@@ -6,12 +6,52 @@ from playhouse.db_url import connect
 
 # Import necessary modules
 import psycopg2
+import psycopg2.extensions
 from dotenv import load_dotenv
 import os
 import re
+import socket
 
 # Load environment variables from .env
 load_dotenv()
+
+# Configure psycopg2 to prefer IPv4 connections
+def force_ipv4_connections():
+    # Original connection function
+    orig_connect = psycopg2.connect
+    
+    # Override connect function for Supabase pooler
+    def ipv4_connect(*args, **kwargs):
+        # Force IPv4 by setting the socket family
+        kwargs['connection_factory'] = kwargs.get('connection_factory', psycopg2.extensions.connection)
+        
+        # Configure options for Supabase pooler
+        if 'options' in kwargs:
+            kwargs['options'] += " -c statement_timeout=5000"
+        else:
+            kwargs['options'] = "-c statement_timeout=5000"
+        
+        # Use getaddrinfo to resolve hostname to IPv4 address
+        if 'host' in kwargs and not kwargs.get('hostaddr'):
+            try:
+                host = kwargs['host']
+                # Get only IPv4 addresses (socket.AF_INET)
+                addrinfo = socket.getaddrinfo(host, None, socket.AF_INET)
+                if addrinfo:
+                    # Use the first IPv4 address
+                    ipv4_addr = addrinfo[0][4][0]
+                    kwargs['hostaddr'] = ipv4_addr
+            except socket.gaierror:
+                # If hostname resolution fails, continue with original host
+                pass
+                
+        return orig_connect(*args, **kwargs)
+    
+    # Replace the connect function
+    psycopg2.connect = ipv4_connect
+
+# Apply the IPv4 preference
+force_ipv4_connections()
 
 # Initialize database connection
 # First try with DATABASE_URL
@@ -42,6 +82,7 @@ if not DATABASE_URL:
             raise ValueError("❌ Database configuration not found. Either DATABASE_URL or individual connection parameters must be set.")
 
 # Connect to the database using playhouse.db_url
+# For Supabase pooler, we need to disable prepared statements
 db = connect(DATABASE_URL)
 
 # Define a function to test the connection
@@ -56,12 +97,14 @@ def test_connection():
         
         params = match.groupdict()
         
+        # Configure connection for Supabase pooler
         connection = psycopg2.connect(
             user=params['user'],
             password=params['password'],
             host=params['host'],
             port=params['port'],
-            dbname=params['database']
+            dbname=params['database'],
+            options="-c statement_timeout=5000"  # Set statement timeout for Supabase pooler
         )
         print("Connection successful!")
 
