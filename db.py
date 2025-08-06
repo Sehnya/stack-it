@@ -1,7 +1,7 @@
 import datetime
 import os
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 from peewee import Model, CharField, AutoField, PostgresqlDatabase, FloatField, TextField, DateTimeField, IntegerField, \
     ForeignKeyField
 
@@ -72,7 +72,10 @@ class Post(BaseModel):
 # ✅ Connect and create the tables only when running db.py directly
 
 if __name__ == "__main__":
-    db.connect()
-    db.create_tables([User, Stack, Post])
-
+    try:
+        db.connect()
+        db.create_tables([User, Stack, Post])
+        print(" Connected and tables created.")
+    except Exception as e:
+        print(" Database connection failed:", e)
 
