@@ -1,6 +1,7 @@
 
+from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, jsonify, session
+from flask import Flask, render_template, request, redirect, jsonify, session, abort
 from peewee import DoesNotExist, IntegrityError
 from db import User, db, Stack, Post
 from functools import wraps
@@ -8,6 +9,7 @@ from flask_caching import Cache
 import os
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 # Load environment variables
 load_dotenv()
@@ -345,8 +347,10 @@ def created_post():
     post = Post.create(
         title=data['title'],
         tags=','.join(data['tags']),
-        content=data['content'],
-        created_at=Post.created_at.isoformat()
+        body=data['content'],  # Map content from request to body field
+        category=data.get('category', 'frontend'),  # Default to frontend if not provided
+        author=session['user_id'],
+        created_at=datetime.now()
     )
     return jsonify({'id': post.id})
 
@@ -372,9 +376,59 @@ def create_post():
     return render_template('create_post.html')
 
 
+@app.route('/edit-post/<int:post_id>', methods=['GET', 'POST'])
+@login_required
+def edit_post(post_id):
+    post = Post.get_or_none(Post.id == post_id)
+    
+    if not post:
+        return render_template('404.html'), 404
+        
+    # Check if the current user is the author of the post
+    if post.author != session['user_id']:
+        return abort(403)  # Forbidden
+    
+    if request.method == 'POST':
+        data = request.form
+        try:
+            post.title = data['title']
+            post.summary = data['summary']
+            post.body = data['body']
+            post.tags = data['tags']
+            post.category = data['category']
+            post.save()
+            return redirect(f'/post/{post_id}')
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    # For GET request, render the edit form with the post data
+    return render_template('create_post.html', post=post, edit_mode=True)
+
+
+@app.route('/delete-post/<int:post_id>', methods=['GET'])
+@login_required
+def delete_post(post_id):
+    post = Post.get_or_none(Post.id == post_id)
+    
+    if not post:
+        return render_template('404.html'), 404
+        
+    # Check if the current user is the author of the post
+    if post.author != session['user_id']:
+        return abort(403)  # Forbidden
+    
+    try:
+        post.delete_instance()
+        return redirect('/dashboard')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html"), 404
+
+
 
 # ---------------------------
 # DEBUG MODE ENTRY POINT
@@ -383,3 +437,4 @@ if __name__ == '__main__':
     db.connect()
     db.create_tables([User, Stack, Post])
     app.run(debug=True, port=5000)
+

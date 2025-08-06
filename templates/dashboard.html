@@ -93,10 +93,11 @@
 </div>
 <!-- Tab content -->
 <div id="London" class="tabcontent" style="height:  100%; width: 100%; display: flex; flex-direction: row; justify-content: space-evenly;text-align: left ; position: relative; padding: 0; margin: 0; border-radius: 0 0 0 0">
+
     <div class="london-container" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; background-color: rgba(5,7,8,0.59); color: white  ; padding: 10px; ">
        <h3>Frontend</h3>
 <p>Here is the latest code we have released for front end development stacks.</p>
-        <div class="container">
+       <div class="container">
 {% for post in posts %}
 <article class="info-post">
   <div class="post-header">
@@ -112,7 +113,7 @@
   </div>
 
   <div class="post-content">
-    <p>{{ post.content[:200]|safe }}...</p>
+    <p>{{ (post.content|truncate(200, true, "..."))|safe }}</p>
   </div>
 
   <div class="post-tags">
@@ -120,8 +121,23 @@
       <span class="tag">#{{ tag }}</span>
     {% endfor %}
   </div>
+<div class="post-menu-container" style="display: flex; flex-direction: row; position: relative;width: 100%; left: 1240px;">
+    <div class="post-menu-wrapper" style="position: relative;">
+        <a href="#" class="post-menu-toggle" data-post-id="{{ post.id }}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-three-dots" viewBox="0 0 16 16">
+                <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+            </svg>
+        </a>
+        <!-- Post dropdown menu -->
+        <div class="post-dropdown" style="display: none; position: absolute; top: 25px; right: 0; background-color: #121212; border: 1px solid #333; border-radius: 6px; min-width: 120px; z-index: 999;">
+            <a href="/edit-post/{{ post.id }}" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Edit Post</a>
+            <a href="/delete-post/{{ post.id }}" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Delete Post</a>
+        </div>
+    </div>
+</div>
 </article>
 {% endfor %}
+
         </div>
     </div>
 
@@ -131,12 +147,15 @@
        <h3>Frontend</h3>
 <p>Here is the latest code we have released for front end development stacks.</p>
         <div class="container">
+        <div id="editors-choices" >
+            <h3>Editor's Picks</h3>
+            <div class="editors-carousel">
 
+            </div>
+        </div>
         </div>
     </div>
-    <div class="sidebar" style="position: absolute; right:0; width: 15%; height: inherit; background-color: rgba(5,7,8,0.59); top:32px;">
 
-    </div>
 
 <div id="Tokyo" class="tabcontent">
   <div class="london-container" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; background-color: rgba(5,7,8,0.59); color: white; border-radius: 20px; padding: 10px; height: 100%">
@@ -183,6 +202,28 @@
   // Hide menu when clicking elsewhere
   document.addEventListener('click', function () {
     dropdown.style.display = 'none';
+    
+    // Hide all post dropdowns when clicking elsewhere
+    document.querySelectorAll('.post-dropdown').forEach(function(menu) {
+      menu.style.display = 'none';
+    });
+  });
+  
+  // Toggle post dropdown menus
+  document.querySelectorAll('.post-menu-toggle').forEach(function(toggle) {
+    toggle.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Hide all other post dropdowns first
+      document.querySelectorAll('.post-dropdown').forEach(function(menu) {
+        menu.style.display = 'none';
+      });
+      
+      // Toggle this dropdown
+      const dropdown = this.nextElementSibling;
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
   });
 </script>
 </body>

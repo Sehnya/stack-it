@@ -157,6 +157,11 @@ class Post(BaseModel):
     category = CharField()  # e.g., 'frontend', 'backend', 'docs'
     author = ForeignKeyField(User, backref='posts', on_delete='CASCADE')
     created_at = DateTimeField(default=datetime.now)
+    
+    @property
+    def content(self):
+        """Alias for body field to maintain compatibility with templates and API"""
+        return self.body
 
 
 # ✅ Connect and create the tables only when running db.py directly

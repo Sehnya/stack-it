@@ -77,25 +77,25 @@
 
     <!-- Main Form Container -->
     <div style="display: flex; justify-content: center; align-items: flex-start; padding-top: 5%;">
-        <form method="POST" action="/create-post" class="font-thin text-sm" style="width:75%; background-color: rgba(36,41,47,0.73); border: solid 1px rgba(0,0,0,0.71); padding: 30px; height: fit-content; border-radius: 6px;">
-            <h2 class="font-thin text-xl text-white mb-6">Create New Post</h2>
+        <form method="POST" action="{% if edit_mode %}/edit-post/{{ post.id }}{% else %}/create-post{% endif %}" class="font-thin text-sm" style="width:75%; background-color: rgba(36,41,47,0.73); border: solid 1px rgba(0,0,0,0.71); padding: 30px; height: fit-content; border-radius: 6px;">
+            <h2 class="font-thin text-xl text-white mb-6">{% if edit_mode %}Edit Post{% else %}Create New Post{% endif %}</h2>
 
             <!-- Title Field -->
             <div class="mb-4">
                 <label for="title" class="block mb-1 text-sm font-thin text-white font-medium">Title</label>
-                <input id="title" name="title" type="text" required class="w-full px-3 py-2 rounded bg-black text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                <input id="title" name="title" type="text" required class="w-full px-3 py-2 rounded bg-black text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500" {% if edit_mode %}value="{{ post.title }}"{% endif %} />
             </div>
 
             <!-- Summary Field -->
             <div class="mb-4">
                 <label for="summary" class="block mb-1 text-sm font-thin text-white font-medium">Summary</label>
-                <textarea id="summary" name="summary" rows="3" required class="h-50 w-full px-3 py-2 rounded bg-black text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                <textarea id="summary" name="summary" rows="3" required class="h-50 w-full px-3 py-2 rounded bg-black text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500">{% if edit_mode %}{{ post.summary }}{% endif %}</textarea>
             </div>
 
             <!-- Tags Field -->
             <div class="mb-4">
                 <label for="tags" class="block mb-1 text-sm font-thin text-white font-medium">Tags (comma-separated)</label>
-                <input id="tags" name="tags" type="text" class="w-full px-3 py-2 rounded bg-black text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                <input id="tags" name="tags" type="text" class="w-full px-3 py-2 rounded bg-black text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500" {% if edit_mode %}value="{{ post.tags }}"{% endif %} />
             </div>
 
             <!-- Category Field -->
