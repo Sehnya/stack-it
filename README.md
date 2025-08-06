@@ -68,8 +68,11 @@ To run the application locally:
 
 1. Clone the repository
 2. Create a `.env` file based on the `.env.example` template
+   - Make sure to use the correct format for DATABASE_URL: `postgresql://username:password@host:port/database`
+   - Note: Remove any square brackets that might be present in the example password
 3. Install dependencies: `pip install -r requirements.txt`
 4. Run the application: `python main.py`
+5. To initialize the database: `python db.py`
 
 ### Troubleshooting
 

@@ -1,42 +1,37 @@
 import datetime
 import os
+import re
+from pathlib import Path
 
 from dotenv import load_dotenv
 from peewee import Model, CharField, AutoField, PostgresqlDatabase, FloatField, TextField, DateTimeField, IntegerField, \
     ForeignKeyField
+from playhouse.db_url import connect
 
-# Load environment variables
 load_dotenv()
 
-# Get database configuration from environment variables
-database_url = os.environ.get('DATABASE_URL')
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-if database_url:
-    # If DATABASE_URL is provided, use it directly
-    import re
-    pattern = r'postgresql://(?P<user>.+):(?P<password>.+)@(?P<host>.+):(?P<port>\d+)/(?P<database>.+)'
-    match = re.match(pattern, database_url)
-    if match:
-        db_config = match.groupdict()
-        db = PostgresqlDatabase(
-            db_config['database'],
-            user=db_config['user'],
-            password=db_config['password'],
-            host=db_config['host'],
-            port=int(db_config['port'])
-        )
-    else:
-        raise ValueError("Invalid DATABASE_URL format")
-else:
-    # Otherwise use individual environment variables
-    db = PostgresqlDatabase(
-        os.environ.get('DB_NAME', 'postgres'),
-        user=os.environ.get('DB_USER', 'postgres'),
-        password=os.environ.get('DB_PASSWORD', ''),
-        host=os.environ.get('DB_HOST', 'localhost'),
-        port=int(os.environ.get('DB_PORT', 5432))
-    )
+if not DATABASE_URL:
+    raise ValueError("❌ DATABASE_URL not found in .env")
 
+# ✅ Parse Supabase pooler URL manually
+pattern = r'postgresql:\/\/(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)\/(?P<database>[^\s?]+)'
+match = re.match(pattern, DATABASE_URL)
+
+if not match:
+    raise ValueError("❌ Invalid DATABASE_URL format")
+
+config = match.groupdict()
+
+# ✅ Initialize PostgresqlDatabase manually
+db = PostgresqlDatabase(
+    config['database'],
+    user=config['user'],
+    password=config['password'],
+    host=config['host'],
+    port=int(config['port'])
+)
 # ✅ Base model to bind models to the database
 class BaseModel(Model):
     class Meta:
