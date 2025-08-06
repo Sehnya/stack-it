@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+
+    <link href="../static/css/output.css" rel="stylesheet"/>
+</head>
+<body
+        class="w-screen h-screen bg-black "
+>
+<div
+        id="header"
+        class="w-dvw h-14 flex-row flex justify-between items-center top-0 relative bg-black/50 backdrop-blur-xs"
+>
+    <div
+            id="logo-container"
+            class="w-full min-w-24 h-13 self-center flex relative"
+    >
+        <img
+                src="../static/images/logo-img.png"
+                class="w-14 ml-2 relative self-center"
+                alt="Logo"
+        />
+    </div>
+
+    <div class="flex-row w-64 min-w-64 mt-3 self-center">
+        <button
+                type="button"
+                onclick="window.location.href='/login'"
+                class="text-orange-900 shadow-md shadow-orange-400/50 bg-gradient-to-br from-red-300 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-100 dark:focus:ring-pink-300 font-medium rounded-md text-xs px-5 py-2.5 text-center me-2 mb-2"
+        >
+            Login
+        </button>
+        <button
+                type="button"
+                data-modal-target="signupModal"
+                data-modal-toggle="signupModal"
+                class="text-orange-900 shadow-md shadow-orange-400/50 bg-gradient-to-br from-red-300 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-100 dark:focus:ring-pink-300 font-medium rounded-md text-xs px-5 py-2.5 text-center me-2 mb-2"
+        >
+            Sign Up
+        </button>
+    </div>
+</div>
+<section class="inline flex-column">
+    <div
+            class="py-8 px-4 mx-auto max-w-screen-xl text-center lg:py-16 text-clifford"
+    >
+        <img
+                class="w-150 inline-flex"
+                src="../static/images/stack-it-logo.png"
+                alt="Logo"
+        />
+        <p
+                class="mb-8 text-lg inline-flex font-normal text-orange-900 lg:text-xl sm:px-16 lg:px-48 dark:text-gray-400"
+        >
+            Where we provide the most up-to-date code for your favorite stacks to
+            give a seamless developing experience with cohesiveness in mind.
+        </p>
+        <div
+                class="flex flex-row space-y-4 sm:flex-row sm:justify-center sm:space-y-0"
+        >
+            <a
+                    href="#"
+                    class="inline-flex shadow-md shadow-orange-400/50 justify-center items-center py-3 px-5 text-base font-medium text-center text-orange-900 rounded-lg bg-orange-300 hover:bg-orange-900 hover:text-white focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900"
+            >
+                Get started
+                <svg
+                        class="w-3.5 h-3.5 ms-2 rtl:rotate-180"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 14 10"
+                >
+                    <path
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M1 5h12m0 0L9 1m4 4L9 9"
+                    />
+                </svg>
+            </a>
+        </div>
+    </div>
+</section>
+<div class="py-24 sm:py-32">
+    <div class="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
+        <p
+                class="mx-auto mt-2 max-w-xl text-center text-3xl font-semibold tracking-comfortable text-balance text-orange-300 sm:text-5xl"
+        >
+            All the code you need to develop your projects with quickness and
+            ease.
+        </p>
+        <div class="mt-10 grid gap-4 sm:mt-16 lg:grid-cols-3 lg:grid-rows-2 h-150">
+            <div class="relative lg:row-span-2">
+                <div
+                        class="absolute inset-px rounded-lg bg-white lg:rounded-l-4xl h-150"
+                ></div>
+                <div
+                        class="relative flex h-150 flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] lg:rounded-l-[calc(2rem+1px)]"
+                >
+                    <div class="relative px-8 pt-8 pb-3 sm:px-10 sm:pt-10 sm:pb-0">
+                        <p
+                                class="relative  text-center mt-2 text-lg font-medium tracking-tight text-orange-900 max-lg:text-center"
+                        >
+                            Modern Stacks
+                        </p>
+                        <p
+                                class=" text-center flex mt-2 max-w-lg text-sm/6 text-orange-900 max-lg:text-center"
+                        >
+                            Find the latest code for your preferred stacks organized by
+                            the latest stable versioning and compatibilities.
+                        </p>
+                    </div>
+                    <div
+                            class="relative min-h-24 w-full grow max-lg:mx-auto max-lg:max-w-sm flex-row sm:flex-nowrap"
+                    >
+                        <div class="w-full overflow-hidden mask-fade min-w-[400%]">
+                            <div
+                                    class="animate-scroll flex whitespace-nowrap gap-12 mt-10 items-center"
+                            >
+                                <!-- First set -->
+                                <img
+                                        src="../static/images/128px-React-icon.svg.png"
+                                        alt="react"
+                                        style="width: 54px; height: 54px"
+                                />
+                                <img
+                                        src="../static/images/img.png"
+                                        alt="nodejs"
+                                        style="width: 94px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/express-js-logo-png_seeklogo-339850.png"
+                                        alt="expressjs"
+                                        style="width: 84px; height: 84px"
+                                />
+                                <img
+                                        src="../static/images/Mongodb.png"
+                                        alt="mongodb"
+                                        style="width: 154px; height: 64px"
+                                />
+                                <!-- Duplicate set -->
+                                <img
+                                        src="../static/images/128px-React-icon.svg.png"
+                                        alt="react"
+                                        style="width: 64px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/img.png"
+                                        alt="nodejs"
+                                        style="width: 94px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/express-js-logo-png_seeklogo-339850.png"
+                                        alt="expressjs"
+                                        style="width: 84px; height: 84px"
+                                />
+                                <img
+                                        src="../static/images/Mongodb.png"
+                                        alt="mongodb"
+                                        style="width: 154px; height: 64px"
+                                />
+                            </div>
+
+                            <div
+                                    class="animate-scroll flex whitespace-nowrap gap-12 mt-10 items-center"
+                            >
+                                <!-- First set -->
+                                <img
+                                        src="../static/images/Elysia.png"
+                                        alt="elysia"
+                                        style="width: 54px; height: 44px"
+                                />
+                                <img
+                                        src="../static/images/Bun.png"
+                                        alt="bun"
+                                        style="width: 64px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/Prisma.png"
+                                        alt="Prisma"
+                                        style="width: 84px; height: 84px"
+                                />
+                                <img
+                                        src="../static/images/SQLite.png"
+                                        alt="Sqlite"
+                                        style="width: 154px; height: 64px"
+                                />
+                                <!-- Duplicate set -->
+                                <img
+                                        src="../static/images/Elysia.png"
+                                        alt="elysia"
+                                        style="width: 64px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/Bun.png"
+                                        alt="bun"
+                                        style="width: 64px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/SQLite.png"
+                                        alt="Sqlite"
+                                        style="width: 154px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/Prisma.png"
+                                        alt="Prisma"
+                                        style="width: 84px; height: 84px"
+                                />
+                            </div>
+                            <div
+                                    class="animate-scroll flex whitespace-nowrap gap-12 mt-10 items-center"
+                            >
+                                <!-- First set -->
+                                <img
+                                          src="../static/images/Tailwind.png"
+                                        alt="tailwindcss"
+                                        style="width: 74px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/Vue.png"
+                                        alt="Vue"
+                                        style="width: 64px; height: 64px"
+                                />
+                                <img
+                                    src="../static/images/Next.png"
+                                        alt="Sqlite"
+                                        style="width: 94px; height: 64px"
+
+                                />
+                                <img
+                                        src="../static/images/Flask.png"
+                                        alt="Flask"
+                                        style="width: 64px; height: 64px"
+                                />
+                                <!-- Duplicate set -->
+                                <img
+                                       src="../static/images/Python.png"
+                                        alt="Python"
+                                        style="width: 84px; height: 84px"
+                                />
+                                <img
+                                        src="../static/images/Vue.png"
+                                        alt="Vue"
+                                        style="width: 64px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/Next.png"
+                                        alt="Sqlite"
+                                        style="width: 94px; height: 64px"
+                                />
+                                <img
+                                        src="../static/images/Python.png"
+                                        alt="Python"
+                                        style="width: 84px; height: 84px"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                        class="pointer-events-none absolute inset-px rounded-lg shadow-sm outline outline-black/5 lg:rounded-l-4xl"
+                ></div>
+            </div>
+            <div class="relative max-lg:row-start-1">
+                <div
+                        class="absolute inset-px rounded-lg bg-white max-lg:rounded-t-4xl"
+                ></div>
+                <div
+                        class="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] max-lg:rounded-t-[calc(2rem+1px)]"
+                >
+                    <div class="relative px-8 pt-8 sm:px-10 sm:pt-10">
+                        <p
+                                class="mt-2 text-center text-lg font-medium tracking-tight text-gray-950 max-lg:text-center"
+                        >
+                            Collaboration
+                        </p>
+                        <p
+                                class="mt-2 max-w-lg text-sm/6 text-gray-600 max-lg:text-center"
+                        >
+                            We encourage our community to engage and collaborate to improve the code on our platform.
+                        </p>
+                    </div>
+                    <div
+                            class="relative flex flex-1 items-center justify-center px-8 max-lg:pt-10 max-lg:pb-12 sm:px-10 lg:pb-2"
+                    >
+                        <img
+                                src="../static/images/img_2.png"
+                                alt="brain"
+                                class="h-30 max-md:max-w-xs"
+                        />
+                    </div>
+                </div>
+                <div
+                        class="pointer-events-none absolute inset-px rounded-lg shadow-sm outline outline-black/5 max-lg:rounded-t-4xl"
+                ></div>
+            </div>
+            <div
+                    class="relative max-lg:row-start-3 lg:col-start-2 lg:row-start-2"
+            >
+                <div class="absolute inset-px rounded-lg bg-white"></div>
+                <div
+                        class="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)]"
+                >
+                    <div class="px-8 pt-8 sm:px-10 sm:pt-10">
+                        <p
+                                class="text-center mt-2 text-lg font-medium tracking-tight text-gray-950 max-lg:text-center"
+                        >
+                            Code-at-Level
+                        </p>
+                        <p
+                                class="text-center mt-2 max-w-lg text-sm/6 text-gray-600 max-lg:text-center"
+                        >
+                            We provide context on how advanced integrating a specific code may be.
+                        </p>
+                    </div>
+                    <div
+                            class="@container flex flex-1 items-center max-lg:py-6 lg:pb-2 justify-center"
+                    >
+                        <img
+                                src="https://cdn-icons-png.flaticon.com/512/628/628297.png"
+                                alt="meter"
+                                class="h-30 place-self-center w-auto "
+                        />
+                    </div>
+                </div>
+                <div
+                        class="pointer-events-none absolute inset-px rounded-lg shadow-sm outline outline-black/5"
+                ></div>
+            </div>
+            <div class="relative lg:row-span-2">
+                <div
+                        class="absolute inset-px rounded-lg bg-white max-lg:rounded-b-4xl lg:rounded-r-4xl"
+                ></div>
+                <div
+                        class="relative flex h-full flex-col overflow-hidden rounded-[calc(var(--radius-lg)+1px)] max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-r-[calc(2rem+1px)]"
+                >
+                    <div class="px-8 pt-8 pb-3 sm:px-10 sm:pt-10 sm:pb-0">
+                        <p
+                                class=" text-center mt-2 text-lg font-medium tracking-tight text-gray-950 max-lg:text-center"
+                        >
+                            Contribute to our Project
+                        </p>
+                        <p
+                                class="mt-2 max-w-lg text-sm/6 text-gray-600 max-lg:text-center"
+                        >
+                            We are an open source community and always open to helping hands to develop an awesome experience for our team and the community!
+                        </p>
+                    </div>
+                    <div class="h-full relative text-center mt-10 content-evenly">
+                        <p> Current Contributors</p>
+                        <div class="lg:grid-cols-2 flex gap-4 place-items-center mb-15" style="margin-top: 40px">
+                            <img src="https://avatars.githubusercontent.com/u/177607412?v=4" alt="Sehnya Github avatar" class="h-20 flex items-center justify-center" style="border-radius: 100%; margin-left: 70px; margin-top: 10px; border: 2px solid #397877;"  />
+                            <img src="https://avatars.githubusercontent.com/u/56284733?v=4" alt="Theo Github avatar" class="h-20 flex items-center justify-center" style="border-radius: 100%; margin-left: 70px; margin-top: 10px; border: 2px solid #397877;" >
+                    </div>
+                    </div>
+                </div>
+<div id="signupModal" tabindex="-1" aria-hidden="true"
+     class="hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-center w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-modal sm:h-full bg-black/40">
+  <div class="relative w-full max-w-xl md:h-auto font-mono">
+    <div class="bg-slate-200 rounded-xl shadow-xl overflow-hidden">
+      <!-- Terminal window bar -->
+      <div class="bg-slate-300 px-4 py-2 flex w-full items-center gap-2">
+        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+        <button type="button"
+                class="ml-auto text-gray-500 hover:text-red-500 text-xs font-bold"
+                data-modal-hide="signupModal">✕</button>
+      </div>
+
+      <!-- Code-styled form -->
+      <form id="signup-form" class="p-6 space-y-4 text-sm leading-relaxed">
+        <p><span class="text-red-400">let</span> <span class="text-teal-600">SignUp</span> <span class="text-gray-400">=</span></p>
+
+        <!-- Username input -->
+        <div class="pl-4">
+          <label for="username" class="inline-block mr-2 text-gray-400">username:</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            placeholder="username"
+            required
+            class="bg-transparent text-slate-950 border-none outline-none w-2/3 focus:ring-0"
+          />
+        </div>
+
+        <!-- Email input -->
+        <div class="pl-4">
+          <label for="email" class="inline-block mr-2 text-gray-400">email:</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            required
+            class="bg-transparent text-slate-950 border-none outline-none w-2/3 focus:ring-0"
+          />
+        </div>
+
+        <!-- Password input -->
+        <div class="pl-4">
+          <label for="password" class="inline-block mr-2 text-gray-400">password:</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            required
+            class="bg-transparent text-slate-950 border-none outline-none w-2/3 focus:ring-0"
+          />
+        </div>
+
+        <!-- Submit -->
+        <div class="pt-4 pl-4">
+          <button type="submit"
+                  class="text-gray-600 bg-slate-300 px-5 py-2 rounded hover:bg-green-400 hover:text-black transition">
+            Sign Up
+          </button>
+          <p class="pt-2 text-xs text-gray-500">
+            Already have an account?
+            <a href="/login" class="text-red-300 hover:underline">Login</a>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+            </div></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+
+</body>
+<script type="module">
+  const form = document.getElementById('signup-form');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      const res = await fetch('http://localhost:5000/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, email, password })
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert('Signup successful! Redirecting to dashboard...');
+        // Redirect to dashboard
+        window.location.href = result.redirect;
+      } else {
+        alert(result.error);
+      }
+    } catch (error) {
+      alert('An error occurred. Please try again.');
+      console.error('Error:', error);
+    }
+  });
+</script>
+
+
+</html>

@@ -1,0 +1,94 @@
+@import 'flowbite';
+@import 'tailwindcss';
+
+@tailwind/preflight;
+@tailwind utilities;
+
+@plugin 'flowbite-typography';
+
+
+/* Optional: Flowbite plugin styles (handled in config, not here) */
+
+/* Custom theme CSS variables */
+:root {
+  --color-coral: oklch(0.7039 0.1182 33.75);
+  --color-deep-orange: oklch(0.6124 0.1808 36.09);
+  --color-light-orange: #EA9936;
+  --color-deep-teal: #397877;
+  --color-teal-reg: #4F9593;
+}
+
+@layer utilities {
+
+     .input-multi-gradient {
+        background-image:
+            linear-gradient(to right, theme('colors.blue.500'), theme('colors.purple.500'));
+        background-repeat: no-repeat; /* Optional, depending on desired effect */
+        background-size: 100% 50%, 100% 50%; /* Adjust as needed for layering */
+        background-position: top, bottom; /* Adjust as needed for layering */
+        background-color: transparent; /* Ensure input's default background doesn't obscure gradients */
+    }
+
+    .mask-fade {
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+
+    mask-size: 100% 100%;
+    -webkit-mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+  }
+
+    @keyframes scroll {
+        0% {
+            transform: translateX(0%);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+
+    .animate-scroll {
+        animation: scroll 15s linear infinite;
+        will-change: transform;
+    }
+
+    .animate-scroll:hover {
+        animation-play-state: paused;
+    }
+}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
