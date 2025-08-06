@@ -5,11 +5,33 @@ from peewee import DoesNotExist, IntegrityError
 from db import User, db, Stack, Post
 from functools import wraps
 from flask_caching import Cache
+import os
+from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key'  # needed for session (optional)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-key-for-testing')  # Use env var with fallback
 app.config['SESSION_COOKIE_HTTPONLY'] = True
+
+# Set additional security and production configurations
+if os.environ.get('FLASK_ENV') == 'production':
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
+    
+    # Configure static files for production
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 year in seconds
+    
+    # Add CSP and other security headers
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        return response
 
 cache = Cache(app, config={
     'CACHE_TYPE': 'SimpleCache',
@@ -97,7 +119,8 @@ def login():
 
         try:
             user = User.get(User.email == email)
-            if user.password == password:  # In production, use proper password hashing
+            # Use secure password checking
+            if check_password_hash(user.password, password):
                 # Set session
                 session['user_id'] = user.id
                 session['username'] = user.username
@@ -135,11 +158,12 @@ def signup():
         if not all([username, email, password]):
             return jsonify({'error': 'All fields are required'}), 400
 
-        # Create user in the database
+        # Create user in the database with hashed password
+        hashed_password = generate_password_hash(password)
         user = User.create(
             username=username,
             email=email,
-            password=password  # ⚠️ Don't forget to hash this in production
+            password=hashed_password
         )
 
         # Automatically log in the user after signup

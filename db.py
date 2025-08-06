@@ -1,16 +1,41 @@
 import datetime
+import os
+from dotenv import load_dotenv
 
 from peewee import Model, CharField, AutoField, PostgresqlDatabase, FloatField, TextField, DateTimeField, IntegerField, \
     ForeignKeyField
 
-# ✅ Replace with your actual Supabase or Neon connection info
-db = PostgresqlDatabase(
-    'postgres',                             # database name
-    user='postgres',
-    password='Serena11052017$',
-    host='db.nahlqtzrdgoytmemxhao.supabase.co',       # or Neon, Render, etc.
-    port=5432
-)
+# Load environment variables
+load_dotenv()
+
+# Get database configuration from environment variables
+database_url = os.environ.get('DATABASE_URL')
+
+if database_url:
+    # If DATABASE_URL is provided, use it directly
+    import re
+    pattern = r'postgresql://(?P<user>.+):(?P<password>.+)@(?P<host>.+):(?P<port>\d+)/(?P<database>.+)'
+    match = re.match(pattern, database_url)
+    if match:
+        db_config = match.groupdict()
+        db = PostgresqlDatabase(
+            db_config['database'],
+            user=db_config['user'],
+            password=db_config['password'],
+            host=db_config['host'],
+            port=int(db_config['port'])
+        )
+    else:
+        raise ValueError("Invalid DATABASE_URL format")
+else:
+    # Otherwise use individual environment variables
+    db = PostgresqlDatabase(
+        os.environ.get('DB_NAME', 'postgres'),
+        user=os.environ.get('DB_USER', 'postgres'),
+        password=os.environ.get('DB_PASSWORD', ''),
+        host=os.environ.get('DB_HOST', 'localhost'),
+        port=int(os.environ.get('DB_PORT', 5432))
+    )
 
 # ✅ Base model to bind models to the database
 class BaseModel(Model):
