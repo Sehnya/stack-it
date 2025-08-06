@@ -12,8 +12,18 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# If DATABASE_URL is not provided, try to construct it from individual variables
 if not DATABASE_URL:
-    raise ValueError("❌ DATABASE_URL not found in .env")
+    DB_HOST = os.getenv("DB_HOST")
+    DB_NAME = os.getenv("DB_NAME")
+    DB_USER = os.getenv("DB_USER")
+    DB_PASSWORD = os.getenv("DB_PASSWORD")
+    DB_PORT = os.getenv("DB_PORT", "5432")
+    
+    if all([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD]):
+        DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    else:
+        raise ValueError("❌ Database configuration not found. Either DATABASE_URL or individual DB_* variables must be set.")
 
 # ✅ Parse Supabase pooler URL manually
 pattern = r'postgresql:\/\/(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)\/(?P<database>[^\s?]+)'
