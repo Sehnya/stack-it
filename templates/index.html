@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Title</title>
+    <title>Stack-it</title>
+    <link rel="icon" type="image/png" href="../static/images/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="../static/images/favicon.svg" />
+<link rel="shortcut icon" href="../static/images/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="../static/images/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content="Stack-it.dev" />
+<link rel="manifest" href="../static/images/site.webmanifest" />
 <link href="../static/css/output.css" rel="stylesheet"/>
     <link href="../static/css/styles.css" rel="stylesheet"/>
 </head>
@@ -11,24 +17,24 @@
 >
 <div
         id="header"
-        class="w-dvw h-14 flex-row flex justify-between items-center top-0 relative  bg-black/50 backdrop-blur-xs"
+        class="w-dvw h-11 flex-row flex justify-between items-center top-0 relative  bg-black/50 backdrop-blur-xs"
 >
     <div
             id="logo-container"
-            class="w-full min-w-24 h-13 self-center flex relative "
+            class="w-full min-w-24 h-11 self-center flex relative "
     >
         <img
                 src="../static/images/logo-img.png"
-                class="w-14 ml-2 relative self-center "
+                class="w-11 ml-2 relative self-center "
                 alt="Logo"
         />
     </div>
 
-    <div class="flex-row w-64 min-w-64 mt-3 self-center">
+    <div class="flex-row w-64 min-w-64 mt-1.5 self-center">
         <button
                 type="button"
                 onclick="window.location.href='/login'"
-                class="text-orange-900 shadow-md shadow-orange-400/50 bg-gradient-to-br from-red-300 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-100 dark:focus:ring-pink-300 font-medium rounded-md text-xs px-5 py-2.5 text-center me-2 mb-2"
+                class="text-orange-900 shadow-md shadow-orange-400/50 bg-gradient-to-br from-red-300 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-100 dark:focus:ring-pink-300  rounded-md text-xs px-5 py-2.5 text-center me-2 mb-2"
         >
             Login
         </button>
@@ -47,12 +53,14 @@
             class="py-8 px-4 mx-auto max-w-screen-xl text-center lg:py-16 text-clifford"
     >
         <img
-                class="w-150 inline-flex"
+                class="w-150 inline-flex "
+                style="filter: drop-shadow(var(--drop-shadow-xl))"
                 src="../static/images/stack-it-logo.png"
                 alt="Logo"
         />
         <p
-                class="mb-8 text-lg inline-flex font-normal text-orange-900 lg:text-xl sm:px-16 lg:px-48 dark:text-gray-400"
+                class="mb-8 text-xl inline-flex font-thin text-white lg:text-xl sm:px-16 lg:px-48 dark:text-white"
+                style="filter: drop-shadow(var(--drop-shadow-md))"
         >
             Where we provide the most up-to-date code for your favorite stacks to
             give a seamless developing experience with cohesiveness in mind.
@@ -62,7 +70,7 @@
         >
             <a
                     href="#"
-                    class="inline-flex shadow-md shadow-orange-400/50 justify-center items-center py-3 px-5 text-base font-medium text-center text-orange-900 rounded-lg bg-orange-300 hover:bg-orange-900 hover:text-white focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900"
+                    class="inline-flex shadow-md shadow-orange-400/50 justify-center items-center py-3 px-5 text-base font-medium text-center text-orange-900 rounded-lg bg-orange-300 hover:bg-orange-900 hover:text-white focus:ring-4 focus:ring-black sm: w-auto"
             >
                 Get started
                 <svg
@@ -87,7 +95,8 @@
 <div class="py-24 sm:py-32">
     <div class="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
         <p
-                class="mx-auto mt-2 max-w-xl text-center text-3xl font-semibold tracking-comfortable text-balance text-orange-300 sm:text-5xl"
+                class="mx-auto mt-2 max-w-2xl text-center text-3xl font-thin tracking-comfortable text-white sm:text-5xl"
+                style="filter: drop-shadow(var(--drop-shadow-md))"
         >
             All the code you need to develop your projects with quickness and
             ease.
@@ -102,12 +111,12 @@
                 >
                     <div class="relative px-8 pt-8 pb-3 sm:px-10 sm:pt-10 sm:pb-0">
                         <p
-                                class="relative  text-center mt-2 text-lg font-medium tracking-tight text-orange-900 max-lg:text-center"
+                                class="relative  text-center mt-2 text-lg font-light tracking-tight text-black max-lg:text-center"
                         >
                             Modern Stacks
                         </p>
                         <p
-                                class=" text-center flex mt-2 max-w-lg text-sm/6 text-orange-900 max-lg:text-center"
+                                class=" text-center flex mt-2 max-w-lg text-sm/6 text-black max-lg:text-center"
                         >
                             Find the latest code for your preferred stacks organized by
                             the latest stable versioning and compatibilities.

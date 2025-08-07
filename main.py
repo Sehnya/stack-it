@@ -239,7 +239,13 @@ def dashboard():
     try:
         user = User.get_by_id(session['user_id'])
         posts = Post.select().order_by(Post.created_at.desc())
-        return render_template('dashboard.html', user=user, posts=posts)
+        # Ensure Get Started doc exists and fetch its id
+        try:
+            gs_doc = ensure_get_started_doc(user.id)
+            get_started_doc_id = gs_doc.id
+        except Exception:
+            get_started_doc_id = None
+        return render_template('dashboard.html', user=user, posts=posts, get_started_doc_id=get_started_doc_id)
     except DoesNotExist:
         session.clear()
         return redirect('/login')
@@ -872,10 +878,62 @@ def favorites():
 
 
 # ---------------------------
+# DOCS SUPPORT
+# ---------------------------
+
+def ensure_get_started_doc(author_id: int):
+    """Ensure a 'Get Started' document exists as a Post with category 'docs'."""
+    try:
+        doc = Post.get_or_none((Post.category == 'docs') & (Post.title == 'Get Started'))
+        if doc:
+            return doc
+        last = Post.select().order_by(Post.id.desc()).first()
+        next_id = (last.id + 1) if last else 1000
+        body = (
+            "<div class='post-content-headers'>Welcome to Stack-it</div>"
+            "<p>Thanks for signing in. This short guide will show you how to navigate your dashboard and find code for your stacks.</p>"
+            "<div class='post-content-headers-2'>What you can do</div>"
+            "<ul><li>Browse Frontend and Backend posts.</li><li>Open Docs for curated guides.</li><li>Favorite posts to find them quickly.</li></ul>"
+            "<div class='post-content-headers-2'>Next steps</div>"
+            "<ol><li>Explore the tabs on your dashboard.</li><li>Open a post to view details and copy snippets.</li><li>Come back to this Get Started doc anytime from the banner.</li></ol>"
+        )
+        return Post.create(
+            id=next_id,
+            title='Get Started',
+            summary='How to get started with Stack-it',
+            body=body,
+            tags='docs,getting-started',
+            category='docs',
+            author=author_id,
+        )
+    except Exception as e:
+        raise e
+
+@app.route('/docs/<int:doc_id>')
+@login_required
+def view_doc(doc_id: int):
+    post = Post.get_or_none(Post.id == doc_id)
+    if not post:
+        return render_template('404.html'), 404
+    return render_template(
+        'docs.html',
+        post_id=post.id,
+        title=post.title,
+        tags=post.tags.split(',') if post.tags else [],
+        content=post.content,
+        created_at=post.created_at.strftime('%B %d, %Y %I:%M%p EST'),
+        author_user=post.author,
+        is_author=(post.author == session.get('user_id')),
+        is_admin=session.get('is_admin', False)
+    )
+
+# ---------------------------
 # DEBUG MODE ENTRY POINT
 # ---------------------------
 if __name__ == '__main__':
     db.connect()
     db.create_tables([User, Stack, Post, Favorite])
     app.run(debug=True, port=5000)
+
+
 

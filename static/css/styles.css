@@ -30,7 +30,6 @@ body {
     overflow-x: hidden;
 
 
-
 }
 
 .header {
@@ -79,9 +78,25 @@ body {
     align-items: center;
     justify-content: space-evenly;
     position: relative;
-svg {
+}
+
+.nav-content-container svg {
+    display: block;
+    vertical-align: middle;
     margin-bottom: 0;
 }
+
+.header .nav-content-container p {
+    margin: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+
+.header .nav-content-container a {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
 }
 
 .right-container{
@@ -255,3 +270,4 @@ font-weight: lighter
     margin-bottom: 10px;
   }
 }
+
