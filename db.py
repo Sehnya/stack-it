@@ -12,6 +12,8 @@ import os
 import re
 import socket
 
+from playhouse.sqlite_ext import AutoIncrementField
+
 # Load environment variables from .env
 load_dotenv()
 
@@ -138,6 +140,11 @@ class User(BaseModel):
     username = CharField(unique=True)
     email = CharField(unique=True)
     password = CharField()
+    role = CharField(default='user')  # Possible values: 'user', 'admin'
+    
+    def is_admin(self):
+        """Check if the user has admin role"""
+        return self.role == 'admin'
 
 class Stack(BaseModel):
     name = CharField()
@@ -150,6 +157,7 @@ class Stack(BaseModel):
     created_at = DateTimeField()
 
 class Post(BaseModel):
+    id = IntegerField(primary_key=True)
     title = CharField()
     summary = TextField()
     body = TextField()

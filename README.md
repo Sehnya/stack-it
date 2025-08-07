@@ -1,85 +1,144 @@
-# Stack-It
+# Stack-It Navigation and User Roles Implementation
 
-A web application for sharing and discovering tech stacks.
+This document describes the changes made to implement a cohesive navigation bar across all pages and a user role system with admin capabilities.
 
-## Deployment to Render
+## Changes Made
 
-This guide will help you deploy the Stack-It application to Render.
+### 1. Navigation Bar Consistency
 
-### Prerequisites
+A reusable navigation bar component has been created to ensure consistency across all pages:
 
-1. A [Render](https://render.com/) account
-2. A PostgreSQL database (you can use Render's PostgreSQL service, Supabase, Neon, or any other PostgreSQL provider)
+- Created a new template file `_navbar.html` that includes:
+  - Home, Favorites, Community links for all logged-in users
+  - Create Post link for admin users only
+  - User menu dropdown with appropriate options based on user role
+  - Login/Signup options for guests
 
-### Deployment Steps
+- Updated all template files to use the new navigation component:
+  - dashboard.html
+  - create_post.html
+  - post.html
+  - 404.html
+  - community.html
+  - db_error.html
 
-#### 1. Set Up Your Database
+### 2. User Role System
 
-If you're using Render's PostgreSQL service:
+A user role system has been implemented to distinguish between admin and regular users:
 
-1. Create a new PostgreSQL database in Render
-2. Note the connection details (host, database name, username, password, port)
+- Modified the User model in `db.py` to add a role field with possible values 'user' and 'admin'
+- Created a migration script `migrate_add_role.py` to add the role field to existing users
+- Implemented role-based access control in `main.py` with an admin_required decorator
+- Added admin functionality to assign admin roles to other users
+- Restricted post creation and admin views to admin users only
 
-If you're using Supabase or another provider, make sure you have the connection details ready.
+## How to Use
 
-#### 2. Deploy the Web Service
+### Running the Migration Script
 
-1. Log in to your Render account
-2. Click "New" and select "Web Service"
-3. Connect your GitHub repository
-4. Configure the service:
-   - **Name**: stack-it (or your preferred name)
-   - **Environment**: Python
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn main:app`
+To add the role field to existing users and set the admin role for a specific user:
 
-#### 3. Set Environment Variables
-
-In the Render dashboard, add the following environment variables:
-
-- `FLASK_ENV`: Set to `production`
-- `SECRET_KEY`: Generate a secure random string (or let Render generate one for you)
-- `DB_HOST`: Your database host
-- `DB_NAME`: Your database name
-- `DB_USER`: Your database username
-- `DB_PASSWORD`: Your database password
-- `DB_PORT`: Your database port (usually 5432)
-
-Alternatively, you can set a single `DATABASE_URL` variable with the format:
-```
-postgresql://username:password@host:port/database
+```bash
+python migrate_add_role.py <admin_email>
 ```
 
-#### 4. Deploy
+Replace `<admin_email>` with the email of the user you want to make an admin.
 
-Click "Create Web Service" and Render will build and deploy your application.
+### Accessing Admin Features
 
-### Custom Domain Setup
+Once you've set up an admin user, you can:
 
-To use your own domain with the Render deployment:
+1. Log in as the admin user
+2. Access the admin dashboard at `/admin`
+3. Manage user roles by selecting 'Admin' or 'User' for each user and clicking 'Save'
+4. Create new posts using the 'Create New Post' link in the navigation bar
 
-1. Go to your web service in the Render dashboard
-2. Click on "Settings" and then "Custom Domain"
-3. Add your domain and follow the instructions to configure DNS settings
+### Testing the Implementation
 
-### Local Development
+A test script has been provided to verify that all the changes work correctly:
 
-To run the application locally:
+```bash
+# Install the requests module if you don't have it
+pip install requests
 
-1. Clone the repository
-2. Create a `.env` file based on the `.env.example` template
-   - Make sure to use the correct format for DATABASE_URL: `postgresql://username:password@host:port/database`
-   - Note: Remove any square brackets that might be present in the example password
-3. Install dependencies: `pip install -r requirements.txt`
-4. Run the application: `python main.py`
-5. To initialize the database: `python db.py`
+# Run the test script
+python test_user_roles.py <admin_email> <admin_password> <regular_user_email> <regular_user_password>
+```
 
-### Troubleshooting
+Replace the parameters with actual user credentials.
 
-If you encounter issues with the deployment:
+The test script checks:
+1. Navigation consistency across all pages
+2. Role-based access control
+3. Admin functionality to assign roles
 
-1. Check the Render logs for error messages
-2. Verify that all environment variables are set correctly
-3. Ensure your database is accessible from Render
+## Technical Details
 
-For more help, refer to the [Render documentation](https://render.com/docs) or open an issue in this repository.
+### Navigation Bar Component
+
+The navigation bar component uses Jinja2's include directive and conditional rendering:
+
+```html
+{% include '_navbar.html' %}
+```
+
+The component checks if the user is logged in and if they have admin privileges:
+
+```html
+{% if session.get('user_id') %}
+    <!-- Navigation for logged-in users -->
+    {% if session.get('is_admin', False) %}
+        <!-- Admin-only features -->
+    {% endif %}
+{% else %}
+    <!-- Navigation for guests -->
+{% endif %}
+```
+
+### User Role System
+
+The User model has been extended with a role field and an is_admin method:
+
+```python
+class User(BaseModel):
+    id = AutoField()
+    username = CharField(unique=True)
+    email = CharField(unique=True)
+    password = CharField()
+    role = CharField(default='user')  # Possible values: 'user', 'admin'
+    
+    def is_admin(self):
+        """Check if the user has admin role"""
+        return self.role == 'admin'
+```
+
+The admin_required decorator checks if the user has admin privileges:
+
+```python
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect('/login')
+        if not session.get('is_admin', False):
+            return abort(403)  # Forbidden
+        return f(*args, **kwargs)
+    return decorated_function
+```
+
+The login route sets the is_admin flag in the session based on the user's role:
+
+```python
+session['is_admin'] = user.is_admin()
+```
+
+## Troubleshooting
+
+If you encounter any issues:
+
+1. Make sure you've run the migration script to add the role field to existing users
+2. Check that you've set the admin role for at least one user
+3. Verify that you're logged in as an admin user to access admin features
+4. If the navigation bar doesn't appear consistent across all pages, clear your browser cache
+
+For any other issues, please refer to the test script output for detailed error messages.

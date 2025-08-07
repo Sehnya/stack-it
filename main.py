@@ -7,12 +7,24 @@ from db import User, db, Stack, Post
 from functools import wraps
 from flask_caching import Cache
 import os
+import time
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
 # Load environment variables
 load_dotenv()
+
+# Circuit breaker configuration
+DB_CIRCUIT_BREAKER = {
+    'failures': 0,                      # Current failure count
+    'failure_threshold': 3,             # Number of failures before circuit opens
+    'reset_timeout': 60,                # Seconds to wait before trying to reconnect
+    'last_failure_time': None,          # Timestamp of the last failure
+    'circuit_open': False,              # Whether the circuit is currently open
+    'max_backoff': 300,                 # Maximum backoff time in seconds (5 minutes)
+}
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-key-for-testing')  # Use env var with fallback
@@ -43,8 +55,67 @@ cache = Cache(app, config={
 
 @app.before_request
 def _db_connect():
+    global DB_CIRCUIT_BREAKER
+    
+    # Skip database connection for static resources
+    if request.path.startswith('/static/'):
+        return None
+        
+    # Check if the circuit is open (database connection is failing)
+    if DB_CIRCUIT_BREAKER['circuit_open']:
+        current_time = datetime.now()
+        last_failure = DB_CIRCUIT_BREAKER['last_failure_time']
+        
+        # Calculate backoff time with exponential increase based on failure count
+        backoff_factor = min(DB_CIRCUIT_BREAKER['failures'], 10)  # Cap at 10 to avoid excessive backoff
+        backoff_time = min(DB_CIRCUIT_BREAKER['reset_timeout'] * (2 ** (backoff_factor - 1)), 
+                          DB_CIRCUIT_BREAKER['max_backoff'])
+        
+        # Check if enough time has passed to try reconnecting
+        if last_failure and (current_time - last_failure) < timedelta(seconds=backoff_time):
+            app.logger.info(f"Circuit open, skipping database connection attempt. Will retry in {backoff_time - (current_time - last_failure).total_seconds():.1f} seconds")
+            
+            # Return appropriate response based on request type
+            if request.path.startswith('/api/'):
+                return jsonify({
+                    "error": "Database unavailable", 
+                    "message": "Database connection is temporarily disabled due to repeated failures",
+                    "retry_after": backoff_time
+                }), 503
+            else:
+                return render_template('db_error.html', 
+                                      error="Database connection is temporarily disabled due to repeated failures",
+                                      retry_after=int(backoff_time)), 503
+    
+    # Attempt to connect to the database
     if db.is_closed():
-        db.connect()
+        try:
+            db.connect()
+            
+            # Reset circuit breaker on successful connection
+            if DB_CIRCUIT_BREAKER['failures'] > 0:
+                app.logger.info("Database connection restored, resetting circuit breaker")
+                DB_CIRCUIT_BREAKER['failures'] = 0
+                DB_CIRCUIT_BREAKER['circuit_open'] = False
+                DB_CIRCUIT_BREAKER['last_failure_time'] = None
+                
+        except Exception as e:
+            # Update circuit breaker state
+            DB_CIRCUIT_BREAKER['failures'] += 1
+            DB_CIRCUIT_BREAKER['last_failure_time'] = datetime.now()
+            
+            # Open the circuit if threshold is reached
+            if DB_CIRCUIT_BREAKER['failures'] >= DB_CIRCUIT_BREAKER['failure_threshold']:
+                DB_CIRCUIT_BREAKER['circuit_open'] = True
+            
+            # Log the error with circuit breaker status
+            app.logger.error(f"Database connection error: {e} (Failures: {DB_CIRCUIT_BREAKER['failures']}, Circuit open: {DB_CIRCUIT_BREAKER['circuit_open']})")
+            
+            # Return appropriate response based on request type
+            if request.path.startswith('/api/'):
+                return jsonify({"error": "Database unavailable", "message": str(e)}), 503
+            else:
+                return render_template('db_error.html', error=str(e)), 503
 
 
 @app.teardown_request
@@ -54,13 +125,24 @@ def _db_close(exc):
 
 
 # ---------------------------
-# SESSION VERIFICATION DECORATOR
+# SESSION VERIFICATION DECORATORS
 # ---------------------------
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             return redirect('/login')
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect('/login')
+        if not session.get('is_admin', False):
+            return abort(403)  # Forbidden
         return f(*args, **kwargs)
 
     return decorated_function
@@ -126,6 +208,8 @@ def login():
                 # Set session
                 session['user_id'] = user.id
                 session['username'] = user.username
+                # Set admin flag based on user role
+                session['is_admin'] = user.is_admin()
 
                 if request.is_json:
                     return jsonify({'message': 'Login successful', 'redirect': '/dashboard'}), 200
@@ -341,10 +425,11 @@ def get_post(post_id):
 
 # POST new post (for future team form)
 @app.route('/api/posts', methods=['POST'])
-@login_required
+@admin_required
 def created_post():
     data = request.get_json()
     post = Post.create(
+        id=data['id'],
         title=data['title'],
         tags=','.join(data['tags']),
         body=data['content'],  # Map content from request to body field
@@ -356,12 +441,13 @@ def created_post():
 
 
 @app.route('/create-post', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def create_post():
     if request.method == 'POST':
         data = request.form
         try:
             Post.create(
+                id=data['id'],
                 title=data['title'],
                 summary=data['summary'],
                 body=data['body'],
@@ -384,13 +470,14 @@ def edit_post(post_id):
     if not post:
         return render_template('404.html'), 404
         
-    # Check if the current user is the author of the post
-    if post.author != session['user_id']:
+    # Check if the current user is the author of the post or an admin
+    if post.author != session['user_id'] and not session.get('is_admin', False):
         return abort(403)  # Forbidden
     
     if request.method == 'POST':
         data = request.form
         try:
+            post.id=data['id']
             post.title = data['title']
             post.summary = data['summary']
             post.body = data['body']
@@ -405,7 +492,7 @@ def edit_post(post_id):
     return render_template('create_post.html', post=post, edit_mode=True)
 
 
-@app.route('/delete-post/<int:post_id>', methods=['GET'])
+@app.route('/delete-post/<int:post_id>', methods=['GET', 'DELETE'])
 @login_required
 def delete_post(post_id):
     post = Post.get_or_none(Post.id == post_id)
@@ -413,12 +500,16 @@ def delete_post(post_id):
     if not post:
         return render_template('404.html'), 404
         
-    # Check if the current user is the author of the post
-    if post.author != session['user_id']:
+    # Check if the current user is the author of the post or an admin
+    if post.author != session['user_id'] and not session.get('is_admin', False):
         return abort(403)  # Forbidden
     
     try:
         post.delete_instance()
+        # For DELETE requests, return a JSON response
+        if request.method == 'DELETE':
+            return jsonify({'success': True, 'message': 'Post deleted successfully'}), 200
+        # For GET requests, redirect to dashboard
         return redirect('/dashboard')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -427,6 +518,46 @@ def delete_post(post_id):
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html"), 404
+
+
+# ---------------------------
+# ADMIN ROUTES
+# ---------------------------
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    """Admin dashboard for managing users and roles"""
+    users = User.select().order_by(User.id)
+    success_message = request.args.get('success')
+    error_message = request.args.get('error')
+    return render_template('admin.html', users=users, 
+                          success_message=success_message,
+                          error_message=error_message)
+
+
+@app.route('/admin/update-role/<int:user_id>', methods=['POST'])
+@admin_required
+def update_user_role(user_id):
+    """Update a user's role"""
+    try:
+        user = User.get_by_id(user_id)
+        new_role = request.form.get('role')
+        
+        if new_role not in ['user', 'admin']:
+            return redirect('/admin?error=Invalid role specified')
+        
+        user.role = new_role
+        user.save()
+        
+        # If the user updated their own role, update the session
+        if user_id == session.get('user_id'):
+            session['is_admin'] = (new_role == 'admin')
+            
+        return redirect('/admin?success=Role updated successfully')
+    except DoesNotExist:
+        return redirect('/admin?error=User not found')
+    except Exception as e:
+        return redirect(f'/admin?error={str(e)}')
 
 
 

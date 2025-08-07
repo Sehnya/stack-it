@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Connection Error - Stack It</title>
+    <link href="../static/css/styles.css" rel="stylesheet"/>
+    <link rel="icon" type="image/png" href="../static/images/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="../static/images/favicon.svg" />
+    <link rel="shortcut icon" href="../static/images/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../static/images/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Stack-it.dev" />
+    <link rel="manifest" href="../static/images/site.webmanifest" />
+    <style>
+        .error-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: rgba(36,41,47,0.73);
+            border: solid 1px rgba(0,0,0,0.71);
+            border-radius: 6px;
+            color: white;
+            text-align: center;
+        }
+        .error-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+        .error-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+        .error-message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            color: #ddd;
+        }
+        .error-details {
+            background-color: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            text-align: left;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        .retry-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ff5722;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .retry-button:hover {
+            background-color: #e64a19;
+        }
+        .help-text {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include the navigation bar -->
+    {% include '_navbar.html' %}
+
+    <div class="error-container">
+        <div class="error-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="#ff6b6b" viewBox="0 0 16 16">
+                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+            </svg>
+        </div>
+        <h1 class="error-title">Database Connection Error</h1>
+        <p class="error-message">
+            We're currently experiencing issues connecting to our database. This is a temporary problem, and we're working to resolve it as quickly as possible.
+        </p>
+        
+        {% if error %}
+        <div class="error-details">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        {% if retry_after is defined and retry_after %}
+        <div class="retry-info" style="margin-bottom: 20px; padding: 10px; background-color: rgba(255,255,255,0.1); border-radius: 4px;">
+            <p>The system will automatically attempt to reconnect in approximately <strong id="retry-seconds">{{ retry_after }}</strong> seconds.</p>
+            <div id="countdown" style="font-size: 18px; margin-top: 10px;">{{ retry_after }}</div>
+            <script>
+                // Countdown timer
+                var secondsRemaining = parseInt("{{ retry_after }}");
+                var countdownElement = document.getElementById('countdown');
+                var retrySecondsElement = document.getElementById('retry-seconds');
+                
+                var timer = setInterval(function() {
+                    secondsRemaining--;
+                    countdownElement.textContent = secondsRemaining;
+                    
+                    if (secondsRemaining <= 0) {
+                        clearInterval(timer);
+                        window.location.href = '/';
+                    }
+                }, 1000);
+            </script>
+        </div>
+        {% endif %}
+        
+        <a href="/" class="retry-button">Retry Connection Now</a>
+        
+        <p class="help-text">
+            If this problem persists, please contact our support team or try again later.
+        </p>
+    </div>
+</body>
+</html>
