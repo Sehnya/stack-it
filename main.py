@@ -40,19 +40,44 @@ def _allowed_file(filename: str) -> bool:
 
 # Set additional security and production configurations
 if os.environ.get('FLASK_ENV') == 'production':
+    # Require a strong secret key in production
+    if app.secret_key == 'dev-key-for-testing':
+        raise RuntimeError('SECRET_KEY must be set in production')
+
+    # Cookie and session settings
     app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
     app.config['PREFERRED_URL_SCHEME'] = 'https'
     
     # Configure static files for production
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 year in seconds
     
+    # Respect reverse proxy headers (e.g., when behind Nginx/Render/Heroku)
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+    
     # Add CSP and other security headers
     @app.after_request
     def add_security_headers(response):
-        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = "geolocation=(), microphone=(), camera=()"
+        # Content Security Policy tuned for our templates using Bootstrap & Highlight.js CDNs and inline scripts
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net data:; "
+            "connect-src 'self'; "
+            "frame-ancestors 'self'; "
+            "base-uri 'self'; "
+            "form-action 'self'"
+        )
+        response.headers['Content-Security-Policy'] = csp
         return response
 
 cache = Cache(app, config={
@@ -96,8 +121,8 @@ def update_last_seen():
 def _db_connect():
     global DB_CIRCUIT_BREAKER
     
-    # Skip database connection for static resources
-    if request.path.startswith('/static/'):
+    # Skip database connection for static resources and health checks
+    if request.path.startswith('/static/') or request.path == '/healthz':
         return None
         
     # Check if the circuit is open (database connection is failing)
@@ -196,6 +221,12 @@ def index():
     if 'user_id' in session:
         return redirect('/dashboard')
     return render_template('index.html')
+
+
+# Lightweight health check endpoint (no DB access)
+@app.route('/healthz')
+def healthz():
+    return jsonify({'status': 'ok', 'time': datetime.utcnow().isoformat() + 'Z'}), 200
 
 
 # ---------------------------
