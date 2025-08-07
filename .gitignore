@@ -31,3 +31,5 @@ dist-ssr
 *.sw?
 .git
 .gitignore
+test*
+migrate*

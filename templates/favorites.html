@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Favorites - Stack It</title>
+    <link href="../static/css/styles.css" rel="stylesheet"/>
+    <link rel="icon" type="image/png" href="../static/images/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="../static/images/favicon.svg" />
+    <link rel="shortcut icon" href="../static/images/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../static/images/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Stack-it.dev" />
+    <link rel="manifest" href="../static/images/site.webmanifest" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+</head>
+<body>
+    <!-- Include the navigation bar -->
+    {% include '_navbar.html' %}
+
+    <div class="main-header" style="width: 100%; height: 90px; background-color: rgba(5,7,8,0.86); border-bottom: #050708 solid 1px; padding: 23px; display: flex; flex-direction: row;">
+        <div style="width: 50%; height: inherit; display: flex; flex-direction: column">
+            <h4 style="color: white; font-weight: lighter;">My Favorites</h4>
+        </div>
+        
+        <!-- Tag filter dropdown -->
+        <div style="width: 50%; height: inherit; display: flex; flex-direction: row; justify-content: flex-end; align-items: center;">
+            <div class="filter-container" style="margin-right: 20px;">
+                <select id="tag-filter" class="form-select" style="background-color: #121212; color: white; border: 1px solid #333;">
+                    <option value="">All Tags</option>
+                    {% for tag in all_tags %}
+                        <option value="{{ tag }}" {% if selected_tag == tag %}selected{% endif %}>{{ tag }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-body" style="position: relative; min-height: 100vh; width:100%; display: flex; flex-direction: column; padding: 20px; font-weight: lighter; overflow:clip; background-color: rgba(5,7,8,0.59); color: white;">
+        <div class="container">
+            <div id="favorites-container">
+                <!-- Favorites will be loaded here via JavaScript -->
+                <div class="loading-indicator" style="text-align: center; padding: 20px;">
+                    Loading your favorites...
+                </div>
+            </div>
+            
+            <!-- No favorites message (hidden by default) -->
+            <div id="no-favorites" style="display: none; text-align: center; padding: 40px;">
+                <h3>You don't have any favorites yet</h3>
+                <p>Browse posts and click the heart icon to add them to your favorites.</p>
+                <a href="/dashboard" class="btn btn-primary mt-3" style="background-color: #ff5722; border: none;">Browse Posts</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template for favorite post item -->
+    <template id="favorite-item-template">
+        <article class="info-post" style="margin-bottom: 20px; padding: 15px; background-color: rgba(18,18,18,0.7); border-radius: 6px;">
+            <div class="post-header">
+                <div class="meta">
+                    <span class="timestamp">Posted: <span class="post-date"></span></span>
+                    <span class="favorited-at">Favorited: <span class="favorite-date"></span></span>
+                </div>
+                <h2 class="title">
+                    <a href="#" class="post-link" style="text-decoration: none; color: inherit;"></a>
+                </h2>
+            </div>
+
+            <div class="post-content">
+                <p class="post-excerpt"></p>
+            </div>
+
+            <div class="post-tags">
+                <!-- Tags will be added here dynamically -->
+            </div>
+            
+            <div class="post-actions" style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                <button class="remove-favorite-btn" style="background: none; border: none; color: #ff5722; cursor: pointer;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-heart-fill" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                    </svg>
+                    Remove from favorites
+                </button>
+            </div>
+        </article>
+    </template>
+
+    <script>
+        // Function to load favorites with optional tag filter
+        function loadFavorites(tagFilter = '') {
+            const favoritesContainer = document.getElementById('favorites-container');
+            const noFavoritesMessage = document.getElementById('no-favorites');
+            
+            // Show loading indicator
+            favoritesContainer.innerHTML = '<div class="loading-indicator" style="text-align: center; padding: 20px;">Loading your favorites...</div>';
+            
+            // Build the API URL with optional tag filter
+            let apiUrl = '/api/user/favorites';
+            if (tagFilter) {
+                apiUrl += `?tag=${encodeURIComponent(tagFilter)}`;
+            }
+            
+            // Fetch favorites from the API
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(favorites => {
+                    // Clear the container
+                    favoritesContainer.innerHTML = '';
+                    
+                    if (favorites.length === 0) {
+                        // Show no favorites message
+                        noFavoritesMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Hide no favorites message
+                    noFavoritesMessage.style.display = 'none';
+                    
+                    // Get the template
+                    const template = document.getElementById('favorite-item-template');
+                    
+                    // Add each favorite to the container
+                    favorites.forEach(favorite => {
+                        // Clone the template
+                        const favoriteElement = document.importNode(template.content, true);
+                        
+                        // Set the post title and link
+                        const titleLink = favoriteElement.querySelector('.post-link');
+                        titleLink.textContent = favorite.title;
+                        titleLink.href = `/post/${favorite.id}`;
+                        
+                        // Set the post dates
+                        favoriteElement.querySelector('.post-date').textContent = favorite.created_at;
+                        favoriteElement.querySelector('.favorite-date').textContent = favorite.favorited_at;
+                        
+                        // Set the post excerpt
+                        favoriteElement.querySelector('.post-excerpt').textContent = favorite.excerpt;
+                        
+                        // Add the tags
+                        const tagsContainer = favoriteElement.querySelector('.post-tags');
+                        favorite.tags.forEach(tag => {
+                            if (tag.trim()) {
+                                const tagSpan = document.createElement('span');
+                                tagSpan.className = 'tag';
+                                tagSpan.textContent = `#${tag.trim()}`;
+                                
+                                // Add click event to filter by this tag
+                                tagSpan.addEventListener('click', function() {
+                                    document.getElementById('tag-filter').value = tag.trim();
+                                    loadFavorites(tag.trim());
+                                });
+                                
+                                tagsContainer.appendChild(tagSpan);
+                            }
+                        });
+                        
+                        // Set up the remove favorite button
+                        const removeButton = favoriteElement.querySelector('.remove-favorite-btn');
+                        removeButton.addEventListener('click', function() {
+                            toggleFavorite(favorite.id);
+                        });
+                        
+                        // Add the favorite to the container
+                        favoritesContainer.appendChild(favoriteElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading favorites:', error);
+                    favoritesContainer.innerHTML = `<div class="error-message" style="text-align: center; padding: 20px; color: #ff5722;">Error loading favorites: ${error.message}</div>`;
+                });
+        }
+        
+        // Function to toggle favorite status
+        function toggleFavorite(postId) {
+            fetch(`/api/posts/${postId}/favorite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the favorites to reflect the change
+                    const tagFilter = document.getElementById('tag-filter').value;
+                    loadFavorites(tagFilter);
+                } else {
+                    console.error('Error toggling favorite:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error toggling favorite:', error);
+            });
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load favorites when the page loads
+            const selectedTag = document.getElementById('tag-filter').value;
+            loadFavorites(selectedTag);
+            
+            // Set up tag filter change event
+            document.getElementById('tag-filter').addEventListener('change', function() {
+                loadFavorites(this.value);
+            });
+        });
+    </script>
+    
+    <style>
+        .tag {
+            display: inline-block;
+            background-color: rgba(255, 87, 34, 0.2);
+            color: #ff5722;
+            padding: 3px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .tag:hover {
+            background-color: rgba(255, 87, 34, 0.4);
+        }
+        
+        .meta {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .meta span {
+            margin-right: 15px;
+        }
+        
+        .title {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .post-content {
+            margin-bottom: 15px;
+        }
+        
+        .remove-favorite-btn:hover {
+            color: #e64a19;
+        }
+    </style>
+</body>
+</html>
