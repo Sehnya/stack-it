@@ -3,7 +3,7 @@ from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, jsonify, session, abort
 from peewee import DoesNotExist, IntegrityError
-from db import User, db, Stack, Post
+from db import User, db, Stack, Post, Favorite
 from functools import wraps
 from flask_caching import Cache
 import os
@@ -29,6 +29,14 @@ DB_CIRCUIT_BREAKER = {
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-key-for-testing')  # Use env var with fallback
 app.config['SESSION_COOKIE_HTTPONLY'] = True
+# Upload configuration
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024  # 4MB limit
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+
+def _allowed_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Set additional security and production configurations
 if os.environ.get('FLASK_ENV') == 'production':
@@ -52,6 +60,37 @@ cache = Cache(app, config={
     'CACHE_DEFAULT_TIMEOUT': 60  # seconds
 })
 
+@app.context_processor
+def inject_helpers():
+    def avatar_url(user):
+        if not user:
+            return '/static/images/Ellipse-2.png'
+        return user.profile_photo or '/static/images/Ellipse-2.png'
+    def is_online(user):
+        try:
+            return bool(user and user.is_online)
+        except Exception:
+            return False
+    def current_user():
+        try:
+            uid = session.get('user_id')
+            return User.get_by_id(uid) if uid else None
+        except Exception:
+            return None
+    return dict(avatar_url=avatar_url, is_online=is_online, current_user=current_user)
+
+
+@app.before_request
+def update_last_seen():
+    # Update user's last_seen on each request (except static)
+    try:
+        if 'user_id' in session and not request.path.startswith('/static/'):
+            user = User.get_by_id(session['user_id'])
+            user.last_seen = datetime.now()
+            user.save()
+    except Exception:
+        # Don't block request if updating last_seen fails
+        pass
 
 @app.before_request
 def _db_connect():
@@ -276,6 +315,49 @@ def logout():
     session.clear()
     return redirect('/')
 
+# ---------------------------
+# SETTINGS / PROFILE ROUTES
+# ---------------------------
+@app.route('/settings', methods=['GET'])
+@login_required
+def settings():
+    try:
+        user = User.get_by_id(session['user_id'])
+        return render_template('settings.html', user=user)
+    except DoesNotExist:
+        session.clear()
+        return redirect('/login')
+
+@app.route('/profile/photo', methods=['POST'])
+@login_required
+def upload_profile_photo():
+    try:
+        if 'photo' not in request.files:
+            return redirect('/settings?error=No file part')
+        file = request.files['photo']
+        if file.filename == '':
+            return redirect('/settings?error=No selected file')
+        if file and _allowed_file(file.filename):
+            # Make a safe unique filename
+            from werkzeug.utils import secure_filename
+            name = secure_filename(file.filename)
+            # Prefix with user id and timestamp
+            ts = int(time.time())
+            filename = f"u{session['user_id']}_{ts}_{name}"
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
+            rel_url = f"/static/uploads/{filename}"
+            # Update user
+            user = User.get_by_id(session['user_id'])
+            user.profile_photo = rel_url
+            user.save()
+            # Update session username unchanged; nothing else required
+            return redirect('/settings?success=Photo updated')
+        else:
+            return redirect('/settings?error=Invalid file type')
+    except Exception as e:
+        return redirect(f"/settings?error={str(e)}")
+
 
 # ---------------------------
 # API ROUTES (Protected)
@@ -358,9 +440,77 @@ def get_dashboard_stats():
 # ---------------------------
 @app.route('/api/user/favorites', methods=['GET'])
 @login_required
-def get_user_favorites():
-    # This would query a favorites table when implemented
-    return jsonify([])
+def get_user_favorites_api():
+    """API endpoint to get a user's favorite posts with optional tag filtering"""
+    try:
+        user_id = session['user_id']
+        tag_filter = request.args.get('tag', None)
+        
+        # Query to get all favorites for the current user
+        query = (Favorite
+                .select(Favorite, Post)
+                .join(Post)
+                .where(Favorite.user == user_id)
+                .order_by(Favorite.created_at.desc()))
+        
+        # Apply tag filtering if specified
+        if tag_filter:
+            query = query.where(Post.tags.contains(tag_filter))
+        
+        favorites = []
+        for fav in query:
+            favorites.append({
+                'id': fav.post.id,
+                'title': fav.post.title,
+                'tags': fav.post.tags.split(','),
+                'category': fav.post.category,
+                'created_at': fav.post.created_at.strftime('%B %d, %Y'),
+                'favorited_at': fav.created_at.strftime('%B %d, %Y'),
+                'excerpt': fav.post.content[:200] + '...' if len(fav.post.content) > 200 else fav.post.content
+            })
+        
+        return jsonify(favorites)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/favorites')
+@login_required
+def favorites_page():
+    """Render the favorites page"""
+    try:
+        user_id = session['user_id']
+        user = User.get_by_id(user_id)
+        
+        # Get all unique tags from user's favorited posts for the filter dropdown
+        tag_query = (Post
+                    .select(Post.tags)
+                    .join(Favorite)
+                    .where(Favorite.user == user_id)
+                    .distinct())
+        
+        all_tags = set()
+        for post in tag_query:
+            post_tags = post.tags.split(',')
+            for tag in post_tags:
+                if tag.strip():  # Only add non-empty tags
+                    all_tags.add(tag.strip())
+        
+        # Sort tags alphabetically
+        all_tags = sorted(list(all_tags))
+        
+        # Get the selected tag filter from query parameters
+        selected_tag = request.args.get('tag', None)
+        
+        return render_template('favorites.html', 
+                              user=user, 
+                              all_tags=all_tags,
+                              selected_tag=selected_tag)
+    except DoesNotExist:
+        session.clear()
+        return redirect('/login')
+    except Exception as e:
+        return render_template('404.html'), 404
 
 
 @app.route('/api/user/contributions', methods=['GET'])
@@ -372,9 +522,54 @@ def get_user_contributions():
 
 @app.route('/api/stacks/<int:stack_id>/favorite', methods=['POST'])
 @login_required
-def toggle_favorite(stack_id):
+def toggle_stack_favorite(stack_id):
     # Implementation for favoriting/unfavoriting stacks
-    return jsonify({'message': 'Favorite toggled'})
+    return jsonify({'message': 'Stack favorite toggled'})
+
+
+@app.route('/api/posts/<int:post_id>/favorite', methods=['POST'])
+@login_required
+def toggle_post_favorite(post_id):
+    """Toggle favorite status for a post"""
+    try:
+        # Get the current user
+        user_id = session['user_id']
+        
+        # Check if the post exists
+        post = Post.get_or_none(Post.id == post_id)
+        if not post:
+            return jsonify({'error': 'Post not found'}), 404
+        
+        # Check if the post is already favorited by this user
+        favorite = Favorite.get_or_none(
+            (Favorite.user == user_id) & 
+            (Favorite.post == post_id)
+        )
+        
+        if favorite:
+            # If already favorited, remove the favorite
+            favorite.delete_instance()
+            return jsonify({
+                'success': True, 
+                'favorited': False,
+                'message': 'Post removed from favorites'
+            })
+        else:
+            # If not favorited, add it to favorites
+            Favorite.create(
+                user=user_id,
+                post=post_id
+            )
+            return jsonify({
+                'success': True, 
+                'favorited': True,
+                'message': 'Post added to favorites'
+            })
+            
+    except DoesNotExist:
+        return jsonify({'error': 'Post not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/post/<int:post_id>')
@@ -386,10 +581,14 @@ def view_post(post_id):
 
     return render_template(
         'post.html',
+        post_id=post.id,
         title=post.title,
         tags=post.tags.split(','),
         content=post.content,
-        created_at=post.created_at.strftime('%B %d, %Y %I:%M%p EST')
+        created_at=post.created_at.strftime('%B %d, %Y %I:%M%p EST'),
+        author_user=post.author,
+        is_author=(post.author == session['user_id']),
+        is_admin=session.get('is_admin', False)
     )
 
 # GET all posts
@@ -559,6 +758,86 @@ def update_user_role(user_id):
     except Exception as e:
         return redirect(f'/admin?error={str(e)}')
 
+@app.route('/community')
+@cache.cached(timeout=300, query_string=True)
+def community():
+    """Render the community page with filterable posts feed"""
+    try:
+        # Get query parameters
+        page = int(request.args.get('page', 1))
+        selected_tag = request.args.get('tag')
+        per_page = 10
+
+        # Base query for posts
+        query = Post.select().order_by(Post.created_at.desc())
+
+        # Apply tag filter if specified
+        if selected_tag:
+            query = query.where(Post.tags.contains(selected_tag))
+
+        # Get total count for pagination
+        total_posts = query.count()
+        total_pages = (total_posts + per_page - 1) // per_page
+
+        # Apply pagination
+        posts = query.paginate(page, per_page)
+
+        # Get all unique tags for filter dropdown
+        tag_query = Post.select(Post.tags).distinct()
+        all_tags = set()
+        for post in tag_query:
+            post_tags = post.tags.split(',')
+            for tag in post_tags:
+                if tag.strip():
+                    all_tags.add(tag.strip())
+
+        return render_template('community.html',
+                               posts=posts,
+                               all_tags=sorted(list(all_tags)),
+                               selected_tag=selected_tag,
+                               current_page=page,
+                               total_pages=total_pages)
+    except Exception as e:
+        return render_template('404.html'), 404
+
+
+@app.route('/favorites')
+@login_required
+def favorites():
+    """Render the favorites page"""
+    try:
+        user_id = session['user_id']
+        user = User.get_by_id(user_id)
+
+        # Get all unique tags from user's favorited posts for the filter dropdown
+        tag_query = (Post
+                     .select(Post.tags)
+                     .join(Favorite)
+                     .where(Favorite.user == user_id)
+                     .distinct())
+
+        all_tags = set()
+        for post in tag_query:
+            post_tags = post.tags.split(',')
+            for tag in post_tags:
+                if tag.strip():  # Only add non-empty tags
+                    all_tags.add(tag.strip())
+
+        # Sort tags alphabetically
+        all_tags = sorted(list(all_tags))
+
+        # Get the selected tag filter from query parameters
+        selected_tag = request.args.get('tag', None)
+
+        return render_template('favorites.html',
+                               user=user,
+                               all_tags=all_tags,
+                               selected_tag=selected_tag)
+    except DoesNotExist:
+        session.clear()
+        return redirect('/login')
+    except Exception as e:
+        return render_template('404.html'), 404
 
 
 # ---------------------------
@@ -566,6 +845,6 @@ def update_user_role(user_id):
 # ---------------------------
 if __name__ == '__main__':
     db.connect()
-    db.create_tables([User, Stack, Post])
+    db.create_tables([User, Stack, Post, Favorite])
     app.run(debug=True, port=5000)
 

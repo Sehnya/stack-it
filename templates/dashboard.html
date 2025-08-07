@@ -46,7 +46,10 @@
 <article class="info-post">
   <div class="post-header">
     <div class="meta">
-      <span class="author">by {{ session['username'] }}</span>
+      <span class="author" style="display:flex; align-items:center; gap:8px;">
+              <img src="{{ avatar_url(post.author) }}" alt="avatar" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">
+              <span>by {{ post.author.username }}</span>
+            </span>
       <span class="timestamp">{{ post.created_at.strftime('%b %d, %Y') }}</span>
     </div>
     <h2 class="title">
@@ -65,9 +68,18 @@
       <span class="tag">#{{ tag }}</span>
     {% endfor %}
   </div>
+  <div class="post-actions" style="display: flex; flex-direction: row; justify-content: space-between; margin-top: 10px;">
+    <!-- Favorite button -->
+    <button class="favorite-btn" data-post-id="{{ post.id }}" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; color: white;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="favorite-icon" viewBox="0 0 16 16">
+        <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+      </svg>
+      <span class="favorite-text" style="margin-left: 5px;">Add to Favorites</span>
+    </button>
+  </div>
 <div class="post-menu-container" style="display: flex; flex-direction: row; position: relative; width: 100%; justify-content: flex-end;">
     <div class="post-menu-wrapper" style="position: relative;">
-        <a href="#" class="post-menu-toggle" data-post-id="{{ post.id }}">
+        <a href=postMenuToggle class="post-menu-toggle" data-post-id="{{ post.id }}">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-three-dots" viewBox="0 0 16 16">
                 <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
             </svg>
@@ -135,40 +147,100 @@
   }
 
   // Toggle user dropdown menu
-  const toggle = document.getElementById('user-menu-toggle');
-  const dropdown = document.getElementById('user-dropdown');
-
-  toggle.addEventListener('click', function (e) {
-    e.stopPropagation();
-    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-  });
-
-  // Hide menu when clicking elsewhere
-  document.addEventListener('click', function () {
-    dropdown.style.display = 'none';
-
-    // Hide all post dropdowns when clicking elsewhere
-    document.querySelectorAll('.post-dropdown').forEach(function(menu) {
-      menu.style.display = 'none';
-    });
-  });
-
-  // Toggle post dropdown menus
-  document.querySelectorAll('.post-menu-toggle').forEach(function(toggle) {
+  const postMenuToggles = document.querySelectorAll('.post-menu-toggle');
+  postMenuToggles.forEach(function(toggle) {
     toggle.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
 
-      // Hide all other post dropdowns first
-      document.querySelectorAll('.post-dropdown').forEach(function(menu) {
-        menu.style.display = 'none';
-      });
-
-      // Toggle this dropdown
       const dropdown = this.nextElementSibling;
       dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
     });
   });
+
+  // Close dropdown when clicking elsewhere
+  document.addEventListener('click', function() {
+    const dropdowns = document.querySelectorAll('.post-dropdown');
+    dropdowns.forEach(function(dropdown) {
+      dropdown.style.display = 'none';
+    });
+  });
+  
+  // Favorite button functionality
+  const favoriteButtons = document.querySelectorAll('.favorite-btn');
+  
+  // Load all favorites to check status
+  loadFavorites();
+  
+  // Add click event to all favorite buttons
+  favoriteButtons.forEach(function(button) {
+    button.addEventListener('click', function() {
+      const postId = this.getAttribute('data-post-id');
+      toggleFavorite(postId, this);
+    });
+  });
+  
+  // Function to load all favorites and update buttons
+  function loadFavorites() {
+    fetch('/api/user/favorites')
+      .then(response => response.json())
+      .then(favorites => {
+        // Create a map of favorited post IDs for quick lookup
+        const favoritedPosts = new Set(favorites.map(fav => fav.id));
+        
+        // Update all favorite buttons based on status
+        favoriteButtons.forEach(function(button) {
+          const postId = button.getAttribute('data-post-id');
+          const isFavorited = favoritedPosts.has(parseInt(postId));
+          updateFavoriteButton(button, isFavorited);
+        });
+      })
+      .catch(error => {
+        console.error('Error loading favorites:', error);
+      });
+  }
+  
+  // Function to toggle favorite status
+  function toggleFavorite(postId, button) {
+    fetch(`/api/posts/${postId}/favorite`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update button appearance based on new favorite status
+        updateFavoriteButton(button, data.favorited);
+      } else {
+        console.error('Error toggling favorite:', data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error toggling favorite:', error);
+    });
+  }
+  
+  // Function to update the favorite button appearance
+  function updateFavoriteButton(button, isFavorited) {
+    const icon = button.querySelector('.favorite-icon');
+    const text = button.querySelector('.favorite-text');
+    
+    if (isFavorited) {
+      // Change to filled heart
+      icon.innerHTML = '<path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>';
+      icon.setAttribute('fill', '#ff5722');
+      text.textContent = 'Remove from Favorites';
+      button.style.color = '#ff5722';
+    } else {
+      // Change to outline heart
+      icon.innerHTML = '<path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>';
+      icon.setAttribute('fill', 'currentColor');
+      text.textContent = 'Add to Favorites';
+      button.style.color = 'white';
+    }
+  }
 </script>
 </body>
 

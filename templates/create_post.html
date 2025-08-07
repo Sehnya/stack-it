@@ -339,8 +339,8 @@
                                 <!-- Text Color Dropdown -->
                                 <div id="textColorDropdown" class="z-10 hidden w-48 rounded-sm bg-white p-2 shadow-sm dark:bg-gray-700">
                                     <div class="grid grid-cols-6 gap-2 group mb-3 items-center p-1.5 rounded-sm hover:bg-gray-100 dark:hover:bg-gray-600">
-                                        <input type="color" id="color-picker" value="#e66465" class="border border-gray-200 border-solid w-full h-8 rounded-sm cursor-pointer disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-700 dark:border-gray-600" title="Choose your color">
-                                        <label for="color-picker" class="col-span-5 text-gray-500 text-sm font-medium cursor-pointer dark:text-gray-400">Pick a color</label>
+                                        <input type="color" id="color-picker" value="#e66465" class="col-span-2 border border-gray-200 border-solid w-full h-10 rounded-sm cursor-pointer disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-700 dark:border-gray-600" title="Choose your color">
+                                        <label for="color-picker" class="col-span-4 text-gray-500 text-sm font-medium cursor-pointer dark:text-gray-400">Pick a color</label>
                                     </div>
                                     <div class="grid grid-cols-6 gap-1 mb-3">
                                         <button type="button" data-hex-color="#1F2937" style="background-color: #1F2937" class="w-6 h-6 rounded-sm"></button>
@@ -370,8 +370,8 @@
                                 <!-- Background Color Dropdown -->
                                 <div id="backgroundColorDropdown" class="z-10 hidden w-48 rounded-sm bg-white p-2 shadow-sm dark:bg-gray-700">
                                     <div class="grid grid-cols-6 gap-2 group mb-3 items-center p-1.5 rounded-sm hover:bg-gray-100 dark:hover:bg-gray-600">
-                                        <input type="color" id="bg-color-picker" value="#ffff00" class="border border-gray-200 border-solid w-full h-8 rounded-sm cursor-pointer disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-700 dark:border-gray-600" title="Choose background color">
-                                        <label for="bg-color-picker" class="col-span-5 text-gray-500 text-sm font-medium cursor-pointer dark:text-gray-400">Pick background</label>
+                                        <input type="color" id="bg-color-picker" value="#ffff00" class="col-span-2 border border-gray-200 border-solid w-full h-10 rounded-sm cursor-pointer disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-700 dark:border-gray-600" title="Choose background color">
+                                        <label for="bg-color-picker" class="col-span-4 text-gray-500 text-sm font-medium cursor-pointer dark:text-gray-400">Pick background</label>
                                     </div>
                                     <div class="grid grid-cols-6 gap-1 mb-3">
                                         <button type="button" data-bg-color="#FFFF00" style="background-color: #FFFF00" class="w-6 h-6 rounded-sm border border-gray-300"></button>
@@ -418,18 +418,52 @@
 
                     <!-- Editor Content Area -->
                     <div class="px-4 py-3 bg-white rounded-b-lg dark:bg-gray-800">
-                        <div id="wysiwyg-example" class="block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400" style="min-height: 200px; outline: none;" contenteditable="true" data-placeholder="Write your post content here..." {% if edit_mode %}data-content="{{ post.body|safe }}"{% endif %}></div>
+                        <div id="wysiwyg-example" class="editor-content block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400" style="min-height: 200px; outline: none;" contenteditable="true" data-placeholder="Write your post content here..." {% if edit_mode %}data-content="{{ post.body|safe }}"{% endif %}></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Submit Button -->
-            <div class="flex justify-end">
-                <button type="submit" class="px-6 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+            <!-- Actions -->
+            <div class="flex justify-end gap-2">
+                <button type="button" id="openPreview" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Preview</button>
+                <button type="submit" id="directSubmit" class="px-6 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
                     {% if edit_mode %}Update Post{% else %}Create Post{% endif %}
                 </button>
             </div>
         </form>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto h-[100vh] bg-black/60">
+        <div class="relative w-full max-w-3xl mx-auto mt-10">
+            <div class="relative bg-white rounded-lg shadow dark:bg-gray-800">
+                <div class="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Post Preview</h3>
+                    <button type="button" id="closePreview" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Title</div>
+                        <div id="previewTitle" class="text-2xl font-semibold text-gray-900 dark:text-white"></div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Summary</div>
+                        <div id="previewSummary" class="text-gray-800 dark:text-gray-200"></div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Body</div>
+                        <div id="previewBody" class="editor-content text-gray-900 dark:text-gray-100"></div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 p-4 border-t border-gray-200 rounded-b dark:border-gray-700">
+                    <button id="backToEdit" type="button" class="px-5 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Back to edit</button>
+                    <button id="confirmSubmit" type="button" class="px-6 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500">Confirm submit</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript for Rich Text Editor and User Menu -->
@@ -438,6 +472,14 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize all dropdowns
         const dropdownButtons = document.querySelectorAll('[data-dropdown-toggle]');
+
+        // Ensure table grid is (re)built whenever the table dropdown opens
+        const tableBtn = document.getElementById('tableButton');
+        if (tableBtn) {
+            tableBtn.addEventListener('click', function() {
+                setTimeout(createTableGrid, 0);
+            });
+        }
         dropdownButtons.forEach(button => {
             const dropdownId = button.getAttribute('data-dropdown-toggle');
             const dropdown = document.getElementById(dropdownId);
@@ -543,7 +585,9 @@
         if (e.target.hasAttribute('data-format')) {
             e.preventDefault();
             const format = e.target.getAttribute('data-format');
-            execCommand('formatBlock', format);
+            // Normalize for better cross-browser behavior
+            const block = format === 'p' ? 'P' : format.toUpperCase();
+            execCommand('formatBlock', block);
             // Close the dropdown
             document.getElementById('formatDropdown').classList.add('hidden');
         }
@@ -925,7 +969,53 @@
         }
     });
 
-    // Form submission handler
+    // Preview modal logic
+    const previewModal = document.getElementById('previewModal');
+    const openPreviewBtn = document.getElementById('openPreview');
+    const closePreviewBtn = document.getElementById('closePreview');
+    const backToEditBtn = document.getElementById('backToEdit');
+    const confirmSubmitBtn = document.getElementById('confirmSubmit');
+
+    function showPreview() {
+        // Sync editor content to hidden textarea
+        hiddenTextarea.value = editor.innerHTML;
+        // Populate preview fields
+        const titleEl = document.getElementById('title');
+        const summaryEl = document.getElementById('summary');
+        document.getElementById('previewTitle').textContent = (titleEl?.value || '').trim();
+        document.getElementById('previewSummary').textContent = (summaryEl?.value || '').trim();
+        document.getElementById('previewBody').innerHTML = editor.innerHTML;
+        // Show modal
+        previewModal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function hidePreview() {
+        previewModal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    if (openPreviewBtn) {
+        openPreviewBtn.addEventListener('click', function() {
+            // Basic validation before preview
+            if (editor.innerHTML.trim() === '' || editor.innerHTML.trim() === '<br>') {
+                alert('Please enter some content for your post before previewing.');
+                return;
+            }
+            showPreview();
+        });
+    }
+    if (closePreviewBtn) closePreviewBtn.addEventListener('click', hidePreview);
+    if (backToEditBtn) backToEditBtn.addEventListener('click', hidePreview);
+    if (confirmSubmitBtn) {
+        confirmSubmitBtn.addEventListener('click', function() {
+            // Ensure content is synced and submit the form
+            hiddenTextarea.value = editor.innerHTML;
+            document.querySelector('form').submit();
+        });
+    }
+
+    // Form submission handler (direct submit still supported)
     document.querySelector('form').addEventListener('submit', function(e) {
         // Ensure the hidden textarea has the latest content
         hiddenTextarea.value = editor.innerHTML;
@@ -967,7 +1057,7 @@
         editor.setAttribute('data-placeholder', 'Write your post content here...');
     }
 
-    // CSS for placeholder
+    // CSS for placeholder + editor content styling
     const style = document.createElement('style');
     style.textContent = `
         [contenteditable][data-placeholder]:empty::before {
@@ -979,6 +1069,22 @@
         [contenteditable][data-placeholder]:empty:focus::before {
             content: "";
         }
+
+        /* Ensure lists and headings render inside editor and preview */
+        .editor-content ul { list-style: disc; margin: 0.5rem 0 0.5rem 1.25rem; }
+        .editor-content ol { list-style: decimal; margin: 0.5rem 0 0.5rem 1.25rem; }
+        .editor-content li { margin: 0.25rem 0; }
+        .editor-content h1 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+        .editor-content h2 { font-size: 1.5rem; line-height: 2rem; font-weight: 600; margin: 0.875rem 0 0.5rem; }
+        .editor-content h3 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; margin: 0.75rem 0 0.5rem; }
+        .editor-content h4 { font-size: 1.125rem; line-height: 1.5rem; font-weight: 600; margin: 0.75rem 0 0.5rem; }
+        .editor-content h5 { font-size: 1rem; line-height: 1.5rem; font-weight: 600; margin: 0.5rem 0 0.25rem; }
+        .editor-content h6 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; margin: 0.5rem 0 0.25rem; }
+        .editor-content p { margin: 0.5rem 0; }
+        .editor-content table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
+        .editor-content th, .editor-content td { border: 1px solid #e5e7eb; padding: 0.5rem; }
+        .editor-content code { background-color: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        .editor-content pre { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 12px; overflow: auto; }
 
         /* Dropdown positioning */
         [data-dropdown-toggle] + div {

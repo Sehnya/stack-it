@@ -21,19 +21,56 @@
 {% include '_navbar.html' %}
 <div class="main-header" style="width: 100%; height: 90px; background-color: rgba(5,7,8,0.86); border-bottom: #050708 solid 1px; padding: 23px; display: flex; flex-direction: row;">
  <div style="width: 50%; height: inherit; display: flex; flex-direction: column; font-weight: lighter; color: white; align-content: center; position: relative">
-    <div class="post-title-container" style="display: flex; flex-direction: row;  position: relative">
-     <h4 style="color: white; font-weight: lighter;">{{ title }}</h4>
-        <div class="tags-container" style="display: flex; flex-direction: row; margin-left: 18px; position: relative; justify-content: space-between ">
-            <div class="post-tags" >
-                {% for tag in tags %}
-                	<span class="tag">#{{ tag }}</span>
-                {% endfor %}
-
-  </div>
-
+    <div class="post-title-container" style="display: flex; flex-direction: row; position: relative; justify-content: space-between; width: 100%; align-items: center;">
+        <div style="display: flex; flex-direction: column;">
+            <h4 style="color: white; font-weight: lighter;">{{ title }}</h4>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="position:relative; display:inline-block;">
+                <img src="{{ avatar_url(author_user) }}" alt="avatar" style="width:22px;height:22px;border-radius:50%;object-fit:cover;">
+                {% if is_online(author_user) %}
+                <span title="Online" style="position:absolute; bottom:-1px; right:-1px; width:8px; height:8px; background:#22c55e; border:2px solid #1b1f23; border-radius:50%; display:inline-block;"></span>
+                {% endif %}
+              </div>
+              <p style="font-size: 12px; margin:0;">by {{ author_user.username }} • {{ created_at }}</p>
+            </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: row; gap: 15px; align-items: center;">
+            <!-- Favorite button -->
+            <button id="favorite-button" class="favorite-btn" data-post-id="{{ post_id }}" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; color: white;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16" id="favorite-icon">
+                    <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                </svg>
+                <span id="favorite-text" style="margin-left: 5px;">Add to Favorites</span>
+            </button>
+            
+            {% if is_author or is_admin %}
+            <!-- Three-dot menu for post actions -->
+            <div class="post-menu-container" style="display: flex; flex-direction: row; position: relative; align-self: flex-start;">
+                <div class="post-menu-wrapper" style="position: relative;">
+                    <a href="#" class="post-menu-toggle" data-post-id="{{ post_id }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-three-dots" viewBox="0 0 16 16">
+                            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                        </svg>
+                    </a>
+                    <!-- Post dropdown menu -->
+                    <div class="post-dropdown" style="display: none; position: absolute; top: 25px; right: 0; background-color: #121212; border: 1px solid #333; border-radius: 6px; min-width: 120px; z-index: 999;">
+                        <a href="/edit-post/{{ post_id }}" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Edit Post</a>
+                        <a href="/delete-post/{{ post_id }}" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Delete Post</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
-    <p style="font-size: 12px; ">{{ created_at }}</p>
+    
+    <div class="tags-container" style="display: flex; flex-direction: row; margin-top: 10px; position: relative;">
+        <div class="post-tags">
+            {% for tag in tags %}
+                <span class="tag">#{{ tag }}</span>
+            {% endfor %}
+        </div>
+    </div>
  </div>
 
     </div>
@@ -55,6 +92,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+  // Sidebar navigation links
   const sideNav = document.querySelector(".post-sidenav");
   const sideNavLinks = document.createElement("nav");
   sideNavLinks.classList.add("sidenav-links");
@@ -76,6 +114,96 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   sideNav.appendChild(sideNavLinks);
+  
+  // Three-dot dropdown menu functionality
+  const postMenuToggle = document.querySelector('.post-menu-toggle');
+  if (postMenuToggle) {
+    postMenuToggle.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const dropdown = this.nextElementSibling;
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    // Close dropdown when clicking elsewhere
+    document.addEventListener('click', function() {
+      const dropdown = document.querySelector('.post-dropdown');
+      if (dropdown) {
+        dropdown.style.display = 'none';
+      }
+    });
+  }
+  
+  // Favorite button functionality
+  const favoriteButton = document.getElementById('favorite-button');
+  const favoriteIcon = document.getElementById('favorite-icon');
+  const favoriteText = document.getElementById('favorite-text');
+  
+  if (favoriteButton) {
+    const postId = favoriteButton.getAttribute('data-post-id');
+    
+    // Check if post is already favorited
+    checkFavoriteStatus(postId);
+    
+    // Add click event to toggle favorite
+    favoriteButton.addEventListener('click', function() {
+      toggleFavorite(postId);
+    });
+  }
+  
+  // Function to check if post is already favorited
+  function checkFavoriteStatus(postId) {
+    fetch(`/api/user/favorites`)
+      .then(response => response.json())
+      .then(favorites => {
+        // Check if this post is in the user's favorites
+        const isFavorited = favorites.some(fav => fav.id == postId);
+        updateFavoriteButton(isFavorited);
+      })
+      .catch(error => {
+        console.error('Error checking favorite status:', error);
+      });
+  }
+  
+  // Function to toggle favorite status
+  function toggleFavorite(postId) {
+    fetch(`/api/posts/${postId}/favorite`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update button appearance based on new favorite status
+        updateFavoriteButton(data.favorited);
+      } else {
+        console.error('Error toggling favorite:', data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error toggling favorite:', error);
+    });
+  }
+  
+  // Function to update the favorite button appearance
+  function updateFavoriteButton(isFavorited) {
+    if (isFavorited) {
+      // Change to filled heart
+      favoriteIcon.innerHTML = '<path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>';
+      favoriteIcon.setAttribute('fill', '#ff5722');
+      favoriteText.textContent = 'Remove from Favorites';
+      favoriteButton.style.color = '#ff5722';
+    } else {
+      // Change to outline heart
+      favoriteIcon.innerHTML = '<path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>';
+      favoriteIcon.setAttribute('fill', 'currentColor');
+      favoriteText.textContent = 'Add to Favorites';
+      favoriteButton.style.color = 'white';
+    }
+  }
 });
 </script>
 </body>

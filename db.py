@@ -141,10 +141,24 @@ class User(BaseModel):
     email = CharField(unique=True)
     password = CharField()
     role = CharField(default='user')  # Possible values: 'user', 'admin'
+    # Profile photo relative URL under static/ (e.g., '/static/uploads/abc.png')
+    profile_photo = CharField(null=True)
+    # Last time the user made a request; used for online status indicator
+    last_seen = DateTimeField(null=True)
     
     def is_admin(self):
         """Check if the user has admin role"""
         return self.role == 'admin'
+    
+    @property
+    def is_online(self):
+        """User is online if active within last 5 minutes"""
+        try:
+            if not self.last_seen:
+                return False
+            return (datetime.now() - self.last_seen).total_seconds() <= 300
+        except Exception:
+            return False
 
 class Stack(BaseModel):
     name = CharField()
@@ -172,6 +186,42 @@ class Post(BaseModel):
         return self.body
 
 
+class Favorite(BaseModel):
+    """Model to store user favorites"""
+    user = ForeignKeyField(User, backref='favorites', on_delete='CASCADE')
+    post = ForeignKeyField(Post, backref='favorited_by', on_delete='CASCADE')
+    created_at = DateTimeField(default=datetime.now)
+    
+    class Meta:
+        # Ensure a user can only favorite a post once
+        indexes = (
+            (('user', 'post'), True),  # Unique index on user and post
+        )
+
+
+# ✅ Lightweight schema guard to add new columns if missing
+def ensure_schema():
+    try:
+        if db.is_closed():
+            db.connect()
+        # Ensure tables exist first
+        db.create_tables([User, Stack, Post, Favorite])
+        # Add missing columns to user table if they don't exist
+        user_table = User._meta.table_name
+        # Quote table name to handle reserved words (e.g., user)
+        qt = f'"{user_table}"'
+        db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS profile_photo VARCHAR NULL;')
+        db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP NULL;')
+    except Exception as e:
+        # Do not crash app on migration issues; logs could be added here if needed
+        pass
+    finally:
+        if not db.is_closed():
+            db.close()
+
+# Invoke schema guard on import so the app can query safely
+ensure_schema()
+
 # ✅ Connect and create the tables only when running db.py directly
 
 if __name__ == "__main__":
@@ -180,7 +230,7 @@ if __name__ == "__main__":
     
     try:
         db.connect()
-        db.create_tables([User, Stack, Post])
+        db.create_tables([User, Stack, Post, Favorite])
         print(" Connected and tables created.")
     except Exception as e:
         print(" Database connection failed:", e)
