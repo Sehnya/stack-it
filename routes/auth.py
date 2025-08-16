@@ -68,8 +68,22 @@ def login():
 
         try:
             user = User.get(User.email == email)
-            # Use secure password checking
-            if check_password_hash(user.password, password):
+            # Use secure password checking with legacy plaintext fallback
+            password_ok = False
+            try:
+                password_ok = check_password_hash(user.password, password)
+            except ValueError:
+                # Legacy plaintext password detected; compare directly and upgrade to hashed
+                if user.password == password:
+                    password_ok = True
+                    try:
+                        user.password = generate_password_hash(password)
+                        user.save()
+                    except Exception:
+                        # If hashing fails, still allow login but do not crash
+                        pass
+
+            if password_ok:
                 # Set session
                 session['user_id'] = user.id
                 session['username'] = user.username

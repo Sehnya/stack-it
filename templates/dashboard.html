@@ -34,7 +34,7 @@
                 </svg>
                 <span class="sr-only">Light bulb</span>
             </span>
-            <span>Welcome, <strong>{{ session['username'] }}</strong>! Start with our <a href="{{ url_for('view_doc', doc_id=get_started_doc_id) }}" class="inline font-medium text-blue-600 underline dark:text-blue-400 hover:no-underline">Get Started Guide</a>.</span>
+            <span>Welcome, <strong>{{ session['username'] }}</strong>! Start with our <a href="{{ url_for('docs.view_doc', doc_id=get_started_doc_id) }}" class="inline font-medium text-blue-600 underline dark:text-blue-400 hover:no-underline">Get Started Guide</a>.</span>
         </p>
     </div>
     <div class="flex items-center">
@@ -83,14 +83,14 @@
       <span class="timestamp">{{ post.created_at.strftime('%b %d, %Y') }}</span>
     </div>
     <h2 class="title">
-      <a href="{{ url_for('view_post', post_id=post.id) }}" style="text-decoration: none; color: inherit;">
+      <a href="{{ url_for('posts.view_post', post_id=post.id) }}" style="text-decoration: none; color: inherit;">
         {{ post.title }}
       </a>
     </h2>
   </div>
 
   <div class="post-content">
-    <p>{{ (post.content|truncate(200, true, "..."))|safe }}</p>
+    <p>{{ (post.body|truncate(200, true, "..."))|safe }}</p>
   </div>
 
   <div class="post-tags">
@@ -109,7 +109,7 @@
   </div>
 <div class="post-menu-container" style="display: flex; flex-direction: row; position: relative; width: 100%; justify-content: flex-end;">
     <div class="post-menu-wrapper" style="position: relative;">
-        <a href=postMenuToggle class="post-menu-toggle" data-post-id="{{ post.id }}">
+        <a href="#" class="post-menu-toggle" data-post-id="{{ post.id }}">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-three-dots" viewBox="0 0 16 16">
                 <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
             </svg>
@@ -149,7 +149,7 @@
 <p>Documentation and guides for getting the most out of Stack-it.</p>
         <div class="container" style="display:flex; gap: 12px;">
             {% if get_started_doc_id %}
-            <a href="{{ url_for('view_doc', doc_id=get_started_doc_id) }}" style="text-decoration:none;" class="inline-flex shadow-md shadow-orange-400/50 justify-center items-center py-2 px-4 text-sm font-medium text-center text-orange-900 rounded-lg bg-orange-300 hover:bg-orange-900 hover:text-white focus:ring-4 focus:ring-black">
+            <a href="{{ url_for('docs.view_doc', doc_id=get_started_doc_id) }}" style="text-decoration:none;" class="inline-flex shadow-md shadow-orange-400/50 justify-center items-center py-2 px-4 text-sm font-medium text-center text-orange-900 rounded-lg bg-orange-300 hover:bg-orange-900 hover:text-white focus:ring-4 focus:ring-black">
                 Open Get Started Guide
                 <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
