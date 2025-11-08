@@ -45,6 +45,7 @@ body {
     flex-direction: row;
     font-size: 12px;
     justify-content: space-between;
+    z-index: 1000;
 }
 
 .img-container {
@@ -104,14 +105,12 @@ body {
     flex-direction: row;
     align-items: center;
     position: relative;
-    width: 150px;
-    border-radius: 30px;
+    width: auto;
     right: 40px;
-    border: white solid 1px;
-    height: 80%;
+    height: auto;
     align-self: center;
-    justify-content: space-around;
-    padding: 5px;
+    justify-content: center;
+    padding: 8px;
 
 }
 

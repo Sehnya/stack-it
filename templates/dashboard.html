@@ -38,13 +38,26 @@
         color: rgba(255, 255, 255, 0.6);
         border-bottom: 2px solid transparent;
         transition: all 0.2s;
+        outline: none;
+        background: transparent;
+        border-top: none;
+        border-left: none;
+        border-right: none;
     }
     .tab-trigger:hover {
         color: rgba(255, 255, 255, 0.9);
+        border-bottom-color: #f97316;
+    }
+    .tab-trigger:focus {
+        outline: none;
     }
     .tab-trigger.active {
-        color: #fff;
-        border-bottom-color: #f97316;
+        color: #fff !important;
+        border-bottom-color: #f97316 !important;
+    }
+    .tab-trigger.active:focus {
+        color: #fff !important;
+        border-bottom-color: #f97316 !important;
     }
     .badge-shadcn {
         display: inline-flex;
@@ -82,7 +95,7 @@
 
 
 {% if get_started_doc_id %}
-<div id="sticky-banner" tabindex="-1" class="fixed top-0 start-0 z-50 flex justify-between w-full p-4 border-b border-gray-700 bg-gray-900 backdrop-blur-md">
+<div id="sticky-banner" tabindex="-1" class="fixed start-0 z-[999] flex justify-between w-full p-4 border-b border-gray-700 bg-gray-900 backdrop-blur-md" style="top: 45px;">
     <div class="flex items-center mx-auto">
         <p class="flex items-center text-sm font-normal text-gray-300">
             <span class="inline-flex p-1 me-3 bg-orange-500/20 rounded-full w-6 h-6 items-center justify-center shrink-0">
@@ -213,7 +226,7 @@
 
 
     <!-- Backend Tab -->
-    <div id="Paris" class="tabcontent hidden w-full">
+    <div id="Paris" class="tabcontent w-full" style="display: none;">
         <div class="max-w-7xl mx-auto px-8 py-8">
             <div class="mb-8">
                 <h2 class="text-2xl font-semibold text-white mb-2">Backend</h2>
@@ -227,7 +240,7 @@
     </div>
 
     <!-- Docs Tab -->
-    <div id="Tokyo" class="tabcontent hidden w-full">
+    <div id="Tokyo" class="tabcontent w-full" style="display: none;">
         <div class="max-w-7xl mx-auto px-8 py-8">
             <div class="mb-8">
                 <h2 class="text-2xl font-semibold text-white mb-2">Documentation</h2>
@@ -255,6 +268,11 @@
 
 <script>
   function openCity(evt, cityName) {
+    if (evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
+    }
+
     // Hide all tab contents
     const tabcontents = document.getElementsByClassName("tabcontent");
     for (let i = 0; i < tabcontents.length; i++) {
@@ -268,8 +286,14 @@
     }
 
     // Show the current tab and add active class
-    document.getElementById(cityName).style.display = "block";
-    evt.currentTarget.classList.add("active");
+    const targetTab = document.getElementById(cityName);
+    if (targetTab) {
+      targetTab.style.display = "block";
+    }
+
+    if (evt && evt.currentTarget) {
+      evt.currentTarget.classList.add("active");
+    }
   }
 
 
