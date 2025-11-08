@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Viewer - Stack It</title>
+    <link href="../static/css/styles.css" rel="stylesheet"/>
+    <link rel="icon" type="image/png" href="../static/images/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="../static/images/favicon.svg" />
+    <link rel="shortcut icon" href="../static/images/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../static/images/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Stack-it.dev" />
+    <link rel="manifest" href="../static/images/site.webmanifest" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLuTusPj697FH4R/5mcr" crossorigin="anonymous"></script>
+    <style>
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        .db-table th, .db-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+            word-wrap: break-word;
+            max-width: 300px;
+        }
+        .db-table th {
+            background-color: rgba(5,7,8,0.86);
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        .db-table tr:hover {
+            background-color: rgba(5,7,8,0.4);
+        }
+        .table-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .table-tab {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        .table-tab:hover {
+            background-color: #444;
+            color: white;
+        }
+        .table-tab.active {
+            background-color: #ff5722;
+        }
+        .table-count {
+            background-color: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+        .pagination {
+            display: flex;
+            gap: 5px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .page-link {
+            background-color: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        .page-link:hover {
+            background-color: #444;
+            color: white;
+        }
+        .page-link.active {
+            background-color: #ff5722;
+        }
+        .query-section {
+            background-color: rgba(5,7,8,0.5);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .query-input {
+            width: 100%;
+            background-color: #121212;
+            color: white;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            min-height: 80px;
+        }
+        .query-btn {
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .query-btn:hover {
+            background-color: #e64a19;
+        }
+        .query-results {
+            margin-top: 20px;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #81C784;
+        }
+        .alert-danger {
+            background-color: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #E57373;
+        }
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    {% include '_navbar.html' %}
+
+    <div class="main-header" style="width: 100%; height: 90px; background-color: rgba(5,7,8,0.86); border-bottom: #050708 solid 1px; padding: 23px; display: flex; flex-direction: row;">
+        <div style="width: 50%; height: inherit; display: flex; flex-direction: column">
+            <h4 style="color: white; font-weight: lighter;">Database Viewer</h4>
+            <p style="color: #999; font-size: 12px; margin: 0;">Local Development Only - SQLite</p>
+        </div>
+    </div>
+
+    <div class="main-body" style="position: relative; min-height: 100vh; width:100%; display: flex; flex-direction: column; padding: 20px; font-weight: lighter; overflow:clip; background-color: rgba(5,7,8,0.59); color: white;">
+        <div class="container">
+            <!-- Table Selection Tabs -->
+            <div class="table-tabs">
+                {% for table in tables %}
+                <a href="?table={{ table.name }}" class="table-tab {% if selected_table == table.name %}active{% endif %}">
+                    {{ table.name|title }}
+                    <span class="table-count">{{ table.count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Custom Query Section -->
+            <div class="query-section">
+                <h5>Custom SQL Query (Read-Only)</h5>
+                <textarea id="query-input" class="query-input" placeholder="SELECT * FROM user LIMIT 10;"></textarea>
+                <button class="query-btn" onclick="executeQuery()">Execute Query</button>
+                <div id="query-result"></div>
+            </div>
+
+            <!-- Table Data -->
+            <div>
+                <h5>Table: {{ selected_table|title }} ({{ total }} rows)</h5>
+
+                {% if data %}
+                <div class="table-container">
+                    <table class="db-table">
+                        <thead>
+                            <tr>
+                                {% for col in columns %}
+                                <th>{{ col }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                {% for col in columns %}
+                                <td>{{ row[col] }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if total_pages > 1 %}
+                <div class="pagination">
+                    {% if page > 1 %}
+                    <a href="?table={{ selected_table }}&page=1" class="page-link">First</a>
+                    <a href="?table={{ selected_table }}&page={{ page - 1 }}" class="page-link">Previous</a>
+                    {% endif %}
+
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p == page %}
+                        <span class="page-link active">{{ p }}</span>
+                        {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                        <a href="?table={{ selected_table }}&page={{ p }}" class="page-link">{{ p }}</a>
+                        {% elif p == page - 3 or p == page + 3 %}
+                        <span class="page-link">...</span>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page < total_pages %}
+                    <a href="?table={{ selected_table }}&page={{ page + 1 }}" class="page-link">Next</a>
+                    <a href="?table={{ selected_table }}&page={{ total_pages }}" class="page-link">Last</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% else %}
+                <p style="color: #999; margin-top: 20px;">No data in this table.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle user dropdown menu
+        const toggle = document.getElementById('user-menu-toggle');
+        const dropdown = document.getElementById('user-dropdown');
+
+        if (toggle && dropdown) {
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            });
+
+            document.addEventListener('click', function () {
+                dropdown.style.display = 'none';
+            });
+        }
+
+        // Execute custom query
+        async function executeQuery() {
+            const query = document.getElementById('query-input').value;
+            const resultDiv = document.getElementById('query-result');
+
+            if (!query.trim()) {
+                resultDiv.innerHTML = '<div class="alert alert-danger">Please enter a query</div>';
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('query', query);
+
+                const response = await fetch('/admin/db-viewer/query', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    let html = '<div class="alert alert-success">Query executed successfully. ' + result.count + ' rows returned.</div>';
+
+                    if (result.data.length > 0) {
+                        html += '<div class="table-container query-results"><table class="db-table"><thead><tr>';
+
+                        // Headers
+                        result.columns.forEach(col => {
+                            html += '<th>' + col + '</th>';
+                        });
+                        html += '</tr></thead><tbody>';
+
+                        // Rows
+                        result.data.forEach(row => {
+                            html += '<tr>';
+                            result.columns.forEach(col => {
+                                html += '<td>' + (row[col] || '') + '</td>';
+                            });
+                            html += '</tr>';
+                        });
+
+                        html += '</tbody></table></div>';
+                    }
+
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = '<div class="alert alert-danger">Error: ' + result.error + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Allow Ctrl+Enter to execute query
+        document.getElementById('query-input').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                executeQuery();
+            }
+        });
+    </script>
+</body>
+</html>

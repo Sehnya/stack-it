@@ -39,8 +39,7 @@
                 </p>
             </div>
 
-            <!-- Create New Post link - shown only if user is admin -->
-            {% if session.get('is_admin', False) %}
+            <!-- Create New Post link - shown for all logged-in users -->
             <div class="nav-5" style="color: white; display: flex; flex-direction: row; justify-content: space-around; width: 135px; position: absolute; left: 135%; align-items: center; height: inherit">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-plus" viewBox="0 0 16 16">
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
@@ -49,7 +48,6 @@
                     <a style="color: inherit; text-decoration: none; position: relative; margin-left: -15px;" href="/create-post">Create New Post</a>
                 </p>
             </div>
-            {% endif %}
         </div>
         {% endif %}
     </div>

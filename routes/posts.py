@@ -29,7 +29,7 @@ def view_post(post_id):
 
 
 @posts_bp.route('/create-post', methods=['GET', 'POST'])
-@admin_required
+@login_required
 def create_post():
     if request.method == 'POST':
         data = request.form

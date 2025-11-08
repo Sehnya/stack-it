@@ -79,7 +79,12 @@
 
     <div class="main-body" style="position: relative; min-height: 100vh; width:100%; display: flex; flex-direction: column; padding: 20px; font-weight: lighter; overflow:clip; background-color: rgba(5,7,8,0.59); color: white;">
         <div class="container">
-            <h2 style="margin-bottom: 20px;">User Management</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">User Management</h2>
+                <a href="/admin/db-viewer" class="btn btn-secondary" style="background-color: #333; border: none;">
+                    Database Viewer
+                </a>
+            </div>
             
             <!-- Success message -->
             {% if success_message %}
