@@ -1,144 +1,195 @@
-# Stack-It Navigation and User Roles Implementation
+# Stack-It
 
-This document describes the changes made to implement a cohesive navigation bar across all pages and a user role system with admin capabilities.
+A modern web application for creating and managing posts, stacks, and favorites with role-based access control. Built with Flask, Tailwind CSS, and SQLite/PostgreSQL.
 
-## Changes Made
+## Prerequisites
 
-### 1. Navigation Bar Consistency
+- Python 3.9 or higher
+- Node.js 16+ and npm (or Bun)
+- Git
 
-A reusable navigation bar component has been created to ensure consistency across all pages:
+## Quick Start
 
-- Created a new template file `_navbar.html` that includes:
-  - Home, Favorites, Community links for all logged-in users
-  - Create Post link for admin users only
-  - User menu dropdown with appropriate options based on user role
-  - Login/Signup options for guests
+Follow these steps to get the project running locally:
 
-- Updated all template files to use the new navigation component:
-  - dashboard.html
-  - create_post.html
-  - post.html
-  - 404.html
-  - community.html
-  - db_error.html
-
-### 2. User Role System
-
-A user role system has been implemented to distinguish between admin and regular users:
-
-- Modified the User model in `db.py` to add a role field with possible values 'user' and 'admin'
-- Created a migration script `migrate_add_role.py` to add the role field to existing users
-- Implemented role-based access control in `main.py` with an admin_required decorator
-- Added admin functionality to assign admin roles to other users
-- Restricted post creation and admin views to admin users only
-
-## How to Use
-
-### Running the Migration Script
-
-To add the role field to existing users and set the admin role for a specific user:
+### 1. Clone the Repository
 
 ```bash
-python migrate_add_role.py <admin_email>
+git clone <repository-url>
+cd stack-it
 ```
 
-Replace `<admin_email>` with the email of the user you want to make an admin.
+### 2. Set Up Python Environment
 
-### Accessing Admin Features
-
-Once you've set up an admin user, you can:
-
-1. Log in as the admin user
-2. Access the admin dashboard at `/admin`
-3. Manage user roles by selecting 'Admin' or 'User' for each user and clicking 'Save'
-4. Create new posts using the 'Create New Post' link in the navigation bar
-
-### Testing the Implementation
-
-A test script has been provided to verify that all the changes work correctly:
+Create and activate a virtual environment:
 
 ```bash
-# Install the requests module if you don't have it
-pip install requests
+python -m venv venv
 
-# Run the test script
-python test_user_roles.py <admin_email> <admin_password> <regular_user_email> <regular_user_password>
+# On Linux/macOS:
+source venv/bin/activate
+
+# On Windows:
+venv\Scripts\activate
 ```
 
-Replace the parameters with actual user credentials.
+### 3. Install Python Dependencies
 
-The test script checks:
-1. Navigation consistency across all pages
-2. Role-based access control
-3. Admin functionality to assign roles
-
-## Technical Details
-
-### Navigation Bar Component
-
-The navigation bar component uses Jinja2's include directive and conditional rendering:
-
-```html
-{% include '_navbar.html' %}
+```bash
+pip install -r requirements.txt
 ```
 
-The component checks if the user is logged in and if they have admin privileges:
+### 4. Install Node Dependencies
 
-```html
-{% if session.get('user_id') %}
-    <!-- Navigation for logged-in users -->
-    {% if session.get('is_admin', False) %}
-        <!-- Admin-only features -->
-    {% endif %}
-{% else %}
-    <!-- Navigation for guests -->
-{% endif %}
+```bash
+npm install
+
+# Or if using Bun:
+bun install
 ```
 
-### User Role System
+### 5. Set Up Database
 
-The User model has been extended with a role field and an is_admin method:
+For local development, the app uses SQLite by default (no configuration needed). The database file `stack_it.db` will be created automatically on first run.
 
-```python
-class User(BaseModel):
-    id = AutoField()
-    username = CharField(unique=True)
-    email = CharField(unique=True)
-    password = CharField()
-    role = CharField(default='user')  # Possible values: 'user', 'admin'
-    
-    def is_admin(self):
-        """Check if the user has admin role"""
-        return self.role == 'admin'
+If you want to use PostgreSQL instead, see the [Environment Variables](#environment-variables) section below.
+
+### 6. Initialize Database Tables
+
+The database tables will be created automatically when you first run the application. The app uses Peewee ORM with the following models:
+- **User** - User accounts with role-based permissions
+- **Stack** - Collections or categories
+- **Post** - Main content items
+- **Favorite** - User favorites tracking
+
+### 7. Run the Development Server
+
+```bash
+python main.py
 ```
 
-The admin_required decorator checks if the user has admin privileges:
+The application will be available at `http://localhost:5000`
 
-```python
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect('/login')
-        if not session.get('is_admin', False):
-            return abort(403)  # Forbidden
-        return f(*args, **kwargs)
-    return decorated_function
+## Environment Variables
+
+For local development with SQLite, no environment variables are required. For production or PostgreSQL setup, create a `.env` file in the root directory:
+
+```bash
+# Required for production
+SECRET_KEY=your-secret-key-here
+FLASK_ENV=production
+
+# PostgreSQL connection (choose one method)
+
+# Method 1: DATABASE_URL
+DATABASE_URL=postgresql://user:password@host:port/dbname
+
+# Method 2: Individual variables (used by Render)
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_HOST=your_db_host
+DB_PORT=5432
+DB_NAME=your_db_name
+
+# Method 3: Non-prefixed variables
+user=your_db_user
+password=your_db_password
+host=your_db_host
+port=5432
+dbname=your_db_name
 ```
 
-The login route sets the is_admin flag in the session based on the user's role:
+**Note:** If no PostgreSQL configuration is found, the app automatically falls back to SQLite for local development.
 
-```python
-session['is_admin'] = user.is_admin()
+## Project Structure
+
 ```
+stack-it/
+├── main.py                 # Main Flask application
+├── db.py                   # Database models and configuration
+├── routes/                 # Route handlers (modular)
+├── templates/              # Jinja2 HTML templates
+├── static/                 # Static assets
+│   ├── css/               # Compiled CSS
+│   ├── images/            # Image assets
+│   └── uploads/           # User-uploaded files
+├── solutions/              # Solution documentation
+├── requirements.txt        # Python dependencies
+├── package.json           # Node.js dependencies
+├── postcss.config.js      # PostCSS configuration
+└── stack_it.db            # SQLite database (auto-generated)
+```
+
+## Development Workflow
+
+### Running the Application
+
+```bash
+# Activate virtual environment
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+
+# Run the Flask development server
+python main.py
+```
+
+### Working with CSS
+
+The project uses Tailwind CSS v4. CSS is processed through PostCSS:
+
+```bash
+# If you modify Tailwind classes, the CSS will be recompiled automatically
+# You may need to set up a PostCSS watch process depending on your workflow
+```
+
+### Database Migrations
+
+The application uses Peewee ORM. Database schema changes require manual migrations. Check the `solutions/` directory for examples of past migrations.
+
+## User Roles
+
+The application supports two user roles:
+
+- **User** - Standard access (can view posts, create favorites)
+- **Admin** - Full access (can create posts, manage users, access admin panel)
+
+To set up an admin user, you'll need to modify the database directly or use a migration script. See `solutions/SOLUTION_ROLE_FIELD.md` for details.
+
+## Production Deployment
+
+For production deployment instructions, see:
+- `PRODUCTION.md` - Production configuration guide
+- `DEPLOYMENT_SUMMARY.md` - Deployment summary
+- `render.yaml` - Render.com configuration
+
+The application is configured to run with Gunicorn in production (see `Procfile`).
+
+## Additional Documentation
+
+- See the `solutions/` directory for detailed documentation on specific features:
+  - Navigation and dropdown menus
+  - Favorites system
+  - Post management
+  - Role-based access control
+  - Three-dot menu implementation
 
 ## Troubleshooting
 
-If you encounter any issues:
+**Database connection errors:**
+- For SQLite: Ensure the application has write permissions in the project directory
+- For PostgreSQL: Verify your connection credentials in the `.env` file
 
-1. Make sure you've run the migration script to add the role field to existing users
-2. Check that you've set the admin role for at least one user
-3. Verify that you're logged in as an admin user to access admin features
-4. If the navigation bar doesn't appear consistent across all pages, clear your browser cache
+**CSS not loading:**
+- Make sure Node dependencies are installed (`npm install`)
+- Check that `static/css/` directory exists
 
-For any other issues, please refer to the test script output for detailed error messages.
+**Import errors:**
+- Ensure virtual environment is activated
+- Reinstall dependencies: `pip install -r requirements.txt`
+
+## License
+
+ISC
+
+## Contributing
+
+This is a personal project. For questions or issues, please open an issue on the repository.
