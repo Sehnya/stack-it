@@ -65,7 +65,7 @@
             </div>
 
             <!-- Dropdown menu for logged in users -->
-            <div id="user-dropdown" class="hidden absolute right-0 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 z-[999] overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content; top: 100%; margin-top: 0.5rem;">
+            <div id="user-dropdown" class="absolute right-0 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 z-[999] overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content; top: 100%; margin-top: 0.5rem; display: none;">
                 <a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap" style="text-decoration: none;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100" viewBox="0 0 16 16">
                         <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
@@ -104,7 +104,7 @@
             <img src="../static/images/Ellipse-2.png" alt="avatar-placeholder" style="height: 32px; width: 32px; border-radius:50%; object-fit:cover; cursor: pointer; border: 2px solid white;">
 
             <!-- Dropdown menu for guests -->
-            <div id="user-dropdown" class="hidden absolute right-0 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 z-[999] overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content; top: 100%; margin-top: 0.5rem;">
+            <div id="user-dropdown" class="absolute right-0 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 z-[999] overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content; top: 100%; margin-top: 0.5rem; display: none;">
                 <a href="/login" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap" style="text-decoration: none;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M10 3.5a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 1 1 0v2A1.5 1.5 0 0 1 9.5 14h-8A1.5 1.5 0 0 1 0 12.5v-9A1.5 1.5 0 0 1 1.5 2h8A1.5 1.5 0 0 1 11 3.5v2a.5.5 0 0 1-1 0z"/>
@@ -133,13 +133,18 @@
     if (toggle && dropdown) {
         toggle.addEventListener('click', function (e) {
             e.stopPropagation();
-            dropdown.classList.toggle('hidden');
+            // Use inline display style instead of hidden class
+            if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
         });
 
         // Hide menu when clicking elsewhere
         document.addEventListener('click', function (e) {
             if (!e.target.closest('#user-menu-toggle')) {
-                dropdown.classList.add('hidden');
+                dropdown.style.display = 'none';
             }
         });
     }

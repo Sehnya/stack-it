@@ -62,7 +62,21 @@ The database tables will be created automatically when you first run the applica
 - **Post** - Main content items
 - **Favorite** - User favorites tracking
 
-### 7. Run the Development Server
+### 7. Seed Sample Data (Optional)
+
+To populate the database with sample community posts for testing and development:
+
+```bash
+python seed.py
+```
+
+This will create 3 sample posts:
+- 2 frontend-focused posts (React Server Components, Vue vs React)
+- 1 backend-focused post (GraphQL vs REST API design)
+
+**Note:** Run this after creating your first user account (username: `sallen20`). If posts with IDs 1001-1003 already exist, you'll be prompted to delete and recreate them.
+
+### 8. Run the Development Server
 
 ```bash
 python main.py
@@ -107,6 +121,7 @@ dbname=your_db_name
 stack-it/
 ├── main.py                 # Main Flask application
 ├── db.py                   # Database models and configuration
+├── seed.py                 # Database seeding script
 ├── routes/                 # Route handlers (modular)
 ├── templates/              # Jinja2 HTML templates
 ├── static/                 # Static assets
