@@ -4,6 +4,7 @@ from peewee import DoesNotExist
 
 from db import Post
 from utils.decorators import login_required, admin_required
+from utils.sanitizer import sanitize_html
 
 posts_bp = Blueprint('posts', __name__)
 
@@ -34,11 +35,14 @@ def create_post():
     if request.method == 'POST':
         data = request.form
         try:
+            # Sanitize HTML content to prevent XSS attacks
+            safe_body = sanitize_html(data['body'])
+            safe_summary = sanitize_html(data['summary'])
+
             Post.create(
-                id=data['id'],
                 title=data['title'],
-                summary=data['summary'],
-                body=data['body'],
+                summary=safe_summary,
+                body=safe_body,
                 tags=data['tags'],
                 category=data['category'],
                 author=session['user_id'],
@@ -65,10 +69,13 @@ def edit_post(post_id):
     if request.method == 'POST':
         data = request.form
         try:
-            post.id=data['id']
+            # Sanitize HTML content to prevent XSS attacks
+            safe_body = sanitize_html(data['body'])
+            safe_summary = sanitize_html(data['summary'])
+
             post.title = data['title']
-            post.summary = data['summary']
-            post.body = data['body']
+            post.summary = safe_summary
+            post.body = safe_body
             post.tags = data['tags']
             post.category = data['category']
             post.save()
@@ -108,11 +115,14 @@ def delete_post(post_id):
 @admin_required
 def create_post_api():
     data = request.get_json()
+    # Sanitize HTML content to prevent XSS attacks
+    safe_body = sanitize_html(data['content'])
+
     post = Post.create(
         id=data['id'],
         title=data['title'],
         tags=','.join(data['tags']),
-        body=data['content'],  # Map content from request to body field
+        body=safe_body,  # Use sanitized content
         category=data.get('category', 'frontend'),  # Default to frontend if not provided
         author=session['user_id'],
         created_at=datetime.now()

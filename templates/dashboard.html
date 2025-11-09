@@ -133,6 +133,8 @@
         <div class="max-w-7xl mx-auto flex gap-8">
             <button class="tablinks tab-trigger active px-4 py-4 font-medium text-sm" onclick="openCity(event, 'London')">Frontend</button>
             <button class="tablinks tab-trigger px-4 py-4 font-medium text-sm" onclick="openCity(event, 'Paris')">Backend</button>
+            <button class="tablinks tab-trigger px-4 py-4 font-medium text-sm" onclick="openCity(event, 'AI')">AI</button>
+            <button class="tablinks tab-trigger px-4 py-4 font-medium text-sm" onclick="openCity(event, 'GameDev')">Game Dev</button>
             <button class="tablinks tab-trigger px-4 py-4 font-medium text-sm" onclick="openCity(event, 'Tokyo')">Docs</button>
         </div>
     </div>
@@ -149,8 +151,8 @@
 
             <!-- Posts Grid -->
             <div class="grid gap-6">
-                {% if posts %}
-                {% for post in posts %}
+                {% if frontend_posts %}
+                {% for post in frontend_posts %}
                 <article class="card-shadcn p-8 relative group">
                     <!-- Card Header -->
                     <div class="flex items-start justify-between mb-6">
@@ -166,6 +168,7 @@
                         </div>
 
                         <!-- Post Menu -->
+                        {% if post.author.id == user.id or is_admin %}
                         <div class="relative">
                             <button class="post-menu-toggle p-2 hover:bg-gray-700/50 rounded-lg transition-colors" data-post-id="{{ post.id }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
@@ -188,6 +191,7 @@
                                 </a>
                             </div>
                         </div>
+                        {% endif %}
                     </div>
 
                     <!-- Card Title & Content -->
@@ -197,7 +201,7 @@
                                 {{ post.title }}
                             </a>
                         </h3>
-                        <p class="text-white leading-relaxed">{{ (post.body|truncate(200, true, "..."))|safe }}</p>
+                        <p class="text-white leading-relaxed">{{ post.body|striptags|truncate(200, true, "...") }}</p>
                     </div>
 
                     <!-- Tags -->
@@ -235,9 +239,84 @@
                 <h2 class="text-2xl font-semibold text-white mb-2">Backend</h2>
                 <p class="text-gray-300">Latest code releases for backend development stacks.</p>
             </div>
-            <div class="card-shadcn p-12 text-center">
-                <h3 class="text-xl font-semibold text-white mb-3">Editor's Picks</h3>
-                <p class="text-gray-500">Coming soon...</p>
+            <!-- Posts Grid -->
+            <div class="grid gap-6">
+                {% if backend_posts %}
+                {% for post in backend_posts %}
+                <article class="card-shadcn p-8 relative group">
+                    <!-- Card Header -->
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <!-- Avatar -->
+                            <div class="relative flex h-12 w-12 shrink-0 overflow-hidden rounded-full ring-2 ring-orange-500/20">
+                                <img src="{{ avatar_url(post.author) }}" alt="avatar" class="aspect-square h-full w-full object-cover">
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">{{ post.author.username }}</p>
+                                <p class="text-xs text-gray-500">{{ post.created_at.strftime('%b %d, %Y') }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Post Menu -->
+                        {% if post.author.id == user.id or is_admin %}
+                        <div class="relative">
+                            <button class="post-menu-toggle p-2 hover:bg-gray-700/50 rounded-lg transition-colors" data-post-id="{{ post.id }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                    <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                </svg>
+                            </button>
+                            <div class="post-dropdown hidden absolute top-full right-0 mt-2 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 z-50 overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content;">
+                                <a href="/edit-post/{{ post.id }}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-200 hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                    </svg>
+                                    <span>Edit Post</span>
+                                </a>
+                                <a href="/delete-post/{{ post.id }}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-200 hover:text-red-500 hover:bg-red-500/10 transition-all duration-150 ease-in-out border-t border-gray-800/50 group whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                    </svg>
+                                    <span>Delete Post</span>
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Card Title & Content -->
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-semibold text-white mb-4 hover:text-orange-500 transition-colors">
+                            <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="no-underline">
+                                {{ post.title }}
+                            </a>
+                        </h3>
+                        <p class="text-white leading-relaxed">{{ post.body|striptags|truncate(200, true, "...") }}</p>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        {% for tag in post.tags.split(',') %}
+                        <span class="badge-shadcn">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="flex items-center justify-between pt-6 border-t border-gray-800">
+                        <button class="favorite-btn flex items-center gap-2 px-4 py-2.5 rounded-lg hover:bg-gray-800/70 transition-all" data-post-id="{{ post.id }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="favorite-icon" viewBox="0 0 16 16">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                            </svg>
+                            <span class="favorite-text text-sm font-medium text-gray-300">Add to Favorites</span>
+                        </button>
+                    </div>
+                </article>
+                {% endfor %}
+                {% else %}
+                <div class="card-shadcn p-8 text-center">
+                    <p class="text-gray-400">No posts available yet.</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -249,8 +328,9 @@
                 <h2 class="text-2xl font-semibold text-white mb-2">Documentation</h2>
                 <p class="text-gray-300">Documentation and guides for getting the most out of Stack-it.</p>
             </div>
-            <div class="card-shadcn p-12">
-                {% if get_started_doc_id %}
+            <!-- Featured: Get Started Guide -->
+            {% if get_started_doc_id %}
+            <div class="card-shadcn p-12 mb-8">
                 <div class="flex flex-col items-center justify-center gap-6">
                     <h3 class="text-xl font-medium text-white">Ready to get started?</h3>
                     <a href="{{ url_for('docs.view_doc', doc_id=get_started_doc_id) }}" class="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50">
@@ -260,8 +340,264 @@
                         </svg>
                     </a>
                 </div>
+            </div>
+            {% endif %}
+
+            <!-- Posts Grid -->
+            <div class="grid gap-6">
+                {% if docs_posts %}
+                {% for post in docs_posts %}
+                <article class="card-shadcn p-8 relative group">
+                    <!-- Card Header -->
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <!-- Avatar -->
+                            <div class="relative flex h-12 w-12 shrink-0 overflow-hidden rounded-full ring-2 ring-orange-500/20">
+                                <img src="{{ avatar_url(post.author) }}" alt="avatar" class="aspect-square h-full w-full object-cover">
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">{{ post.author.username }}</p>
+                                <p class="text-xs text-gray-500">{{ post.created_at.strftime('%b %d, %Y') }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Post Menu -->
+                        {% if post.author.id == user.id or is_admin %}
+                        <div class="relative">
+                            <button class="post-menu-toggle p-2 hover:bg-gray-700/50 rounded-lg transition-colors" data-post-id="{{ post.id }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                    <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                </svg>
+                            </button>
+                            <div class="post-dropdown hidden absolute top-full right-0 mt-2 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 z-50 overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content;">
+                                <a href="/edit-post/{{ post.id }}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-200 hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                    </svg>
+                                    <span>Edit Post</span>
+                                </a>
+                                <a href="/delete-post/{{ post.id }}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-200 hover:text-red-500 hover:bg-red-500/10 transition-all duration-150 ease-in-out border-t border-gray-800/50 group whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                    </svg>
+                                    <span>Delete Post</span>
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Card Title & Content -->
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-semibold text-white mb-4 hover:text-orange-500 transition-colors">
+                            <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="no-underline">
+                                {{ post.title }}
+                            </a>
+                        </h3>
+                        <p class="text-white leading-relaxed">{{ post.body|striptags|truncate(200, true, "...") }}</p>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        {% for tag in post.tags.split(',') %}
+                        <span class="badge-shadcn">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="flex items-center justify-between pt-6 border-t border-gray-800">
+                        <button class="favorite-btn flex items-center gap-2 px-4 py-2.5 rounded-lg hover:bg-gray-800/70 transition-all" data-post-id="{{ post.id }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="favorite-icon" viewBox="0 0 16 16">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                            </svg>
+                            <span class="favorite-text text-sm font-medium text-gray-300">Add to Favorites</span>
+                        </button>
+                    </div>
+                </article>
+                {% endfor %}
                 {% else %}
-                <p class="text-gray-500 text-center">No documentation available yet.</p>
+                <div class="card-shadcn p-8 text-center">
+                    <p class="text-gray-400">No documentation posts available yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Tab -->
+    <div id="AI" class="tabcontent w-full" style="display: none;">
+        <div class="max-w-7xl mx-auto px-8 py-8">
+            <div class="mb-8">
+                <h2 class="text-2xl font-semibold text-white mb-2">AI</h2>
+                <p class="text-gray-300">Latest code releases for AI development stacks.</p>
+            </div>
+            <!-- Posts Grid -->
+            <div class="grid gap-6">
+                {% if ai_posts %}
+                {% for post in ai_posts %}
+                <article class="card-shadcn p-8 relative group">
+                    <!-- Card Header -->
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <!-- Avatar -->
+                            <div class="relative flex h-12 w-12 shrink-0 overflow-hidden rounded-full ring-2 ring-orange-500/20">
+                                <img src="{{ avatar_url(post.author) }}" alt="avatar" class="aspect-square h-full w-full object-cover">
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">{{ post.author.username }}</p>
+                                <p class="text-xs text-gray-500">{{ post.created_at.strftime('%b %d, %Y') }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Post Menu -->
+                        {% if post.author.id == user.id or is_admin %}
+                        <div class="relative">
+                            <button class="post-menu-toggle p-2 hover:bg-gray-700/50 rounded-lg transition-colors" data-post-id="{{ post.id }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                    <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                </svg>
+                            </button>
+                            <div class="post-dropdown hidden absolute top-full right-0 mt-2 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 z-50 overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content;">
+                                <a href="/edit-post/{{ post.id }}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-200 hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                    </svg>
+                                    <span>Edit Post</span>
+                                </a>
+                                <a href="/delete-post/{{ post.id }}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-200 hover:text-red-500 hover:bg-red-500/10 transition-all duration-150 ease-in-out border-t border-gray-800/50 group whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                    </svg>
+                                    <span>Delete Post</span>
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Card Title & Content -->
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-semibold text-white mb-4 hover:text-orange-500 transition-colors">
+                            <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="no-underline">
+                                {{ post.title }}
+                            </a>
+                        </h3>
+                        <p class="text-white leading-relaxed">{{ post.body|striptags|truncate(200, true, "...") }}</p>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        {% for tag in post.tags.split(',') %}
+                        <span class="badge-shadcn">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="flex items-center justify-between pt-6 border-t border-gray-800">
+                        <button class="favorite-btn flex items-center gap-2 px-4 py-2.5 rounded-lg hover:bg-gray-800/70 transition-all" data-post-id="{{ post.id }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="favorite-icon" viewBox="0 0 16 16">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                            </svg>
+                            <span class="favorite-text text-sm font-medium text-gray-300">Add to Favorites</span>
+                        </button>
+                    </div>
+                </article>
+                {% endfor %}
+                {% else %}
+                <div class="card-shadcn p-8 text-center">
+                    <p class="text-gray-400">No AI posts available yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Dev Tab -->
+    <div id="GameDev" class="tabcontent w-full" style="display: none;">
+        <div class="max-w-7xl mx-auto px-8 py-8">
+            <div class="mb-8">
+                <h2 class="text-2xl font-semibold text-white mb-2">Game Development</h2>
+                <p class="text-gray-300">Latest code releases for game development stacks.</p>
+            </div>
+            <!-- Posts Grid -->
+            <div class="grid gap-6">
+                {% if gamedev_posts %}
+                {% for post in gamedev_posts %}
+                <article class="card-shadcn p-8 relative group">
+                    <!-- Card Header -->
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <!-- Avatar -->
+                            <div class="relative flex h-12 w-12 shrink-0 overflow-hidden rounded-full ring-2 ring-orange-500/20">
+                                <img src="{{ avatar_url(post.author) }}" alt="avatar" class="aspect-square h-full w-full object-cover">
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">{{ post.author.username }}</p>
+                                <p class="text-xs text-gray-500">{{ post.created_at.strftime('%b %d, %Y') }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Post Menu -->
+                        {% if post.author.id == user.id or is_admin %}
+                        <div class="relative">
+                            <button class="post-menu-toggle p-2 hover:bg-gray-700/50 rounded-lg transition-colors" data-post-id="{{ post.id }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                    <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                </svg>
+                            </button>
+                            <div class="post-dropdown hidden absolute top-full right-0 mt-2 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 z-50 overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content;">
+                                <a href="/edit-post/{{ post.id }}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-200 hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                    </svg>
+                                    <span>Edit Post</span>
+                                </a>
+                                <a href="/delete-post/{{ post.id }}" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-200 hover:text-red-500 hover:bg-red-500/10 transition-all duration-150 ease-in-out border-t border-gray-800/50 group whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                    </svg>
+                                    <span>Delete Post</span>
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Card Title & Content -->
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-semibold text-white mb-4 hover:text-orange-500 transition-colors">
+                            <a href="{{ url_for('posts.view_post', post_id=post.id) }}" class="no-underline">
+                                {{ post.title }}
+                            </a>
+                        </h3>
+                        <p class="text-white leading-relaxed">{{ post.body|striptags|truncate(200, true, "...") }}</p>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        {% for tag in post.tags.split(',') %}
+                        <span class="badge-shadcn">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="flex items-center justify-between pt-6 border-t border-gray-800">
+                        <button class="favorite-btn flex items-center gap-2 px-4 py-2.5 rounded-lg hover:bg-gray-800/70 transition-all" data-post-id="{{ post.id }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="favorite-icon" viewBox="0 0 16 16">
+                                <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                            </svg>
+                            <span class="favorite-text text-sm font-medium text-gray-300">Add to Favorites</span>
+                        </button>
+                    </div>
+                </article>
+                {% endfor %}
+                {% else %}
+                <div class="card-shadcn p-8 text-center">
+                    <p class="text-gray-400">No game development posts available yet.</p>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -316,40 +652,40 @@
     }
   }
 
-
-  // Toggle post dropdown menu
-  const postMenuToggles = document.querySelectorAll('.post-menu-toggle');
-  postMenuToggles.forEach(function(toggle) {
-    toggle.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Close all other dropdowns first
-      const allDropdowns = document.querySelectorAll('.post-dropdown');
-      allDropdowns.forEach(function(dropdown) {
-        if (dropdown !== toggle.nextElementSibling) {
-          dropdown.classList.add('hidden');
-        }
-      });
-
-      // Toggle this dropdown
-      const dropdown = toggle.nextElementSibling;
-      dropdown.classList.toggle('hidden');
-    });
-  });
-
-  // Close dropdown when clicking elsewhere
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.post-menu-toggle')) {
-      const dropdowns = document.querySelectorAll('.post-dropdown');
-      dropdowns.forEach(function(dropdown) {
-        dropdown.classList.add('hidden');
-      });
-    }
-  });
-  
-  // Favorite button functionality
+  // All DOM manipulation code wrapped in DOMContentLoaded
   document.addEventListener('DOMContentLoaded', function() {
+    // Toggle post dropdown menu
+    const postMenuToggles = document.querySelectorAll('.post-menu-toggle');
+    postMenuToggles.forEach(function(toggle) {
+      toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Close all other dropdowns first
+        const allDropdowns = document.querySelectorAll('.post-dropdown');
+        allDropdowns.forEach(function(dropdown) {
+          if (dropdown !== toggle.nextElementSibling) {
+            dropdown.classList.add('hidden');
+          }
+        });
+
+        // Toggle this dropdown
+        const dropdown = toggle.nextElementSibling;
+        dropdown.classList.toggle('hidden');
+      });
+    });
+
+    // Close dropdown when clicking elsewhere
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.post-menu-toggle')) {
+        const dropdowns = document.querySelectorAll('.post-dropdown');
+        dropdowns.forEach(function(dropdown) {
+          dropdown.classList.add('hidden');
+        });
+      }
+    });
+
+    // Favorite button functionality
     const favoriteButtons = document.querySelectorAll('.favorite-btn');
 
     // Load all favorites to check status

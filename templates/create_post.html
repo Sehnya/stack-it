@@ -13,12 +13,12 @@
     <script src="https://unpkg.com/flowbite@1.5.1/dist/flowbite.min.js"></script>
 </head>
 
-<body style="height: 200vh;">
+<body style="min-height: 100vh;">
     <!-- Include the navigation bar -->
     {% include '_navbar.html' %}
 
     <!-- Main Form Container -->
-    <div style="display: flex; justify-content: center; align-items: flex-start; padding-top: 5%;">
+    <div style="display: flex; justify-content: center; align-items: flex-start; padding-top: 5%; min-height: calc(100vh - 45px);">
         <form method="POST" action="{% if edit_mode %}/edit-post/{{ post.id }}{% else %}/create-post{% endif %}" class="font-thin text-sm" style="width:75%; background-color: rgba(36,41,47,0.73); border: solid 1px rgba(0,0,0,0.71); padding: 30px; height: fit-content; border-radius: 6px;">
             <h2 class="font-thin text-xl text-white mb-6">{% if edit_mode %}Edit Post{% else %}Create New Post{% endif %}</h2>
 
@@ -47,6 +47,8 @@
                     <option value="frontend">Frontend</option>
                     <option value="backend">Backend</option>
                     <option value="docs">Docs</option>
+                    <option value="ai">AI</option>
+                    <option value="game-dev">Game Dev</option>
                 </select>
             </div>
 
@@ -58,7 +60,7 @@
                 <textarea name="body" id="body" style="display: none;"></textarea>
 
                 <!-- Rich Text Editor Container -->
-                <div class="w-full h-full relative border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                <div class="w-full relative border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
                     <!-- Toolbar -->
                     <div class="w-full px-3 py-2 border-b border-gray-200 dark:border-gray-600">
                         <div class="w-full flex flex-wrap items-center">
@@ -418,7 +420,10 @@
 
                     <!-- Editor Content Area -->
                     <div class="px-4 py-3 bg-white rounded-b-lg dark:bg-gray-800">
-                        <div id="wysiwyg-example" class="editor-content block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400" style="min-height: 200px; outline: none;" contenteditable="true" data-placeholder="Write your post content here..." {% if edit_mode %}data-content="{{ post.body|safe }}"{% endif %}></div>
+                        <div id="wysiwyg-example" class="editor-content block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400" style="min-height: 200px; outline: none;" contenteditable="true" data-placeholder="Write your post content here..."></div>
+                        {% if edit_mode %}
+                        <textarea id="initial-content" style="display: none;">{{ post.body }}</textarea>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -521,22 +526,6 @@
                 }
             });
         });
-    });
-
-    // User menu toggle functionality
-    document.getElementById('user-menu-toggle').addEventListener('click', function() {
-        const dropdown = document.getElementById('user-dropdown');
-        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-    });
-
-    // Close user dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-        const userMenu = document.getElementById('user-menu-toggle');
-        const dropdown = document.getElementById('user-dropdown');
-
-        if (!userMenu.contains(event.target)) {
-            dropdown.style.display = 'none';
-        }
     });
 
     // Rich Text Editor functionality
@@ -1029,9 +1018,10 @@
     });
 
     // Initialize editor with placeholder behavior or existing content
-    if (editor.hasAttribute('data-content') && editor.getAttribute('data-content')) {
+    const initialContentField = document.getElementById('initial-content');
+    if (initialContentField && initialContentField.value) {
         // We're in edit mode with existing content
-        editor.innerHTML = editor.getAttribute('data-content');
+        editor.innerHTML = initialContentField.value;
         // Update the hidden textarea with the content
         hiddenTextarea.value = editor.innerHTML;
         
@@ -1083,8 +1073,9 @@
         .editor-content p { margin: 0.5rem 0; }
         .editor-content table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
         .editor-content th, .editor-content td { border: 1px solid #e5e7eb; padding: 0.5rem; }
-        .editor-content code { background-color: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-        .editor-content pre { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 12px; overflow: auto; }
+        .editor-content code { background-color: rgba(55, 65, 81, 0.5) !important; color: #fbbf24 !important; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 500; border: 1px solid rgba(75, 85, 99, 0.3); font-family: 'Courier New', Courier, monospace; }
+        .editor-content pre { background-color: #1e1e1e !important; border: 1px solid #374151 !important; border-radius: 0.5rem; padding: 1.25rem; margin-top: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+        .editor-content pre code { background-color: transparent !important; color: #e5e7eb !important; border: none !important; padding: 0 !important; font-family: 'Courier New', Courier, monospace; }
 
         /* Dropdown positioning */
         [data-dropdown-toggle] + div {

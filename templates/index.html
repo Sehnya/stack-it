@@ -17,7 +17,7 @@
 >
 <div
         id="header"
-        class="w-dvw h-11 flex-row flex justify-between items-center top-0 relative  bg-black/50 backdrop-blur-xs"
+        class="w-dvw h-11 flex-row flex justify-between items-center top-0 sticky z-50 bg-black/50 backdrop-blur-xs"
 >
     <div
             id="logo-container"
@@ -34,17 +34,17 @@
         <button
                 type="button"
                 onclick="window.location.href='/login'"
-                class="text-orange-900 shadow-md shadow-orange-400/50 bg-gradient-to-br from-red-300 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-100 dark:focus:ring-pink-300  rounded-md text-xs px-5 py-2.5 text-center me-2 mb-2"
+                class="shadow-md shadow-orange-400/50 bg-gradient-to-br from-red-300 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-100 dark:focus:ring-pink-300  rounded-md text-xs px-5 py-2.5 text-center me-2 mb-2"
         >
-            Login
+            <p class="text-black font-bold">Login</p>
         </button>
         <button
                 type="button"
                 data-modal-target="signupModal"
                 data-modal-toggle="signupModal"
-                class="text-orange-900 shadow-md shadow-orange-400/50 bg-gradient-to-br from-red-300 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-100 dark:focus:ring-pink-300 font-medium rounded-md text-xs px-5 py-2.5 text-center me-2 mb-2"
+                class="shadow-md shadow-orange-400/50 bg-gradient-to-br from-red-300 to-orange-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-pink-100 dark:focus:ring-pink-300 font-medium rounded-md text-xs px-5 py-2.5 text-center me-2 mb-2"
         >
-            Sign Up
+            <p class="text-black font-bold">Sign Up</p>
         </button>
     </div>
 </div>
@@ -70,6 +70,8 @@
         >
             <a
                     href="#"
+                    data-modal-target="signupModal"
+                    data-modal-toggle="signupModal"
                     class="inline-flex shadow-md shadow-orange-400/50 justify-center items-center py-3 px-5 text-base font-medium text-center text-orange-900 rounded-lg bg-orange-300 hover:bg-orange-900 hover:text-white focus:ring-4 focus:ring-black sm: w-auto"
             >
                 Get started
@@ -427,8 +429,9 @@
         <!-- Submit -->
         <div class="pt-4 pl-4">
           <button type="submit"
-                  class="text-gray-600 bg-slate-300 px-5 py-2 rounded hover:bg-green-400 hover:text-black transition">
-            Sign Up
+                  style="background-color: #374151 !important;"
+                  class="px-5 py-2 rounded transition hover:opacity-90">
+            <p class="text-white font-bold">Sign Up</p>
           </button>
           <p class="pt-2 text-xs text-gray-500">
             Already have an account?
@@ -454,7 +457,7 @@
     const password = document.getElementById('password').value;
 
     try {
-      const res = await fetch('http://localhost:5000/signup', {
+      const res = await fetch('/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

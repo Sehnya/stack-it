@@ -31,7 +31,12 @@ def dashboard():
     try:
         from db import Post
         user = User.get_by_id(session['user_id'])
-        posts = Post.select().order_by(Post.created_at.desc())
+        # Filter posts by category for each tab
+        frontend_posts = Post.select().where(Post.category == 'frontend').order_by(Post.created_at.desc())
+        backend_posts = Post.select().where(Post.category == 'backend').order_by(Post.created_at.desc())
+        docs_posts = Post.select().where(Post.category == 'docs').order_by(Post.created_at.desc())
+        ai_posts = Post.select().where(Post.category == 'ai').order_by(Post.created_at.desc())
+        gamedev_posts = Post.select().where(Post.category == 'game-dev').order_by(Post.created_at.desc())
         # Only show welcome banner if user hasn't dismissed it
         get_started_doc_id = None
         if not user.dismissed_welcome_banner:
@@ -40,7 +45,8 @@ def dashboard():
                 get_started_doc_id = gs_doc.id
             except Exception:
                 pass
-        return render_template('dashboard.html', user=user, posts=posts, get_started_doc_id=get_started_doc_id)
+        is_admin = session.get('is_admin', False)
+        return render_template('dashboard.html', user=user, is_admin=is_admin, frontend_posts=frontend_posts, backend_posts=backend_posts, docs_posts=docs_posts, ai_posts=ai_posts, gamedev_posts=gamedev_posts, get_started_doc_id=get_started_doc_id)
     except DoesNotExist:
         session.clear()
         return redirect('/login')

@@ -70,13 +70,31 @@ To populate the database with sample community posts for testing and development
 python seed.py
 ```
 
-This will create 3 sample posts:
-- 2 frontend-focused posts (React Server Components, Vue vs React)
-- 1 backend-focused post (GraphQL vs REST API design)
+This will:
+- Create an admin user (username: `stackit-team`, password: `password`) if it doesn't exist
+- Create 3 sample posts authored by the Stack-It Team:
+  - 2 frontend-focused posts (React Server Components, Vue vs React)
+  - 1 backend-focused post (GraphQL vs REST API design)
 
-**Note:** Run this after creating your first user account (username: `sallen20`). If posts with IDs 1001-1003 already exist, you'll be prompted to delete and recreate them.
+**Note:** If posts with IDs 1001-1003 already exist, you'll be prompted to delete and recreate them.
 
-### 8. Run the Development Server
+### 8. Reset Database (Optional)
+
+To completely clear the database and start fresh with sample data:
+
+```bash
+python clear.py
+```
+
+This will:
+- Drop all database tables (User, Stack, Post, Favorite)
+- Recreate all tables
+- Automatically run the seed script to populate with sample data
+- Create the `stackit-team` admin user (password: `password`)
+
+**Warning:** This script runs without confirmation and will delete all data permanently.
+
+### 9. Run the Development Server
 
 ```bash
 python main.py
@@ -122,6 +140,7 @@ stack-it/
 ├── main.py                 # Main Flask application
 ├── db.py                   # Database models and configuration
 ├── seed.py                 # Database seeding script
+├── clear.py                # Database reset script
 ├── routes/                 # Route handlers (modular)
 ├── templates/              # Jinja2 HTML templates
 ├── static/                 # Static assets

@@ -226,21 +226,6 @@
     </div>
 
     <script>
-        // Toggle user dropdown menu
-        const toggle = document.getElementById('user-menu-toggle');
-        const dropdown = document.getElementById('user-dropdown');
-
-        if (toggle && dropdown) {
-            toggle.addEventListener('click', function (e) {
-                e.stopPropagation();
-                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-            });
-
-            document.addEventListener('click', function () {
-                dropdown.style.display = 'none';
-            });
-        }
-
         // Execute custom query
         async function executeQuery() {
             const query = document.getElementById('query-input').value;

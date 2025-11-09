@@ -5,7 +5,7 @@ html {
 }
 
 body {
-    background: no-repeat linear-gradient(
+    background: linear-gradient(
     to bottom left,
     rgba(223, 131, 110, 1) 6.800445914268494%,
     rgba(222, 120, 95, 1) 9.744707494974136%,
@@ -28,9 +28,8 @@ body {
     rgba(70, 137, 136, 1) 89.14530277252197%,
     rgba(57, 120, 119, 1) 100%
   );
-    background-size: cover;
+    background-attachment: fixed;
     padding: 0;
-    padding-top: 45px;
     margin: 0;
     min-height: 100vh;
     max-width: 100vw;
@@ -253,8 +252,19 @@ font-weight: lighter
    box-shadow: #2d2d30 0 0 45px 5px;
     background-color: rgba(45, 45, 48, 0.37) ;
 }
-#user-dropdown a:hover {
-  background-color: #1e1e1e;
+/* Dropdown hover styles are handled by Tailwind classes in _navbar.html */
+#user-dropdown a[href="/dashboard"]:hover,
+#user-dropdown a[href="/admin"]:hover,
+#user-dropdown a[href="/settings"]:hover,
+#user-dropdown a[href="/login"]:hover,
+#user-dropdown a[href="/signup"]:hover {
+  color: #f97316 !important; /* orange-500 */
+  background-color: rgba(249, 115, 22, 0.1) !important; /* orange-500/10 */
+}
+
+#user-dropdown a[href="/logout"]:hover {
+  color: #ef4444 !important; /* red-500 */
+  background-color: rgba(239, 68, 68, 0.1) !important; /* red-500/10 */
 }
 
 .nav-5:hover {

@@ -28,7 +28,7 @@
             border-bottom: 1px solid #333;
         }
         .user-table th {
-            background-color: rgba(5,7,8,0.86);
+            background-color: rgba(31, 41, 55, 0.5);
             color: white;
         }
         .user-table tr:hover {
@@ -141,20 +141,6 @@
     </div>
 
     <script>
-        // Toggle user dropdown menu
-        const toggle = document.getElementById('user-menu-toggle');
-        const dropdown = document.getElementById('user-dropdown');
-
-        toggle.addEventListener('click', function (e) {
-            e.stopPropagation();
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-        });
-
-        // Hide menu when clicking elsewhere
-        document.addEventListener('click', function () {
-            dropdown.style.display = 'none';
-        });
-        
         // Set the correct option as selected based on user role
         document.addEventListener('DOMContentLoaded', function() {
             const rows = document.querySelectorAll('.user-table tbody tr');
