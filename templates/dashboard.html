@@ -275,6 +275,15 @@
     const banner = document.getElementById('sticky-banner');
     if (banner) {
       banner.style.display = 'none';
+      // Persist dismissal to server
+      fetch('/api/user/dismiss-banner', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }).catch(error => {
+        console.error('Error dismissing banner:', error);
+      });
     }
   }
 

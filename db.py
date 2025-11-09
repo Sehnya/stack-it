@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from peewee import Model, CharField, AutoField, PostgresqlDatabase, FloatField, TextField, DateTimeField, IntegerField, \
-    ForeignKeyField, SqliteDatabase
+    ForeignKeyField, SqliteDatabase, BooleanField
 from playhouse.db_url import connect
 
 # Import necessary modules
@@ -161,7 +161,9 @@ class User(BaseModel):
     profile_photo = CharField(null=True)
     # Last time the user made a request; used for online status indicator
     last_seen = DateTimeField(null=True)
-    
+    # Track if user has dismissed the welcome banner
+    dismissed_welcome_banner = BooleanField(default=False)
+
     def is_admin(self):
         """Check if the user has admin role"""
         return self.role == 'admin'
@@ -235,11 +237,14 @@ def ensure_schema():
                 db.execute_sql(f'ALTER TABLE {user_table} ADD COLUMN profile_photo VARCHAR NULL;')
             if 'last_seen' not in existing_columns:
                 db.execute_sql(f'ALTER TABLE {user_table} ADD COLUMN last_seen TIMESTAMP NULL;')
+            if 'dismissed_welcome_banner' not in existing_columns:
+                db.execute_sql(f'ALTER TABLE {user_table} ADD COLUMN dismissed_welcome_banner BOOLEAN DEFAULT 0;')
         else:
             # PostgreSQL: Use ADD COLUMN IF NOT EXISTS
             qt = f'"{user_table}"'
             db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS profile_photo VARCHAR NULL;')
             db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP NULL;')
+            db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS dismissed_welcome_banner BOOLEAN DEFAULT FALSE;')
     except Exception as e:
         # Do not crash app on migration issues; logs could be added here if needed
         pass

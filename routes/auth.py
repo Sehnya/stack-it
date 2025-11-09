@@ -32,12 +32,14 @@ def dashboard():
         from db import Post
         user = User.get_by_id(session['user_id'])
         posts = Post.select().order_by(Post.created_at.desc())
-        # Ensure Get Started doc exists and fetch its id
-        try:
-            gs_doc = ensure_get_started_doc(user.id)
-            get_started_doc_id = gs_doc.id
-        except Exception:
-            get_started_doc_id = None
+        # Only show welcome banner if user hasn't dismissed it
+        get_started_doc_id = None
+        if not user.dismissed_welcome_banner:
+            try:
+                gs_doc = ensure_get_started_doc(user.id)
+                get_started_doc_id = gs_doc.id
+            except Exception:
+                pass
         return render_template('dashboard.html', user=user, posts=posts, get_started_doc_id=get_started_doc_id)
     except DoesNotExist:
         session.clear()
