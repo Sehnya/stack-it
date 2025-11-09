@@ -1,3 +1,9 @@
+html {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
 body {
     background: no-repeat linear-gradient(
     to bottom left,
@@ -24,19 +30,20 @@ body {
   );
     background-size: cover;
     padding: 0;
+    padding-top: 45px;
     margin: 0;
-    height: fit-content;
-    width: 100vw;
+    min-height: 100vh;
+    max-width: 100vw;
     overflow-x: hidden;
 
 
 }
 
 .header {
-    position: relative;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     background-color: black;
     height: 45px;
     align-content: center;
@@ -45,7 +52,7 @@ body {
     flex-direction: row;
     font-size: 12px;
     justify-content: space-between;
-    z-index: 1000;
+    z-index: 10001;
 }
 
 .img-container {

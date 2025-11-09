@@ -85,13 +85,13 @@
  </div>
 
     </div>
-<div class="main-post-content" style="width: 100%; display: flex; flex-direction: row; height: 100%; position: relative; overflow: auto; background-color: rgba(12,12,12,0.7) ">
-    <div class="content-post" style="width: inherit; height: inherit; display: flex; flex-direction: column; font-weight: lighter; color: white; align-content: start; position: relative; padding: 20px;">
+<div class="main-post-content" style="width: 100%; display: flex; flex-direction: row; min-height: calc(100vh - 135px); position: relative; overflow: auto; background-color: rgba(12,12,12,0.7) ">
+    <div class="content-post" style="flex: 1; height: inherit; display: flex; flex-direction: column; font-weight: lighter; color: white; align-content: start; position: relative; padding: 20px;">
         <div class="prose">
             {{ content|safe }}
         </div>
     </div>
-    <div class="post-sidenav" style="width: 300px; display: flex; flex-direction: column; background-color: rgba(5,7,8,0.47); min-height: 200px; color: white; font-weight: lighter; padding: 10px">
+    <div class="post-sidenav" style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; background-color: rgba(5,7,8,0.47); min-height: 200px; color: white; font-weight: lighter; padding: 10px">
        <header>
            <p> On This Page</p>
     </header>
