@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from peewee import Model, CharField, AutoField, PostgresqlDatabase, FloatField, TextField, DateTimeField, IntegerField, \
-    ForeignKeyField
+    ForeignKeyField, SqliteDatabase, BooleanField
 from playhouse.db_url import connect
 
 # Import necessary modules
@@ -58,6 +58,7 @@ force_ipv4_connections()
 # Initialize database connection
 # First try with DATABASE_URL
 DATABASE_URL = os.getenv("DATABASE_URL")
+USE_SQLITE = False
 
 # If DATABASE_URL is not provided, try to construct it from individual variables
 if not DATABASE_URL:
@@ -67,7 +68,7 @@ if not DATABASE_URL:
     DB_HOST = os.getenv("DB_HOST")
     DB_PORT = os.getenv("DB_PORT", "5432")
     DB_NAME = os.getenv("DB_NAME")
-    
+
     if all([DB_USER, DB_PASSWORD, DB_HOST, DB_NAME]):
         DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     else:
@@ -77,52 +78,67 @@ if not DATABASE_URL:
         HOST = os.getenv("host")
         PORT = os.getenv("port")
         DBNAME = os.getenv("dbname")
-        
+
         if all([USER, PASSWORD, HOST, PORT, DBNAME]):
             DATABASE_URL = f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}"
         else:
-            raise ValueError("❌ Database configuration not found. Either DATABASE_URL or individual connection parameters must be set.")
+            # Fall back to SQLite for local development
+            USE_SQLITE = True
+            print("ℹ️  No PostgreSQL config found, using SQLite for local development")
 
-# Connect to the database using playhouse.db_url
-# For Supabase pooler, we need to disable prepared statements
-db = connect(DATABASE_URL)
+# Connect to the database
+if USE_SQLITE:
+    # Use SQLite for local development
+    db = SqliteDatabase('stack_it.db')
+else:
+    # Use PostgreSQL for production
+    # For Supabase pooler, we need to disable prepared statements
+    db = connect(DATABASE_URL)
 
 # Define a function to test the connection
 def test_connection():
     try:
-        # Extract connection parameters from DATABASE_URL
-        pattern = r'postgresql:\/\/(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)\/(?P<database>[^\s?]+)'
-        match = re.match(pattern, DATABASE_URL)
-        
-        if not match:
-            raise ValueError("❌ Invalid DATABASE_URL format")
-        
-        params = match.groupdict()
-        
-        # Configure connection for Supabase pooler
-        connection = psycopg2.connect(
-            user=params['user'],
-            password=params['password'],
-            host=params['host'],
-            port=params['port'],
-            dbname=params['database'],
-            options="-c statement_timeout=5000"  # Set statement timeout for Supabase pooler
-        )
-        print("Connection successful!")
+        if USE_SQLITE:
+            # Test SQLite connection
+            if db.is_closed():
+                db.connect()
+            print("✅ SQLite connection successful!")
+            db.close()
+            return True
+        else:
+            # Extract connection parameters from DATABASE_URL
+            pattern = r'postgresql:\/\/(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)\/(?P<database>[^\s?]+)'
+            match = re.match(pattern, DATABASE_URL)
 
-        # Create a cursor to execute SQL queries
-        cursor = connection.cursor()
+            if not match:
+                raise ValueError("❌ Invalid DATABASE_URL format")
 
-        # Example query
-        cursor.execute("SELECT NOW();")
-        result = cursor.fetchone()
-        print("Current Time:", result)
+            params = match.groupdict()
 
-        # Close the cursor and connection
-        cursor.close()
-        connection.close()
-        print("Connection closed.")
-        return True
+            # Configure connection for Supabase pooler
+            connection = psycopg2.connect(
+                user=params['user'],
+                password=params['password'],
+                host=params['host'],
+                port=params['port'],
+                dbname=params['database'],
+                options="-c statement_timeout=5000"  # Set statement timeout for Supabase pooler
+            )
+            print("Connection successful!")
+
+            # Create a cursor to execute SQL queries
+            cursor = connection.cursor()
+
+            # Example query
+            cursor.execute("SELECT NOW();")
+            result = cursor.fetchone()
+            print("Current Time:", result)
+
+            # Close the cursor and connection
+            cursor.close()
+            connection.close()
+            print("Connection closed.")
+            return True
 
     except Exception as e:
         print(f"Failed to connect: {e}")
@@ -145,7 +161,9 @@ class User(BaseModel):
     profile_photo = CharField(null=True)
     # Last time the user made a request; used for online status indicator
     last_seen = DateTimeField(null=True)
-    
+    # Track if user has dismissed the welcome banner
+    dismissed_welcome_banner = BooleanField(default=False)
+
     def is_admin(self):
         """Check if the user has admin role"""
         return self.role == 'admin'
@@ -206,12 +224,27 @@ def ensure_schema():
             db.connect()
         # Ensure tables exist first
         db.create_tables([User, Stack, Post, Favorite])
+
         # Add missing columns to user table if they don't exist
         user_table = User._meta.table_name
-        # Quote table name to handle reserved words (e.g., user)
-        qt = f'"{user_table}"'
-        db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS profile_photo VARCHAR NULL;')
-        db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP NULL;')
+
+        if USE_SQLITE:
+            # SQLite: Check if columns exist before adding
+            cursor = db.execute_sql(f"PRAGMA table_info({user_table})")
+            existing_columns = {row[1] for row in cursor.fetchall()}
+
+            if 'profile_photo' not in existing_columns:
+                db.execute_sql(f'ALTER TABLE {user_table} ADD COLUMN profile_photo VARCHAR NULL;')
+            if 'last_seen' not in existing_columns:
+                db.execute_sql(f'ALTER TABLE {user_table} ADD COLUMN last_seen TIMESTAMP NULL;')
+            if 'dismissed_welcome_banner' not in existing_columns:
+                db.execute_sql(f'ALTER TABLE {user_table} ADD COLUMN dismissed_welcome_banner BOOLEAN DEFAULT 0;')
+        else:
+            # PostgreSQL: Use ADD COLUMN IF NOT EXISTS
+            qt = f'"{user_table}"'
+            db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS profile_photo VARCHAR NULL;')
+            db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP NULL;')
+            db.execute_sql(f'ALTER TABLE {qt} ADD COLUMN IF NOT EXISTS dismissed_welcome_banner BOOLEAN DEFAULT FALSE;')
     except Exception as e:
         # Do not crash app on migration issues; logs could be added here if needed
         pass

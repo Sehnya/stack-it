@@ -39,8 +39,7 @@
                 </p>
             </div>
 
-            <!-- Create New Post link - shown only if user is admin -->
-            {% if session.get('is_admin', False) %}
+            <!-- Create New Post link - shown for all logged-in users -->
             <div class="nav-5" style="color: white; display: flex; flex-direction: row; justify-content: space-around; width: 135px; position: absolute; left: 135%; align-items: center; height: inherit">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-plus" viewBox="0 0 16 16">
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
@@ -49,7 +48,6 @@
                     <a style="color: inherit; text-decoration: none; position: relative; margin-left: -15px;" href="/create-post">Create New Post</a>
                 </p>
             </div>
-            {% endif %}
         </div>
         {% endif %}
     </div>
@@ -59,41 +57,68 @@
         {% if session.get('user_id') %}
             <!-- Logged in user menu -->
             {% set cu = current_user() %}
-            <div style="position:relative; display:inline-block;">
-              <img src="{{ avatar_url(cu) }}" alt="avatar" style="height: 24px; margin-left: 4px; width: 24px; border-radius:50%; object-fit:cover;">
+            <div style="position:relative; display:inline-flex; align-items:center;">
+              <img src="{{ avatar_url(cu) }}" alt="avatar" style="height: 32px; width: 32px; border-radius:50%; object-fit:cover; cursor: pointer; border: 2px solid white;">
               {% if is_online(cu) %}
-              <span title="Online" style="position:absolute; bottom:-1px; right:-1px; width:8px; height:8px; background:#22c55e; border:2px solid #1b1f23; border-radius:50%; display:inline-block;"></span>
+              <span title="Online" style="position:absolute; bottom:0px; right:0px; width:9px; height:9px; background:#22c55e; border:2px solid #000; border-radius:50%; display:inline-block;"></span>
               {% endif %}
             </div>
-            <p style="color: white; font-size: 10px; margin-top: 14px;">{{ cu.username }}</p>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-chevron-down" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708"/>
-            </svg>
 
             <!-- Dropdown menu for logged in users -->
-            <div id="user-dropdown" style="display: none; position: absolute; right: 0; background-color: #121212; border: 1px solid #333; border-radius: 6px; min-width: 120px; z-index: 999;">
-                <a href="/dashboard" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Dashboard</a>
-                
+            <div id="user-dropdown" class="flex flex-col absolute right-0 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content; top: 100%; margin-top: 0.5rem; display: none; z-index: 10000;">
+                <a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap" style="text-decoration: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100" viewBox="0 0 16 16">
+                        <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
                 <!-- Admin section - only shown to admins -->
                 {% if session.get('is_admin', False) %}
-                <a href="/admin" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Admin Panel</a>
+                <a href="/admin" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap" style="text-decoration: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                        <path d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                    </svg>
+                    <span>Admin Panel</span>
+                </a>
                 {% endif %}
-                
-                <a href="/settings" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Settings</a>
-                <a href="/logout" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Logout</a>
+
+                <a href="/settings" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap" style="text-decoration: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/>
+                        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>
+                    </svg>
+                    <span>Settings</span>
+                </a>
+                <a href="/logout" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white hover:text-red-500 hover:bg-red-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap" style="text-decoration: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+                        <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                    </svg>
+                    <span>Logout</span>
+                </a>
             </div>
         {% else %}
             <!-- Not logged in - show login/signup options -->
-            <img src="../static/images/Ellipse-2.png" alt="avatar-placeholder" style="height: 20px; margin-left: 4px; width: 20px;">
-            <p style="color: white; font-size: 10px; margin-top: 14px;">Menu</p>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-chevron-down" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708"/>
-            </svg>
+            <img src="../static/images/Ellipse-2.png" alt="avatar-placeholder" style="height: 32px; width: 32px; border-radius:50%; object-fit:cover; cursor: pointer; border: 2px solid white;">
 
             <!-- Dropdown menu for guests -->
-            <div id="user-dropdown" style="display: none; position: absolute; top: 40px; right: 0; background-color: #121212; border: 1px solid #333; border-radius: 6px; min-width: 120px; z-index: 999;">
-                <a href="/login" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Login</a>
-                <a href="/signup" style="display: block; padding: 10px; color: white; text-decoration: none; font-size: 14px;">Sign Up</a>
+            <div id="user-dropdown" class="flex flex-col absolute right-0 backdrop-blur-md border border-gray-700/50 rounded-lg shadow-xl ring-1 ring-gray-800/50 overflow-hidden transition-all duration-200 ease-out" style="background-color: #121212; min-width: max-content; top: 100%; margin-top: 0.5rem; display: none; z-index: 10000;">
+                <a href="/login" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap" style="text-decoration: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M10 3.5a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 1 1 0v2A1.5 1.5 0 0 1 9.5 14h-8A1.5 1.5 0 0 1 0 12.5v-9A1.5 1.5 0 0 1 1.5 2h8A1.5 1.5 0 0 1 11 3.5v2a.5.5 0 0 1-1 0z"/>
+                        <path fill-rule="evenodd" d="M4.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H14.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708z"/>
+                    </svg>
+                    <span>Login</span>
+                </a>
+                <a href="/signup" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-150 ease-in-out group whitespace-nowrap" style="text-decoration: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="opacity-70 group-hover:opacity-100 flex-shrink-0" viewBox="0 0 16 16">
+                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                        <path d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                    </svg>
+                    <span>Sign Up</span>
+                </a>
             </div>
         {% endif %}
     </div>
@@ -108,12 +133,19 @@
     if (toggle && dropdown) {
         toggle.addEventListener('click', function (e) {
             e.stopPropagation();
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            // Use inline display style instead of hidden class
+            if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
         });
 
         // Hide menu when clicking elsewhere
-        document.addEventListener('click', function () {
-            dropdown.style.display = 'none';
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('#user-menu-toggle')) {
+                dropdown.style.display = 'none';
+            }
         });
     }
 </script>

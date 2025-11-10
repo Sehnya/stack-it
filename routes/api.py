@@ -144,6 +144,20 @@ def get_user_contributions():
     return jsonify([])
 
 
+@api_bp.route('/user/dismiss-banner', methods=['POST'])
+@login_required
+def dismiss_banner():
+    """Mark the welcome banner as dismissed for the current user"""
+    try:
+        user_id = session['user_id']
+        user = User.get_by_id(user_id)
+        user.dismissed_welcome_banner = True
+        user.save()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @api_bp.route('/stacks/<int:stack_id>/favorite', methods=['POST'])
 @login_required
 def toggle_stack_favorite(stack_id):
