@@ -1,0 +1,14 @@
+# Nixpacks configuration for Railway deployment
+# This tells Nixpacks to use Bun and ignore Python/npm detection
+
+[phases.setup]
+nixPkgs = ["bun"]
+
+[phases.install]
+cmds = ["cd backend && bun install"]
+
+[phases.build]
+cmds = ["cd backend && bunx prisma generate"]
+
+[start]
+cmd = "cd backend && bun run start"
