@@ -1,0 +1,186 @@
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff, ArrowLeft, Mail, Lock } from 'lucide-react'
+
+interface LoginProps {
+  onLogin: () => void
+}
+
+const Login = ({ onLogin }: LoginProps) => {
+  const navigate = useNavigate()
+  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    // Simulate login
+    setTimeout(() => {
+      setIsLoading(false)
+      onLogin()
+      navigate('/dashboard')
+    }, 1000)
+  }
+
+  return (
+    <div className="min-h-screen bg-[#e5e7eb] flex">
+      {/* Left Panel - Form */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md"
+        >
+          <NavLink
+            to="/"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors"
+          >
+            <ArrowLeft size={18} />
+            Back to home
+          </NavLink>
+
+          <div className="flex items-center gap-3 mb-8">
+            <img
+              src="/images/black-logo.png"
+              alt="Stack-it"
+              className="w-12 h-12 object-contain"
+            />
+            <span className="text-2xl font-semibold text-gray-900">Stack-it</span>
+          </div>
+
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
+          <p className="text-gray-600 mb-8">
+            Sign in to continue to your account
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <div className="relative">
+                <Mail
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full pl-11 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition-colors"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-11 pr-12 py-3 bg-white rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition-colors"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                />
+                <span className="text-sm text-gray-600">Remember me</span>
+              </label>
+              <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
+                Forgot password?
+              </a>
+            </div>
+
+            <motion.button
+              type="submit"
+              disabled={isLoading}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                  />
+                  Signing in...
+                </span>
+              ) : (
+                'Sign in'
+              )}
+            </motion.button>
+          </form>
+
+          <div className="mt-8 text-center">
+            <span className="text-gray-600">Don't have an account? </span>
+            <NavLink
+              to="/register"
+              className="text-gray-900 font-medium hover:underline"
+            >
+              Sign up
+            </NavLink>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Right Panel - Visual */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="hidden lg:flex flex-1 bg-gray-900 items-center justify-center p-12"
+      >
+        <div className="max-w-md text-center">
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-8"
+          >
+            <img
+              src="/images/black-logo.png"
+              alt="Stack-it"
+              className="w-16 h-16 object-contain invert"
+            />
+          </motion.div>
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Share your stack with the world
+          </h2>
+          <p className="text-gray-400">
+            Join thousands of developers sharing their tech stacks, 
+            discovering new tools, and building connections.
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+export default Login

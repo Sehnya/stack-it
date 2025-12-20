@@ -38,20 +38,16 @@ body {
 
 }
 
+/* Main content area - accounts for sidebar */
+.main-content {
+    margin-left: 80px;
+    transition: margin-left 0.3s ease-in-out;
+    min-height: 100vh;
+}
+
+/* Legacy header - hidden when using sidebar */
 .header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: black;
-    height: 45px;
-    align-content: center;
-    padding-left: 20px;
-    display: flex;
-    flex-direction: row;
-    font-size: 12px;
-    justify-content: space-between;
-    z-index: 10001;
+    display: none;
 }
 
 .img-container {

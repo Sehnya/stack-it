@@ -14,11 +14,12 @@
 </head>
 
 <body style="min-height: 100vh;">
-    <!-- Include the navigation bar -->
-    {% include '_navbar.html' %}
+    <!-- Include the sidebar -->
+    {% include '_sidebar.html' %}
 
+    <div class="main-content">
     <!-- Main Form Container -->
-    <div style="display: flex; justify-content: center; align-items: flex-start; padding-top: 5%; min-height: calc(100vh - 45px);">
+    <div style="display: flex; justify-content: center; align-items: flex-start; padding-top: 5%; min-height: calc(100vh - 0px);">
         <form method="POST" action="{% if edit_mode %}/edit-post/{{ post.id }}{% else %}/create-post{% endif %}" class="font-thin text-sm" style="width:75%; background-color: rgba(36,41,47,0.73); border: solid 1px rgba(0,0,0,0.71); padding: 30px; height: fit-content; border-radius: 6px;">
             <h2 class="font-thin text-xl text-white mb-6">{% if edit_mode %}Edit Post{% else %}Create New Post{% endif %}</h2>
 
@@ -1221,6 +1222,7 @@
     <div id="tooltip-more-typography" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
         More typography options
         <div class="tooltip-arrow" data-popper-arrow></div>
+    </div>
     </div>
 </body>
 </html>

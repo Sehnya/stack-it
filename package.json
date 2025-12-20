@@ -1,13 +1,16 @@
 {
-  "name": "stack-proj-copy",
+  "name": "stack-it",
   "version": "1.0.0",
-  "description": "",
+  "description": "Stack-it - A developer community platform",
   "license": "ISC",
   "author": "",
-  "type": "commonjs",
-  "main": "postcss.config.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "bun run --watch backend/src/index.ts",
+    "start": "bun run backend/src/index.ts",
+    "db:generate": "bun run --cwd backend db:generate",
+    "db:push": "bun run --cwd backend db:push",
+    "db:seed": "bun run --cwd backend db:seed"
   },
   "dependencies": {
     "autoprefixer": "^10.4.21",
@@ -66,5 +69,7 @@
     "update-browserslist-db": "^1.1.3",
     "yallist": "^5.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
 }

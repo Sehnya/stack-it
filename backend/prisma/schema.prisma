@@ -1,0 +1,69 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                     Int        @id @default(autoincrement())
+  username               String     @unique
+  email                  String     @unique
+  password               String
+  role                   String     @default("user")
+  profilePhoto           String?    @map("profile_photo")
+  lastSeen               DateTime?  @map("last_seen")
+  dismissedWelcomeBanner Boolean    @default(false) @map("dismissed_welcome_banner")
+  createdAt              DateTime   @default(now()) @map("created_at")
+  
+  posts     Post[]
+  favorites Favorite[]
+
+  @@map("users")
+}
+
+model Post {
+  id        Int        @id @default(autoincrement())
+  title     String
+  summary   String
+  body      String
+  tags      String
+  category  String
+  authorId  Int        @map("author_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  favorites Favorite[]
+
+  @@map("posts")
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("favorites")
+}
+
+model Stack {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  difficulty  String
+  rating      Float    @default(0.0)
+  usageCount  Int      @default(0) @map("usage_count")
+  technologies String
+  codeSnippet String   @map("code_snippet")
+  createdAt   DateTime @map("created_at")
+
+  @@map("stacks")
+}

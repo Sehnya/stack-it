@@ -67,9 +67,10 @@
     </style>
 </head>
 <body>
-    <!-- Include the navigation bar -->
-    {% include '_navbar.html' %}
+    <!-- Include the sidebar -->
+    {% include '_sidebar.html' %}
 
+    <div class="main-content">
     <div class="error-container">
         <div class="error-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="#ff6b6b" viewBox="0 0 16 16">
@@ -115,6 +116,7 @@
         <p class="help-text">
             If this problem persists, please contact our support team or try again later.
         </p>
+    </div>
     </div>
 </body>
 </html>

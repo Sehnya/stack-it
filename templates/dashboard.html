@@ -90,15 +90,89 @@
     body.dashboard-page {
         padding-top: 0;
     }
+    
+    /* Three column layout */
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Right sidebar styling */
+    .right-sidebar {
+        height: fit-content;
+    }
+    
+    .right-sidebar-section {
+        background: #1a1a1a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .user-request-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: background 0.2s;
+        margin-bottom: 0.5rem;
+    }
+    
+    .user-request-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .user-avatar-small {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    /* Code snippet styling */
+    .code-snippet-container {
+        background: #0d1117;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+    
+    .code-snippet-header {
+        background: #161b22;
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.75rem;
+        color: #8b949e;
+    }
+    
+    .code-snippet-container pre {
+        margin: 0;
+        padding: 1rem;
+        overflow-x: auto;
+    }
+    
+    .code-snippet-container code {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
 </style>
 </head>
  <body class="bg-gray-950 min-h-screen dashboard-page">
-<!-- Include the navigation bar -->
-{% include '_navbar.html' %}
+<!-- Include the sidebar -->
+{% include '_sidebar.html' %}
+
+<div class="main-content">
 
 <!-- Floating notification banner -->
 {% if get_started_doc_id %}
-<div id="sticky-banner" tabindex="-1" class="fixed start-0 w-full p-3 border-b border-gray-700 bg-gray-800" style="top: 45px; z-index: 9999; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4); display: grid; grid-template-columns: 1fr auto 1fr;">
+<div id="sticky-banner" tabindex="-1" class="fixed start-0 w-full border-b border-gray-700 bg-black" style="top: 0; left: 80px; width: calc(100% - 80px); z-index: 9999; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4); display: grid; grid-template-columns: 1fr auto 1fr; margin: 0; padding: 0.5rem 0;">
     <div></div>
     <div class="flex items-center justify-center">
         <span class="inline-flex p-1 me-3 bg-white/10 rounded-full w-6 h-6 items-center justify-center shrink-0">
@@ -120,9 +194,9 @@
 {% endif %}
 
 <!-- Header -->
-<div id="welcome-header" class="w-full bg-gray-900 border-b border-gray-800 px-8 py-6 sticky transition-all duration-300" style="top: 45px; z-index: 998; padding-bottom: 4em;">
+<div id="welcome-header" class="w-full border-b border-gray-800 px-8 py-6 sticky transition-all duration-300" style="z-index: 998; padding-bottom: 4em; background: #111111;">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-light text-white">Welcome, <span class="font-semibold text-orange-500">{{ session['username'] }}</span>!</h1>
+        <h1 class="text-3xl font-light text-white">Welcome, <span class="font-semibold text-white">{{ session['username'] }}</span>!</h1>
     </div>
 </div>
 
@@ -142,15 +216,18 @@
 
     <!-- Tab content -->
     <div id="London" class="tabcontent w-full" style="display: block;">
-        <div class="max-w-7xl mx-auto px-8 py-8">
-            <!-- Section Header -->
-            <div class="mb-8">
-                <h2 class="text-2xl font-semibold text-white mb-2">Frontend</h2>
-                <p class="text-gray-300">Latest code releases for front-end development stacks.</p>
-            </div>
+        <div class="px-8 py-8">
+            <div class="dashboard-layout">
+                <!-- Main Feed -->
+                <div>
+                    <!-- Section Header -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-white mb-2">Frontend</h2>
+                        <p class="text-gray-300">Latest code releases for front-end development stacks.</p>
+                    </div>
 
-            <!-- Posts Grid -->
-            <div class="grid gap-6">
+                    <!-- Posts Grid -->
+                    <div class="grid gap-6">
                 {% if frontend_posts %}
                 {% for post in frontend_posts %}
                 <article class="card-shadcn p-8 relative group">
@@ -227,6 +304,85 @@
                     <p class="text-gray-400">No posts available yet.</p>
                 </div>
                 {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Right Sidebar -->
+                <aside class="right-sidebar">
+                    <!-- Requests Section -->
+                    <div class="right-sidebar-section">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-white">Requests</h3>
+                            <span class="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded-full">2</span>
+                        </div>
+                        <div>
+                            <div class="user-request-item">
+                                <img src="../static/images/Ellipse-2.png" alt="avatar" class="user-avatar-small">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">Sarah Chen</p>
+                                    <p class="text-xs text-gray-400">wants to connect</p>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button class="text-xs px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded transition">Accept</button>
+                                    <button class="text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded transition">Decline</button>
+                                </div>
+                            </div>
+                            <div class="user-request-item">
+                                <img src="../static/images/Ellipse-2.png" alt="avatar" class="user-avatar-small">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">Mike Johnson</p>
+                                    <p class="text-xs text-gray-400">wants to connect</p>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button class="text-xs px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded transition">Accept</button>
+                                    <button class="text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded transition">Decline</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Suggestions Section -->
+                    <div class="right-sidebar-section">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-white">Suggestions for you</h3>
+                        </div>
+                        <div>
+                            <div class="user-request-item">
+                                <img src="../static/images/Ellipse-2.png" alt="avatar" class="user-avatar-small">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">Alex Rivera</p>
+                                    <p class="text-xs text-gray-400">Full Stack Dev</p>
+                                </div>
+                                <button class="text-xs px-3 py-1 bg-orange-500/20 hover:bg-orange-500 text-orange-400 hover:text-white rounded transition">Follow</button>
+                            </div>
+                            <div class="user-request-item">
+                                <img src="../static/images/Ellipse-2.png" alt="avatar" class="user-avatar-small">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">Emma Davis</p>
+                                    <p class="text-xs text-gray-400">UI/UX Designer</p>
+                                </div>
+                                <button class="text-xs px-3 py-1 bg-orange-500/20 hover:bg-orange-500 text-orange-400 hover:text-white rounded transition">Follow</button>
+                            </div>
+                            <div class="user-request-item">
+                                <img src="../static/images/Ellipse-2.png" alt="avatar" class="user-avatar-small">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">James Wilson</p>
+                                    <p class="text-xs text-gray-400">Backend Engineer</p>
+                                </div>
+                                <button class="text-xs px-3 py-1 bg-orange-500/20 hover:bg-orange-500 text-orange-400 hover:text-white rounded transition">Follow</button>
+                            </div>
+                            <div class="user-request-item">
+                                <img src="../static/images/Ellipse-2.png" alt="avatar" class="user-avatar-small">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">Lisa Anderson</p>
+                                    <p class="text-xs text-gray-400">DevOps Specialist</p>
+                                </div>
+                                <button class="text-xs px-3 py-1 bg-orange-500/20 hover:bg-orange-500 text-orange-400 hover:text-white rounded transition">Follow</button>
+                            </div>
+                        </div>
+                        <button class="text-sm text-orange-400 hover:text-orange-300 mt-4 transition">View All</button>
+                    </div>
+                </aside>
             </div>
         </div>
     </div>
@@ -234,13 +390,15 @@
 
     <!-- Backend Tab -->
     <div id="Paris" class="tabcontent w-full" style="display: none;">
-        <div class="max-w-7xl mx-auto px-8 py-8">
-            <div class="mb-8">
-                <h2 class="text-2xl font-semibold text-white mb-2">Backend</h2>
-                <p class="text-gray-300">Latest code releases for backend development stacks.</p>
-            </div>
-            <!-- Posts Grid -->
-            <div class="grid gap-6">
+        <div class="px-8 py-8">
+            <div class="dashboard-layout">
+                <div>
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-white mb-2">Backend</h2>
+                        <p class="text-gray-300">Latest code releases for backend development stacks.</p>
+                    </div>
+                    <!-- Posts Grid -->
+                    <div class="grid gap-6">
                 {% if backend_posts %}
                 {% for post in backend_posts %}
                 <article class="card-shadcn p-8 relative group">
@@ -317,17 +475,26 @@
                     <p class="text-gray-400">No posts available yet.</p>
                 </div>
                 {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Right Sidebar -->
+                <aside class="right-sidebar">
+                    {% include '_right_sidebar.html' %}
+                </aside>
             </div>
         </div>
     </div>
 
     <!-- Docs Tab -->
     <div id="Tokyo" class="tabcontent w-full" style="display: none;">
-        <div class="max-w-7xl mx-auto px-8 py-8">
-            <div class="mb-8">
-                <h2 class="text-2xl font-semibold text-white mb-2">Documentation</h2>
-                <p class="text-gray-300">Documentation and guides for getting the most out of Stack-it.</p>
-            </div>
+        <div class="px-8 py-8">
+            <div class="dashboard-layout">
+                <div>
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-white mb-2">Documentation</h2>
+                        <p class="text-gray-300">Documentation and guides for getting the most out of Stack-it.</p>
+                    </div>
             <!-- Featured: Get Started Guide -->
             {% if get_started_doc_id %}
             <div class="card-shadcn p-12 mb-8">
@@ -421,19 +588,28 @@
                     <p class="text-gray-400">No documentation posts available yet.</p>
                 </div>
                 {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Right Sidebar -->
+                <aside class="right-sidebar">
+                    {% include '_right_sidebar.html' %}
+                </aside>
             </div>
         </div>
     </div>
 
     <!-- AI Tab -->
     <div id="AI" class="tabcontent w-full" style="display: none;">
-        <div class="max-w-7xl mx-auto px-8 py-8">
-            <div class="mb-8">
-                <h2 class="text-2xl font-semibold text-white mb-2">AI</h2>
-                <p class="text-gray-300">Latest code releases for AI development stacks.</p>
-            </div>
-            <!-- Posts Grid -->
-            <div class="grid gap-6">
+        <div class="px-8 py-8">
+            <div class="dashboard-layout">
+                <div>
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-white mb-2">AI</h2>
+                        <p class="text-gray-300">Latest code releases for AI development stacks.</p>
+                    </div>
+                    <!-- Posts Grid -->
+                    <div class="grid gap-6">
                 {% if ai_posts %}
                 {% for post in ai_posts %}
                 <article class="card-shadcn p-8 relative group">
@@ -510,19 +686,28 @@
                     <p class="text-gray-400">No AI posts available yet.</p>
                 </div>
                 {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Right Sidebar -->
+                <aside class="right-sidebar">
+                    {% include '_right_sidebar.html' %}
+                </aside>
             </div>
         </div>
     </div>
 
     <!-- Game Dev Tab -->
     <div id="GameDev" class="tabcontent w-full" style="display: none;">
-        <div class="max-w-7xl mx-auto px-8 py-8">
-            <div class="mb-8">
-                <h2 class="text-2xl font-semibold text-white mb-2">Game Development</h2>
-                <p class="text-gray-300">Latest code releases for game development stacks.</p>
-            </div>
-            <!-- Posts Grid -->
-            <div class="grid gap-6">
+        <div class="px-8 py-8">
+            <div class="dashboard-layout">
+                <div>
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-semibold text-white mb-2">Game Development</h2>
+                        <p class="text-gray-300">Latest code releases for game development stacks.</p>
+                    </div>
+                    <!-- Posts Grid -->
+                    <div class="grid gap-6">
                 {% if gamedev_posts %}
                 {% for post in gamedev_posts %}
                 <article class="card-shadcn p-8 relative group">
@@ -599,6 +784,13 @@
                     <p class="text-gray-400">No game development posts available yet.</p>
                 </div>
                 {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Right Sidebar -->
+                <aside class="right-sidebar">
+                    {% include '_right_sidebar.html' %}
+                </aside>
             </div>
         </div>
     </div>
@@ -763,6 +955,7 @@
     }
   }
 </script>
+</div>
 </body>
 
 
