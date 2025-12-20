@@ -1,8 +1,9 @@
 # Nixpacks configuration for Railway deployment
-# This tells Nixpacks to use Bun and ignore Python/npm detection
+# This tells Nixpacks to use Bun and includes OpenSSL for Prisma
 
 [phases.setup]
-nixPkgs = ["bun"]
+nixPkgs = ["bun", "openssl"]
+aptPkgs = ["openssl", "libssl3"]
 
 [phases.install]
 cmds = ["cd backend && bun install"]
