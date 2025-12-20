@@ -1,16 +1,27 @@
 # Stack-It
 
-A modern web application for creating and managing posts, stacks, and favorites with role-based access control. Built with Flask, Tailwind CSS, and SQLite/PostgreSQL.
+A modern web application for developers to share and discover tech stacks. Built with Bun, Elysia, React, and Tailwind CSS.
+
+## Tech Stack
+
+**Backend:**
+- Bun runtime
+- Elysia framework
+- Prisma ORM
+- SQLite/LibSQL database
+
+**Frontend:**
+- React 18 + TypeScript
+- Vite build tool
+- Tailwind CSS
+- Framer Motion animations
 
 ## Prerequisites
 
-- Python 3.9 or higher
-- Node.js 16+ and npm (or Bun)
+- [Bun](https://bun.sh) v1.0+
 - Git
 
 ## Quick Start
-
-Follow these steps to get the project running locally:
 
 ### 1. Clone the Repository
 
@@ -19,211 +30,137 @@ git clone <repository-url>
 cd stack-it
 ```
 
-### 2. Set Up Python Environment
-
-Create and activate a virtual environment:
+### 2. Install Dependencies
 
 ```bash
-python -m venv venv
+# Backend
+cd backend
+bun install
 
-# On Linux/macOS:
-source venv/bin/activate
-
-# On Windows:
-venv\Scripts\activate
-```
-
-### 3. Install Python Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Install Node Dependencies
-
-```bash
-npm install
-
-# Or if using Bun:
+# Frontend
+cd ../frontend
 bun install
 ```
 
-### 5. Set Up Database
-
-For local development, the app uses SQLite by default (no configuration needed). The database file `stack_it.db` will be created automatically on first run.
-
-If you want to use PostgreSQL instead, see the [Environment Variables](#environment-variables) section below.
-
-### 6. Initialize Database Tables
-
-The database tables will be created automatically when you first run the application. The app uses Peewee ORM with the following models:
-- **User** - User accounts with role-based permissions
-- **Stack** - Collections or categories
-- **Post** - Main content items
-- **Favorite** - User favorites tracking
-
-### 7. Seed Sample Data (Optional)
-
-To populate the database with sample community posts for testing and development:
+### 3. Set Up Database
 
 ```bash
-python seed.py
+cd backend
+
+# Generate Prisma client
+bun run db:generate
+
+# Push schema to database
+bun run db:push
+
+# Seed sample data (optional)
+bun run db:seed
 ```
 
-This will:
-- Create an admin user (username: `stackit-team`, password: `password`) if it doesn't exist
-- Create 3 sample posts authored by the Stack-It Team:
-  - 2 frontend-focused posts (React Server Components, Vue vs React)
-  - 1 backend-focused post (GraphQL vs REST API design)
+### 4. Configure Environment
 
-**Note:** If posts with IDs 1001-1003 already exist, you'll be prompted to delete and recreate them.
-
-### 8. Reset Database (Optional)
-
-To completely clear the database and start fresh with sample data:
+Create `backend/.env`:
 
 ```bash
-python clear.py
+DATABASE_URL="file:./prisma/dev.db"
+JWT_SECRET="your-secret-key"
+PORT=3001
 ```
 
-This will:
-- Drop all database tables (User, Stack, Post, Favorite)
-- Recreate all tables
-- Automatically run the seed script to populate with sample data
-- Create the `stackit-team` admin user (password: `password`)
-
-**Warning:** This script runs without confirmation and will delete all data permanently.
-
-### 9. Run the Development Server
+### 5. Run Development Servers
 
 ```bash
-python main.py
+# Terminal 1 - Backend
+cd backend
+bun run dev
+
+# Terminal 2 - Frontend
+cd frontend
+bun run dev
 ```
 
-The application will be available at `http://localhost:5000`
-
-## Environment Variables
-
-For local development with SQLite, no environment variables are required. For production or PostgreSQL setup, create a `.env` file in the root directory:
-
-```bash
-# Required for production
-SECRET_KEY=your-secret-key-here
-FLASK_ENV=production
-
-# PostgreSQL connection (choose one method)
-
-# Method 1: DATABASE_URL
-DATABASE_URL=postgresql://user:password@host:port/dbname
-
-# Method 2: Individual variables (used by Render)
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_HOST=your_db_host
-DB_PORT=5432
-DB_NAME=your_db_name
-
-# Method 3: Non-prefixed variables
-user=your_db_user
-password=your_db_password
-host=your_db_host
-port=5432
-dbname=your_db_name
-```
-
-**Note:** If no PostgreSQL configuration is found, the app automatically falls back to SQLite for local development.
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
 
 ## Project Structure
 
 ```
 stack-it/
-├── main.py                 # Main Flask application
-├── db.py                   # Database models and configuration
-├── seed.py                 # Database seeding script
-├── clear.py                # Database reset script
-├── routes/                 # Route handlers (modular)
-├── templates/              # Jinja2 HTML templates
+├── backend/
+│   ├── src/
+│   │   ├── index.ts        # Elysia server entry
+│   │   ├── db.ts           # Prisma client
+│   │   └── routes/         # API routes
+│   ├── prisma/
+│   │   └── schema.prisma   # Database schema
+│   ├── package.json
+│   └── railway.json        # Railway deployment config
+├── frontend/
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── pages/          # Page components
+│   │   ├── App.tsx         # Main app with routing
+│   │   └── main.tsx        # Entry point
+│   ├── package.json
+│   └── railway.json        # Railway deployment config
+├── templates/              # Legacy Jinja templates
 ├── static/                 # Static assets
-│   ├── css/               # Compiled CSS
-│   ├── images/            # Image assets
-│   └── uploads/           # User-uploaded files
-├── solutions/              # Solution documentation
-├── requirements.txt        # Python dependencies
-├── package.json           # Node.js dependencies
-├── postcss.config.js      # PostCSS configuration
-└── stack_it.db            # SQLite database (auto-generated)
+└── DEPLOYMENT.md           # Railway deployment guide
 ```
 
-## Development Workflow
+## Available Scripts
 
-### Running the Application
-
+**Backend:**
 ```bash
-# Activate virtual environment
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-
-# Run the Flask development server
-python main.py
+bun run dev        # Start dev server with hot reload
+bun run start      # Start production server
+bun run db:generate # Generate Prisma client
+bun run db:push    # Push schema changes
+bun run db:studio  # Open Prisma Studio
+bun run db:seed    # Seed database
 ```
 
-### Working with CSS
-
-The project uses Tailwind CSS v4. CSS is processed through PostCSS:
-
+**Frontend:**
 ```bash
-# If you modify Tailwind classes, the CSS will be recompiled automatically
-# You may need to set up a PostCSS watch process depending on your workflow
+bun run dev        # Start Vite dev server
+bun run build      # Build for production
+bun run preview    # Preview production build
 ```
 
-### Database Migrations
+## Deployment
 
-The application uses Peewee ORM. Database schema changes require manual migrations. Check the `solutions/` directory for examples of past migrations.
+Stack-It is configured for Railway deployment. See [DEPLOYMENT.md](./DEPLOYMENT.md) for full instructions.
 
-## User Roles
+**Quick deploy:**
+1. Push to GitHub
+2. Connect repo to Railway
+3. Create two services: `backend/` and `frontend/`
+4. Set environment variables
+5. Deploy
 
-The application supports two user roles:
+## Features
 
-- **User** - Standard access (can view posts, create favorites)
-- **Admin** - Full access (can create posts, manage users, access admin panel)
+- User authentication (JWT)
+- Create and share tech stack posts
+- Community feed with trending posts
+- Favorites system
+- Responsive design
+- Animated UI components
 
-To set up an admin user, you'll need to modify the database directly or use a migration script. See `solutions/SOLUTION_ROLE_FIELD.md` for details.
+## API Endpoints
 
-## Production Deployment
-
-For production deployment instructions, see:
-- `PRODUCTION.md` - Production configuration guide
-- `DEPLOYMENT_SUMMARY.md` - Deployment summary
-- `render.yaml` - Render.com configuration
-
-The application is configured to run with Gunicorn in production (see `Procfile`).
-
-## Additional Documentation
-
-- See the `solutions/` directory for detailed documentation on specific features:
-  - Navigation and dropdown menus
-  - Favorites system
-  - Post management
-  - Role-based access control
-  - Three-dot menu implementation
-
-## Troubleshooting
-
-**Database connection errors:**
-- For SQLite: Ensure the application has write permissions in the project directory
-- For PostgreSQL: Verify your connection credentials in the `.env` file
-
-**CSS not loading:**
-- Make sure Node dependencies are installed (`npm install`)
-- Check that `static/css/` directory exists
-
-**Import errors:**
-- Ensure virtual environment is activated
-- Reinstall dependencies: `pip install -r requirements.txt`
+```
+POST   /api/auth/register   # Register new user
+POST   /api/auth/login      # Login user
+GET    /api/posts           # Get all posts
+POST   /api/posts           # Create post
+GET    /api/posts/:id       # Get single post
+DELETE /api/posts/:id       # Delete post
+GET    /api/users/:id       # Get user profile
+POST   /api/favorites       # Add favorite
+DELETE /api/favorites/:id   # Remove favorite
+```
 
 ## License
 
 ISC
-
-## Contributing
-
-This is a personal project. For questions or issues, please open an issue on the repository.
