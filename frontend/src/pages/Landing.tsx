@@ -16,6 +16,7 @@ import { Magnet } from '../components/Magnet'
 import { SpotlightCard } from '../components/SpotlightCard'
 import Prism from '../components/Prism'
 import CardSwap, { Card } from '../components/CardSwap'
+import PillNav from '../components/PillNav'
 
 const Landing = () => {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -36,45 +37,30 @@ const Landing = () => {
     'Elysia',
   ]
 
+  const navItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Login', href: '/login' },
+    { label: 'Sign Up', href: '/register' },
+  ]
+
   return (
     <div ref={containerRef} className="min-h-screen bg-[#e5e7eb] relative">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <motion.div
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="flex items-center justify-between bg-black/30 backdrop-blur-xl rounded-2xl px-6 py-3 border border-white/10"
-          >
-            <div className="flex items-center gap-3">
-              <img
-                src="/images/black-logo.png"
-                alt="Stack-it"
-                className="w-9 h-9 object-contain invert"
-              />
-              <span className="text-lg font-semibold text-white">
-                Stack-it
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <NavLink
-                to="/login"
-                className="px-4 py-2 text-white/80 font-medium hover:text-white transition-colors"
-              >
-                Log in
-              </NavLink>
-              <Magnet strength={0.2}>
-                <NavLink
-                  to="/register"
-                  className="px-5 py-2.5 bg-white text-gray-900 rounded-xl font-medium hover:bg-gray-100 transition-colors"
-                >
-                  Sign up
-                </NavLink>
-              </Magnet>
-            </div>
-          </motion.div>
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4 relative">
+          <PillNav
+            logo="/images/black-logo.png"
+            logoAlt="Stack-it"
+            items={navItems}
+            activeHref="/"
+            baseColor="#000000"
+            pillColor="#ffffff"
+            hoveredPillTextColor="#000000"
+            pillTextColor="#000000"
+            ease="power2.easeOut"
+          />
         </div>
-      </nav>
+      </div>
 
       {/* Hero Section with ColorBends Background */}
       <motion.section
