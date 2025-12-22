@@ -76,23 +76,17 @@ export const pageRoutes = new Elysia()
       return redirect("/login");
     }
 
-    const [frontendPosts, backendPosts, docsPosts, aiPosts, gamedevPosts] = await Promise.all([
-      db.post.findMany({ where: { category: "frontend" }, orderBy: { createdAt: "desc" }, include: { author: true } }),
-      db.post.findMany({ where: { category: "backend" }, orderBy: { createdAt: "desc" }, include: { author: true } }),
-      db.post.findMany({ where: { category: "docs" }, orderBy: { createdAt: "desc" }, include: { author: true } }),
-      db.post.findMany({ where: { category: "ai" }, orderBy: { createdAt: "desc" }, include: { author: true } }),
-      db.post.findMany({ where: { category: "game-dev" }, orderBy: { createdAt: "desc" }, include: { author: true } }),
-    ]);
+    const posts = await db.post.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      include: { author: true }
+    });
 
     return new Response(render("dashboard.html", {
       user,
       session: { user_id: user.id, username: user.username, is_admin: user.role === "admin" },
       request: { path: "/dashboard" },
-      frontend_posts: frontendPosts,
-      backend_posts: backendPosts,
-      docs_posts: docsPosts,
-      ai_posts: aiPosts,
-      gamedev_posts: gamedevPosts,
+      posts,
       current_user: () => user,
       avatar_url: avatarUrl,
       is_online: isOnline,

@@ -15,30 +15,52 @@ model User {
   password               String
   role                   String     @default("user")
   profilePhoto           String?    @map("profile_photo")
+  bio                    String?
   lastSeen               DateTime?  @map("last_seen")
   dismissedWelcomeBanner Boolean    @default(false) @map("dismissed_welcome_banner")
   createdAt              DateTime   @default(now()) @map("created_at")
   
-  posts     Post[]
-  favorites Favorite[]
+  posts      Post[]
+  favorites  Favorite[]
+  likes      Like[]
+  comments   Comment[]
+  followers  Follow[]   @relation("following")
+  following  Follow[]   @relation("followers")
 
   @@map("users")
 }
 
 model Post {
-  id        Int        @id @default(autoincrement())
-  title     String
-  summary   String
-  body      String
-  tags      String
-  category  String
-  authorId  Int        @map("author_id")
-  createdAt DateTime   @default(now()) @map("created_at")
+  id           Int        @id @default(autoincrement())
+  title        String
+  excerpt      String
+  content      String
+  coverImage   String?    @map("cover_image")
+  technologies String     // JSON array stored as string
+  viewCount    Int        @default(0) @map("view_count")
+  authorId     Int        @map("author_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
   
   author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   favorites Favorite[]
+  likes     Like[]
+  files     PostFile[]
+  comments  Comment[]
 
   @@map("posts")
+}
+
+model PostFile {
+  id       Int    @id @default(autoincrement())
+  postId   Int    @map("post_id")
+  name     String
+  language String
+  code     String
+  
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("post_files")
 }
 
 model Favorite {
@@ -52,6 +74,45 @@ model Favorite {
 
   @@unique([userId, postId])
   @@map("favorites")
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  followerId  Int      @map("follower_id")
+  followingId Int      @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  follower  User @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
 }
 
 model Stack {

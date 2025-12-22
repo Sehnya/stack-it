@@ -5,9 +5,8 @@ import { staticPlugin } from "@elysiajs/static";
 import { resolve } from "path";
 import { existsSync } from "fs";
 import { authRoutes } from "./routes/auth";
-import { postRoutes } from "./routes/posts";
+import { postsRoutes } from "./routes/posts";
 import { userRoutes } from "./routes/users";
-import { favoriteRoutes } from "./routes/favorites";
 import { pageRoutes } from "./routes/pages";
 
 // Resolve static path relative to this file's directory
@@ -44,9 +43,8 @@ app
   // Mount routes
   .use(pageRoutes)      // HTML pages
   .use(authRoutes)      // /api/auth/*
-  .use(postRoutes)      // /api/posts/*
+  .use(postsRoutes)     // /api/posts/*
   .use(userRoutes)      // /api/users/*
-  .use(favoriteRoutes)  // /api/favorites/*
   // Global error handler
   .onError(({ code, error }) => {
     console.error(`Error [${code}]:`, error);

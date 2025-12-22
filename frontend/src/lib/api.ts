@@ -32,6 +32,52 @@ async function request<T>(
   }
 }
 
+export interface User {
+  id: number
+  username: string
+  email: string
+  role: string
+  profilePhoto?: string
+  lastSeen?: string
+  dismissedWelcomeBanner?: boolean
+}
+
+export interface PostFile {
+  id?: number
+  name: string
+  language: string
+  code: string
+}
+
+export interface Post {
+  id: string
+  title: string
+  excerpt: string
+  content: string
+  coverImage?: string
+  technologies: string[]
+  viewCount: number
+  createdAt: string
+  savedAt?: string
+  author: {
+    id: string
+    username: string
+    avatar: string
+  }
+  files: PostFile[]
+  likes: number
+  favorites: number
+  comments?: number
+}
+
+export interface UserStats {
+  posts: number
+  likes: number
+  views: number
+  followers: number
+  following: number
+}
+
 export const api = {
   auth: {
     login: (email: string, password: string) =>
@@ -54,14 +100,37 @@ export const api = {
     me: () =>
       request<{ user: User }>('/api/auth/me'),
   },
-}
 
-export interface User {
-  id: number
-  username: string
-  email: string
-  role: string
-  profilePhoto?: string
-  lastSeen?: string
-  dismissedWelcomeBanner?: boolean
+  posts: {
+    getAll: (sort: 'latest' | 'popular' = 'latest', limit = 20, offset = 0) =>
+      request<Post[]>(`/api/posts?sort=${sort}&limit=${limit}&offset=${offset}`),
+
+    getById: (id: string) =>
+      request<Post>(`/api/posts/${id}`),
+
+    create: (data: {
+      title: string
+      excerpt: string
+      content: string
+      coverImage?: string
+      technologies: string[]
+      files?: PostFile[]
+    }) =>
+      request<Post>('/api/posts', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    like: (id: string) =>
+      request<{ liked: boolean }>(`/api/posts/${id}/like`, { method: 'POST' }),
+
+    favorite: (id: string) =>
+      request<{ favorited: boolean }>(`/api/posts/${id}/favorite`, { method: 'POST' }),
+
+    getFavorites: () =>
+      request<Post[]>('/api/posts/favorites/me'),
+
+    getStats: () =>
+      request<UserStats>('/api/posts/stats/me'),
+  },
 }

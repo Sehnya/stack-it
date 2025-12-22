@@ -2,6 +2,17 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { db } from "../db";
 
+const isProduction = process.env.NODE_ENV === "production";
+
+// Cookie options for cross-domain auth
+const getCookieOptions = () => ({
+  httpOnly: true,
+  maxAge: 7 * 24 * 60 * 60, // 7 days
+  path: "/",
+  secure: isProduction, // HTTPS only in production
+  sameSite: isProduction ? "none" as const : "lax" as const, // Required for cross-domain cookies
+});
+
 export const authRoutes = new Elysia({ prefix: "/api/auth" })
   .use(
     jwt({
@@ -53,9 +64,7 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
 
         auth.set({
           value: token,
-          httpOnly: true,
-          maxAge: 7 * 24 * 60 * 60, // 7 days
-          path: "/",
+          ...getCookieOptions(),
         });
 
         console.log("[SIGNUP] Success!");
@@ -117,9 +126,7 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
 
       auth.set({
         value: token,
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60,
-        path: "/",
+        ...getCookieOptions(),
       });
 
       return {
@@ -145,6 +152,8 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
       value: "",
       maxAge: 0,
       path: "/",
+      secure: isProduction,
+      sameSite: isProduction ? "none" as const : "lax" as const,
     });
     return { message: "Logged out successfully" };
   })

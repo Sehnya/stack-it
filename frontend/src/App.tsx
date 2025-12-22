@@ -5,17 +5,14 @@ import { useState } from 'react'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import Community from './pages/Community'
+import Favorites from './pages/Favorites'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Post from './pages/Post'
+import CreatePost from './pages/CreatePost'
 
 // Placeholder pages
-const Favorites = () => (
-  <div className="text-gray-800 text-2xl">Favorites</div>
-)
-const CreatePost = () => (
-  <div className="text-gray-800 text-2xl">Create Post</div>
-)
 const Settings = () => <div className="text-gray-800 text-2xl">Settings</div>
 const Admin = () => <div className="text-gray-800 text-2xl">Admin Panel</div>
 
@@ -184,6 +181,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <AuthenticatedLayout>
               <Admin />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/post/:postId"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <Post />
             </AuthenticatedLayout>
           </ProtectedRoute>
         }

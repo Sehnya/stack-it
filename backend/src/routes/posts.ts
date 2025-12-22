@@ -1,219 +1,235 @@
-import { Elysia, t } from "elysia";
-import { jwt } from "@elysiajs/jwt";
-import { db } from "../db";
+import { Elysia, t } from "elysia"
+import { jwt } from "@elysiajs/jwt"
+import { db } from "../db"
 
-// Helper to get user from JWT
-async function getUserFromAuth(
-  jwtInstance: { verify: (token: string) => Promise<any> },
-  authValue: unknown
-) {
-  if (!authValue || typeof authValue !== "string") {
-    return null;
-  }
-  const payload = await jwtInstance.verify(authValue);
-  if (!payload) return null;
-
-  return db.user.findUnique({
-    where: { id: payload.userId as number },
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      role: true,
-      profilePhoto: true,
-    },
-  });
-}
-
-export const postRoutes = new Elysia({ prefix: "/api/posts" })
-  .use(
-    jwt({
-      name: "jwt",
-      secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
-    })
-  )
-  // Get all posts (public)
-  .get(
-    "/",
-    async ({ query }) => {
-      const { category, limit = "20", offset = "0" } = query;
-
-      const where = category ? { category } : {};
-
+export const postsRoutes = new Elysia({ prefix: "/api/posts" })
+  .use(jwt({
+    name: "jwt",
+    secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
+  }))
+  .get("/", async ({ query }) => {
+    const { sort = "latest", limit = "20", offset = "0" } = query
+    try {
       const posts = await db.post.findMany({
-        where,
-        include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              profilePhoto: true,
-            },
-          },
-          _count: {
-            select: { favorites: true },
-          },
-        },
+        take: parseInt(limit),
+        skip: parseInt(offset),
         orderBy: { createdAt: "desc" },
-        take: Number(limit),
-        skip: Number(offset),
-      });
-
-      return { posts };
-    },
-    {
-      query: t.Object({
-        category: t.Optional(t.String()),
-        limit: t.Optional(t.String()),
-        offset: t.Optional(t.String()),
-      }),
+        include: {
+          author: { select: { id: true, username: true, profilePhoto: true } },
+          files: true,
+          _count: { select: { favorites: true, comments: true } }
+        }
+      })
+      return posts.map(post => ({
+        id: String(post.id),
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        coverImage: post.coverImage,
+        technologies: JSON.parse(post.technologies || "[]"),
+        viewCount: post.viewCount,
+        createdAt: post.createdAt.toISOString(),
+        author: {
+          id: String(post.author.id),
+          username: post.author.username,
+          avatar: post.author.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author.username}`
+        },
+        files: post.files,
+        likes: post._count.favorites,
+        favorites: post._count.favorites,
+        comments: post._count.comments
+      }))
+    } catch (error) {
+      console.error("[POSTS] Error fetching posts:", error)
+      return []
     }
-  )
-  // Get single post (public)
-  .get(
-    "/:id",
-    async ({ params }) => {
+  })
+  .get("/:id", async ({ params, set }) => {
+    try {
       const post = await db.post.findUnique({
         where: { id: Number(params.id) },
         include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              profilePhoto: true,
-            },
-          },
-          _count: {
-            select: { favorites: true },
-          },
-        },
-      });
-
+          author: { select: { id: true, username: true, profilePhoto: true } },
+          files: true,
+          _count: { select: { favorites: true, comments: true } }
+        }
+      })
       if (!post) {
-        return { error: "Post not found" };
+        set.status = 404
+        return { error: "Post not found" }
       }
-
-      return { post };
-    },
-    {
-      params: t.Object({
-        id: t.String(),
-      }),
+      await db.post.update({ where: { id: post.id }, data: { viewCount: post.viewCount + 1 } })
+      return {
+        id: String(post.id),
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        coverImage: post.coverImage,
+        technologies: JSON.parse(post.technologies || "[]"),
+        viewCount: post.viewCount + 1,
+        createdAt: post.createdAt.toISOString(),
+        author: {
+          id: String(post.author.id),
+          username: post.author.username,
+          avatar: post.author.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author.username}`
+        },
+        files: post.files,
+        likes: post._count.favorites,
+        favorites: post._count.favorites,
+        comments: post._count.comments
+      }
+    } catch (error) {
+      console.error("[POSTS] Error fetching post:", error)
+      set.status = 500
+      return { error: "Failed to fetch post" }
     }
-  )
-  // Create post (auth required)
-  .post(
-    "/",
-    async ({ body, jwt, cookie: { auth } }) => {
-      const user = await getUserFromAuth(jwt, auth?.value);
-      if (!user) {
-        return { error: "Unauthorized" };
-      }
-
+  })
+  .post("/", async ({ body, set, jwt, cookie: { auth } }) => {
+    const authValue = auth?.value
+    if (!authValue || typeof authValue !== "string") {
+      set.status = 401
+      return { error: "Not authenticated" }
+    }
+    const payload = await jwt.verify(authValue)
+    if (!payload) {
+      set.status = 401
+      return { error: "Invalid token" }
+    }
+    const { title, excerpt, content, coverImage, technologies, files } = body as {
+      title: string; excerpt: string; content: string; coverImage?: string
+      technologies: string[]; files?: { name: string; language: string; code: string }[]
+    }
+    try {
       const post = await db.post.create({
         data: {
-          title: body.title,
-          summary: body.summary,
-          body: body.body,
-          tags: body.tags,
-          category: body.category,
-          authorId: user.id,
+          title, excerpt, content, coverImage,
+          technologies: JSON.stringify(technologies),
+          authorId: payload.userId as number,
+          files: files ? { create: files.map(f => ({ name: f.name, language: f.language, code: f.code })) } : undefined
         },
         include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              profilePhoto: true,
-            },
-          },
+          author: { select: { id: true, username: true, profilePhoto: true } },
+          files: true
+        }
+      })
+      return {
+        id: String(post.id), title: post.title, excerpt: post.excerpt, content: post.content,
+        coverImage: post.coverImage, technologies: JSON.parse(post.technologies || "[]"),
+        createdAt: post.createdAt.toISOString(),
+        author: {
+          id: String(post.author.id), username: post.author.username,
+          avatar: post.author.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author.username}`
         },
-      });
-
-      return { message: "Post created", post };
-    },
-    {
-      body: t.Object({
-        title: t.String({ minLength: 1 }),
-        summary: t.String(),
-        body: t.String(),
-        tags: t.String(),
-        category: t.String(),
-      }),
+        files: post.files, likes: 0, favorites: 0
+      }
+    } catch (error) {
+      console.error("[POSTS] Error creating post:", error)
+      set.status = 500
+      return { error: "Failed to create post" }
     }
-  )
-  // Update post (auth required)
-  .put(
-    "/:id",
-    async ({ params, body, jwt, cookie: { auth } }) => {
-      const user = await getUserFromAuth(jwt, auth?.value);
-      if (!user) {
-        return { error: "Unauthorized" };
+  })
+  .post("/:id/like", async ({ params, set, jwt, cookie: { auth } }) => {
+    const authValue = auth?.value
+    if (!authValue || typeof authValue !== "string") { set.status = 401; return { error: "Not authenticated" } }
+    const payload = await jwt.verify(authValue)
+    if (!payload) { set.status = 401; return { error: "Invalid token" } }
+    const userId = payload.userId as number
+    const postId = Number(params.id)
+    try {
+      const existing = await db.like.findUnique({ where: { userId_postId: { userId, postId } } })
+      if (existing) {
+        await db.like.delete({ where: { id: existing.id } })
+        return { liked: false }
+      } else {
+        await db.like.create({ data: { userId, postId } })
+        return { liked: true }
       }
-
-      const post = await db.post.findUnique({
-        where: { id: Number(params.id) },
-      });
-
-      if (!post) {
-        return { error: "Post not found" };
+    } catch (error) {
+      console.error("[POSTS] Error toggling like:", error)
+      set.status = 500
+      return { error: "Failed to toggle like" }
+    }
+  })
+  .post("/:id/favorite", async ({ params, set, jwt, cookie: { auth } }) => {
+    const authValue = auth?.value
+    if (!authValue || typeof authValue !== "string") { set.status = 401; return { error: "Not authenticated" } }
+    const payload = await jwt.verify(authValue)
+    if (!payload) { set.status = 401; return { error: "Invalid token" } }
+    const userId = payload.userId as number
+    const postId = Number(params.id)
+    try {
+      const existing = await db.favorite.findUnique({ where: { userId_postId: { userId, postId } } })
+      if (existing) {
+        await db.favorite.delete({ where: { id: existing.id } })
+        return { favorited: false }
+      } else {
+        await db.favorite.create({ data: { userId, postId } })
+        return { favorited: true }
       }
-
-      // Check ownership or admin
-      if (post.authorId !== user.id && user.role !== "admin") {
-        return { error: "Forbidden" };
-      }
-
-      const updated = await db.post.update({
-        where: { id: Number(params.id) },
-        data: {
-          title: body.title,
-          summary: body.summary,
-          body: body.body,
-          tags: body.tags,
-          category: body.category,
+    } catch (error) {
+      console.error("[POSTS] Error toggling favorite:", error)
+      set.status = 500
+      return { error: "Failed to toggle favorite" }
+    }
+  })
+  .get("/favorites/me", async ({ set, jwt, cookie: { auth } }) => {
+    const authValue = auth?.value
+    if (!authValue || typeof authValue !== "string") { set.status = 401; return { error: "Not authenticated" } }
+    const payload = await jwt.verify(authValue)
+    if (!payload) { set.status = 401; return { error: "Invalid token" } }
+    const userId = payload.userId as number
+    try {
+      const favorites = await db.favorite.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        include: {
+          post: {
+            include: {
+              author: { select: { id: true, username: true, profilePhoto: true } },
+              files: true,
+              _count: { select: { favorites: true, comments: true } }
+            }
+          }
+        }
+      })
+      return favorites.map(fav => ({
+        id: String(fav.post.id), title: fav.post.title, excerpt: fav.post.excerpt,
+        content: fav.post.content, coverImage: fav.post.coverImage,
+        technologies: JSON.parse(fav.post.technologies || "[]"),
+        viewCount: fav.post.viewCount, createdAt: fav.post.createdAt.toISOString(),
+        savedAt: fav.createdAt.toISOString(),
+        author: {
+          id: String(fav.post.author.id), username: fav.post.author.username,
+          avatar: fav.post.author.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${fav.post.author.username}`
         },
-      });
-
-      return { message: "Post updated", post: updated };
-    },
-    {
-      params: t.Object({ id: t.String() }),
-      body: t.Object({
-        title: t.Optional(t.String()),
-        summary: t.Optional(t.String()),
-        body: t.Optional(t.String()),
-        tags: t.Optional(t.String()),
-        category: t.Optional(t.String()),
-      }),
+        files: fav.post.files, likes: fav.post._count.favorites,
+        favorites: fav.post._count.favorites, comments: fav.post._count.comments
+      }))
+    } catch (error) {
+      console.error("[POSTS] Error fetching favorites:", error)
+      return []
     }
-  )
-  // Delete post (auth required)
-  .delete(
-    "/:id",
-    async ({ params, jwt, cookie: { auth } }) => {
-      const user = await getUserFromAuth(jwt, auth?.value);
-      if (!user) {
-        return { error: "Unauthorized" };
+  })
+  .get("/stats/me", async ({ set, jwt, cookie: { auth } }) => {
+    const authValue = auth?.value
+    if (!authValue || typeof authValue !== "string") { set.status = 401; return { error: "Not authenticated" } }
+    const payload = await jwt.verify(authValue)
+    if (!payload) { set.status = 401; return { error: "Invalid token" } }
+    const userId = payload.userId as number
+    try {
+      const [postCount, totalLikes, totalViews, followerCount, followingCount] = await Promise.all([
+        db.post.count({ where: { authorId: userId } }),
+        db.like.count({ where: { post: { authorId: userId } } }),
+        db.post.aggregate({ where: { authorId: userId }, _sum: { viewCount: true } }),
+        db.follow.count({ where: { followingId: userId } }),
+        db.follow.count({ where: { followerId: userId } })
+      ])
+      return {
+        posts: postCount, likes: totalLikes, views: totalViews._sum.viewCount || 0,
+        followers: followerCount, following: followingCount
       }
-
-      const post = await db.post.findUnique({
-        where: { id: Number(params.id) },
-      });
-
-      if (!post) {
-        return { error: "Post not found" };
-      }
-
-      if (post.authorId !== user.id && user.role !== "admin") {
-        return { error: "Forbidden" };
-      }
-
-      await db.post.delete({ where: { id: Number(params.id) } });
-
-      return { message: "Post deleted" };
-    },
-    {
-      params: t.Object({ id: t.String() }),
+    } catch (error) {
+      console.error("[POSTS] Error fetching stats:", error)
+      return { posts: 0, likes: 0, views: 0, followers: 0, following: 0 }
     }
-  );
+  })

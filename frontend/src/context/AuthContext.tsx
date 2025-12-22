@@ -18,6 +18,7 @@ interface AuthContextType {
     password: string
   ) => Promise<{ error?: string }>
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -36,45 +37,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await api.auth.me()
       if (!error && data?.user) {
         setUser(data.user)
+      } else {
+        setUser(null)
       }
     } catch {
-      // Not authenticated
+      setUser(null)
     } finally {
       setIsLoading(false)
     }
   }
 
+  const refreshUser = async () => {
+    await checkAuth()
+  }
+
   const login = async (email: string, password: string) => {
-    const { data, error } = await api.auth.login(email, password)
+    try {
+      const { data, error } = await api.auth.login(email, password)
 
-    if (error) {
-      return { error }
+      if (error) {
+        return { error }
+      }
+
+      if (data?.user) {
+        setUser(data.user)
+      }
+
+      return {}
+    } catch (err) {
+      return { error: 'Login failed. Please try again.' }
     }
-
-    if (data?.user) {
-      setUser(data.user)
-    }
-
-    return {}
   }
 
   const signup = async (username: string, email: string, password: string) => {
-    const { data, error } = await api.auth.signup(username, email, password)
+    try {
+      const { data, error } = await api.auth.signup(username, email, password)
 
-    if (error) {
-      return { error }
+      if (error) {
+        return { error }
+      }
+
+      if (data?.user) {
+        setUser(data.user)
+      }
+
+      return {}
+    } catch (err) {
+      return { error: 'Signup failed. Please try again.' }
     }
-
-    if (data?.user) {
-      setUser(data.user)
-    }
-
-    return {}
   }
 
   const logout = async () => {
-    await api.auth.logout()
-    setUser(null)
+    try {
+      await api.auth.logout()
+    } finally {
+      setUser(null)
+    }
   }
 
   return (
@@ -86,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signup,
         logout,
+        refreshUser,
       }}
     >
       {children}

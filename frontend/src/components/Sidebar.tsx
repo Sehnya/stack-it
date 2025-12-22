@@ -8,6 +8,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  PenSquare,
 } from 'lucide-react'
 import './Sidebar.css'
 
@@ -34,6 +35,7 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
     { icon: Home, path: '/dashboard', label: 'Home' },
     { icon: Users, path: '/community', label: 'Community' },
     { icon: Heart, path: '/favorites', label: 'Favorites' },
+    { icon: PenSquare, path: '/create-post', label: 'Create Post' },
     { icon: Settings, path: '/settings', label: 'Settings' },
   ]
 

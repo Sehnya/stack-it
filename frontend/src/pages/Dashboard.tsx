@@ -1,467 +1,367 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
-  TrendingUp,
   Heart,
-  MessageCircle,
-  Share2,
-  Users,
-  Zap,
-  ArrowRight,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
   Bookmark,
+  Eye,
+  TrendingUp,
+  Clock,
+  Zap,
+  ChevronRight,
+  Sparkles,
+  Code2,
+  Users,
+  Star,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
-import LetterGlitch from '../components/LetterGlitch'
 import { useAuth } from '../context/AuthContext'
+import { TechTag } from '../components/TechTag'
+import { api, Post, UserStats } from '../lib/api'
 
-interface Post {
-  id: number
-  title: string
-  author: string
-  avatar: string
-  favorites: number
-  comments: number
-  technologies: string[]
-  excerpt: string
-  image?: string
-}
-
-const topPosts: Post[] = [
-  {
-    id: 1,
-    title: 'Building a Full-Stack App with Bun & Elysia',
-    author: 'Sarah Chen',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-    favorites: 234,
-    comments: 45,
-    technologies: ['Bun', 'Elysia', 'TypeScript'],
-    excerpt: 'Learn how to build blazing fast APIs with the new JavaScript runtime and framework combo.',
-    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600',
-  },
-  {
-    id: 2,
-    title: 'React 19 Features You Need to Know',
-    author: 'Mike Johnson',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-    favorites: 189,
-    comments: 32,
-    technologies: ['React', 'Frontend'],
-    excerpt: 'Explore the exciting new features coming in React 19 and how they will change your workflow.',
-    image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600',
-  },
-  {
-    id: 3,
-    title: 'Prisma vs Drizzle: Which ORM to Choose?',
-    author: 'Emma Wilson',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-    favorites: 156,
-    comments: 28,
-    technologies: ['Prisma', 'Drizzle', 'Database'],
-    excerpt: 'A comprehensive comparison of two popular TypeScript ORMs for your next project.',
-    image: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=600',
-  },
-  {
-    id: 4,
-    title: 'Mastering Tailwind CSS in 2024',
-    author: 'Alex Rivera',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-    favorites: 203,
-    comments: 41,
-    technologies: ['CSS', 'Tailwind'],
-    excerpt: 'Tips and tricks to level up your Tailwind CSS skills and build beautiful UIs faster.',
-    image: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=600',
-  },
-]
-
-const trendingPosts: Post[] = [
-  {
-    id: 5,
-    title: 'Getting Started with Turso Database',
-    author: 'Jordan Lee',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-    favorites: 98,
-    comments: 15,
-    technologies: ['Turso', 'SQLite'],
-    excerpt: 'Edge-ready SQLite for modern applications.',
-  },
-  {
-    id: 6,
-    title: 'The Art of Code Reviews',
-    author: 'Taylor Swift',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
-    favorites: 145,
-    comments: 23,
-    technologies: ['Best Practices'],
-    excerpt: 'How to give and receive feedback effectively.',
-  },
-  {
-    id: 7,
-    title: 'TypeScript 5.4 Deep Dive',
-    author: 'Chris Park',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100',
-    favorites: 167,
-    comments: 29,
-    technologies: ['TypeScript'],
-    excerpt: 'New features and improvements in the latest release.',
-  },
-]
-
-const PostCard = ({ post, index }: { post: Post; index: number }) => {
+// Hero card - large featured post
+const HeroCard = ({ post }: { post: Post }) => {
   const [liked, setLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(post.favorites)
-
-  const handleLike = () => {
-    setLiked(!liked)
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1)
-  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.4 }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-    >
-      <h3 className="font-semibold text-gray-900 mb-3 line-clamp-2">
-        {post.title}
-      </h3>
-
-      <div className="flex items-center gap-2 mb-4">
+    <NavLink to={`/post/${post.id}`} className="block">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        whileHover={{ scale: 1.01 }}
+        className="relative h-[400px] rounded-3xl overflow-hidden group cursor-pointer"
+      >
         <img
-          src={post.avatar}
-          alt={post.author}
-          className="w-6 h-6 rounded-full object-cover"
+          src={post.coverImage}
+          alt={post.title}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        <span className="text-sm text-gray-600">{post.author}</span>
-      </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        
+        {/* Featured Badge */}
+        <div className="absolute top-6 left-6">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+            <Sparkles size={14} className="text-yellow-400" />
+            <span className="text-white text-sm font-medium">Featured</span>
+          </div>
+        </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {post.technologies.map((tech) => (
-          <span
-            key={tech}
-            className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+        {/* Actions */}
+        <div className="absolute top-6 right-6 flex gap-2">
+          <button
+            onClick={(e) => { e.preventDefault(); setLiked(!liked) }}
+            className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors border border-white/20"
           >
-            {tech}
-          </span>
-        ))}
-      </div>
+            <Heart size={18} className={liked ? 'text-red-500 fill-red-500' : 'text-white'} />
+          </button>
+          <button className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-colors border border-white/20">
+            <Bookmark size={18} className="text-white" />
+          </button>
+        </div>
 
-      <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={handleLike}
-          className={`flex items-center gap-1 text-sm ${
-            liked ? 'text-red-500' : 'text-gray-500'
-          }`}
-        >
-          <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
-          <span>{likeCount}</span>
-        </motion.button>
-        <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-          <MessageCircle size={16} />
-          <span>{post.comments}</span>
-        </button>
-        <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 ml-auto">
-          <Share2 size={16} />
-        </button>
-      </div>
-    </motion.div>
+        {/* Content */}
+        <div className="absolute bottom-0 left-0 right-0 p-8">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {post.technologies.slice(0, 3).map((tech) => (
+              <TechTag key={tech} tech={tech} size="sm" />
+            ))}
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-3 line-clamp-2">{post.title}</h2>
+          <p className="text-gray-300 text-sm mb-4 line-clamp-2 max-w-2xl">{post.excerpt}</p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <img src={post.author.avatar} alt={post.author.username} className="w-8 h-8 rounded-full" />
+              <span className="text-white text-sm font-medium">{post.author.username}</span>
+            </div>
+            <div className="flex items-center gap-4 text-gray-400 text-sm">
+              <span className="flex items-center gap-1"><Heart size={14} /> {post.favorites}</span>
+              <span className="flex items-center gap-1"><Eye size={14} /> {Math.floor(Math.random() * 1000) + 500}</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </NavLink>
   )
 }
 
-const Dashboard = () => {
-  const { user } = useAuth()
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+// Compact post card
+const CompactCard = ({ post, index }: { post: Post; index: number }) => {
+  return (
+    <NavLink to={`/post/${post.id}`}>
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: index * 0.1 }}
+        whileHover={{ x: 4 }}
+        className="flex gap-4 p-3 rounded-xl hover:bg-white/60 transition-all cursor-pointer group"
+      >
+        <img
+          src={post.coverImage}
+          alt={post.title}
+          className="w-20 h-20 rounded-xl object-cover shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 group-hover:text-gray-700 mb-1">
+            {post.title}
+          </h4>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span>{post.author.username}</span>
+            <span>•</span>
+            <span className="flex items-center gap-1"><Heart size={12} /> {post.favorites}</span>
+          </div>
+        </div>
+        <ChevronRight size={16} className="text-gray-400 self-center opacity-0 group-hover:opacity-100 transition-opacity" />
+      </motion.div>
+    </NavLink>
+  )
+}
 
-  // Auto-advance slides
-  useEffect(() => {
-    if (!isAutoPlaying) return
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % topPosts.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [isAutoPlaying])
-
-  const nextSlide = () => {
-    setIsAutoPlaying(false)
-    setCurrentSlide((prev) => (prev + 1) % topPosts.length)
-  }
-
-  const prevSlide = () => {
-    setIsAutoPlaying(false)
-    setCurrentSlide((prev) => (prev - 1 + topPosts.length) % topPosts.length)
-  }
-
-  const goToSlide = (index: number) => {
-    setIsAutoPlaying(false)
-    setCurrentSlide(index)
-  }
+// Grid post card
+const GridCard = ({ post, index }: { post: Post; index: number }) => {
+  const [hovered, setHovered] = useState(false)
 
   return (
-    <div className="min-h-screen">
-      {/* Welcome Header with LetterGlitch */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative h-48 rounded-3xl overflow-hidden mb-8"
-      >
-        <div className="absolute inset-0">
-          <LetterGlitch
-            glitchColors={['#ffffff', '#d1d5db', '#9ca3af', '#6b7280']}
-            glitchSpeed={75}
-            centerVignette={true}
-            outerVignette={true}
-            smooth={true}
-          />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center z-10">
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-4xl font-bold text-white mb-2 drop-shadow-lg"
-            >
-              Welcome back, {user?.username || 'Developer'}!
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="text-gray-300 text-lg drop-shadow-md"
-            >
-              Ready to share your stack today?
-            </motion.p>
-          </div>
-        </div>
-      </motion.div>
-      {/* Hero Section with Paginating Gallery */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="mb-8"
-      >
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <motion.h1
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-3xl font-bold text-gray-900 mb-2"
-            >
-              Top Posts of the Day
-            </motion.h1>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <NavLink
-              to="/create-post"
-              className="flex items-center gap-2 px-5 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
-            >
-              <Plus size={18} />
-              Create Post
-            </NavLink>
-          </motion.div>
-        </div>
-
-        {/* Gallery - Full Image Card Style */}
-        <div className="relative">
-          <div className="overflow-hidden rounded-3xl">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentSlide}
-                initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -100 }}
-                transition={{ duration: 0.4 }}
-                className="relative h-[420px] rounded-3xl overflow-hidden"
-              >
-                {/* Full Background Image */}
-                <img
-                  src={topPosts[currentSlide].image}
-                  alt={topPosts[currentSlide].title}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                
-                {/* Gradient Overlay - transparent to dark gray */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-900/95" />
-                
-                {/* Bookmark Icon - Top Right */}
-                <button className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
-                  <Bookmark size={20} className="text-white" />
-                </button>
-                
-                {/* Trending Badge - Top Left */}
-                <div className="absolute top-4 left-4 flex items-center gap-1 bg-orange-500 text-white text-xs font-medium px-3 py-1.5 rounded-full">
-                  <TrendingUp size={12} />
-                  <span>#{currentSlide + 1} Today</span>
-                </div>
-
-                {/* Content Overlay - Bottom */}
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  {/* Title and Favorites */}
-                  <div className="flex items-start justify-between mb-3">
-                    <h2 className="text-2xl font-bold text-white flex-1 pr-4">
-                      {topPosts[currentSlide].title}
-                    </h2>
-                    <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                      <Heart size={14} className="text-white" />
-                      <span className="text-white text-sm font-medium">
-                        {topPosts[currentSlide].favorites}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Excerpt */}
-                  <p className="text-gray-200 mb-4 line-clamp-2">
-                    {topPosts[currentSlide].excerpt}
-                  </p>
-                  
-                  {/* Technologies */}
-                  <div className="flex flex-wrap gap-2 mb-5">
-                    {topPosts[currentSlide].technologies.map((tech) => (
-                      <span
-                        key={tech}
-                        className="px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white text-sm rounded-full"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                  
-                  {/* View Post Button */}
-                  <NavLink
-                    to={`/post/${topPosts[currentSlide].id}`}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-800/80 backdrop-blur-sm text-white rounded-2xl font-medium hover:bg-gray-700/80 transition-colors"
-                  >
-                    View Post
-                  </NavLink>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* Navigation Arrows */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
-          >
-            <ChevronLeft size={20} className="text-white" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
-          >
-            <ChevronRight size={20} className="text-white" />
-          </button>
-
-          {/* Pagination Dots */}
-          <div className="flex items-center justify-center gap-2 mt-4">
-            {topPosts.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentSlide
-                    ? 'w-6 bg-gray-900'
-                    : 'bg-gray-300 hover:bg-gray-400'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Trending Posts Section */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={20} className="text-orange-500" />
-            <h2 className="text-xl font-semibold text-gray-900">
-              More Trending
-            </h2>
-          </div>
-          <NavLink
-            to="/community"
-            className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            View all
-            <ArrowRight size={16} />
-          </NavLink>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {trendingPosts.map((post, index) => (
-            <PostCard key={post.id} post={post} index={index} />
-          ))}
-        </div>
-      </div>
-
-      {/* Community CTA */}
+    <NavLink to={`/post/${post.id}`}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-3xl p-8 text-white"
+        transition={{ delay: index * 0.05 }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="relative rounded-2xl overflow-hidden cursor-pointer group"
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">
-              Join the Community Discussion
-            </h2>
-            <p className="text-gray-300 max-w-md">
-              Share your projects, ask questions, and help others grow. Your
-              contribution matters!
-            </p>
-          </div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <NavLink
-              to="/community"
-              className="flex items-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
-            >
-              <Users size={18} />
-              Explore Community
-            </NavLink>
+        <div className="aspect-[4/3] relative">
+          <img
+            src={post.coverImage}
+            alt={post.title}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          
+          {/* Hover overlay */}
+          <motion.div
+            initial={false}
+            animate={{ opacity: hovered ? 1 : 0 }}
+            className="absolute inset-0 bg-black/40 flex items-center justify-center"
+          >
+            <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-900">
+              View Post
+            </span>
           </motion.div>
+        </div>
+
+        {/* Content */}
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="flex gap-1.5 mb-2">
+            {post.technologies.slice(0, 2).map((tech) => (
+              <span key={tech} className="text-[10px] px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-white">
+                {tech}
+              </span>
+            ))}
+          </div>
+          <h3 className="font-semibold text-white text-sm line-clamp-2 mb-2">{post.title}</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <img src={post.author.avatar} alt="" className="w-5 h-5 rounded-full" />
+              <span className="text-xs text-gray-300">{post.author.username}</span>
+            </div>
+            <span className="text-xs text-gray-400 flex items-center gap-1">
+              <Heart size={12} /> {post.favorites}
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    </NavLink>
+  )
+}
+
+// Stats card
+const StatCard = ({ icon: Icon, label, value, trend, color }: {
+  icon: typeof TrendingUp
+  label: string
+  value: string
+  trend?: string
+  color: string
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/40"
+  >
+    <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center mb-3`}>
+      <Icon size={20} className="text-white" />
+    </div>
+    <div className="text-2xl font-bold text-gray-900 mb-1">{value}</div>
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-gray-500">{label}</span>
+      {trend && <span className="text-xs text-green-600 font-medium">{trend}</span>}
+    </div>
+  </motion.div>
+)
+
+const Dashboard = () => {
+  const { user } = useAuth()
+  const [posts, setPosts] = useState<Post[]>([])
+  const [stats, setStats] = useState<UserStats>({ posts: 0, likes: 0, views: 0, followers: 0, following: 0 })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      
+      // Fetch posts
+      const { data: postsData } = await api.posts.getAll('latest', 10)
+      if (postsData) {
+        setPosts(postsData)
+      }
+
+      // Fetch user stats
+      const { data: statsData } = await api.posts.getStats()
+      if (statsData) {
+        setStats(statsData)
+      }
+      
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
+  const featuredPost = posts[0]
+  const trendingPosts = posts.slice(1, 4)
+  const recentPosts = posts.slice(0, 6)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-10 h-10 border-2 border-gray-300 border-t-gray-900 rounded-full mx-auto mb-4" />
+          <p className="text-gray-500">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen space-y-8">
+      {/* Welcome Section */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+            Welcome back, {user?.username || 'Developer'}
+          </h1>
+          <p className="text-gray-500">Here's what's happening in your dev world</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <div className="text-sm text-gray-500">Today</div>
+            <div className="font-semibold text-gray-900">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+            </div>
+          </div>
         </div>
       </motion.div>
 
-      {/* Quick Actions */}
-      <div className="mt-8 grid grid-cols-2 gap-4">
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="bg-white rounded-2xl p-6 shadow-sm cursor-pointer"
-        >
-          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-4">
-            <Zap size={24} className="text-gray-700" />
-          </div>
-          <h3 className="font-semibold text-gray-900 mb-1">Quick Post</h3>
-          <p className="text-sm text-gray-500">
-            Share a quick thought or code snippet with the community
-          </p>
-        </motion.div>
+      {/* Stats Row */}
+      <div className="grid grid-cols-4 gap-4">
+        <StatCard icon={Eye} label="Total Views" value={stats.views.toLocaleString()} trend="+12%" color="bg-blue-500" />
+        <StatCard icon={Heart} label="Total Likes" value={stats.likes.toLocaleString()} trend="+8%" color="bg-red-500" />
+        <StatCard icon={Users} label="Followers" value={stats.followers.toLocaleString()} trend="+24%" color="bg-gray-700" />
+        <StatCard icon={Code2} label="Posts" value={String(stats.posts)} color="bg-gray-900" />
+      </div>
 
-        <motion.div
-          whileHover={{ y: -2 }}
-          className="bg-white rounded-2xl p-6 shadow-sm cursor-pointer"
-        >
-          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-4">
-            <Heart size={24} className="text-gray-700" />
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-3 gap-6">
+        {/* Featured + Grid */}
+        <div className="col-span-2 space-y-6">
+          {/* Featured Post */}
+          {featuredPost && <HeroCard post={featuredPost} />}
+
+          {/* Recent Posts Grid */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Clock size={20} /> Recent Posts
+              </h2>
+              <NavLink to="/community" className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1">
+                View all <ChevronRight size={16} />
+              </NavLink>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {recentPosts.map((post, index) => (
+                <GridCard key={post.id} post={post} index={index} />
+              ))}
+            </div>
           </div>
-          <h3 className="font-semibold text-gray-900 mb-1">Your Favorites</h3>
-          <p className="text-sm text-gray-500">
-            Access your saved posts and bookmarked content
-          </p>
-        </motion.div>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          {/* Trending Section */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/40"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                <Zap size={18} className="text-yellow-500" /> Trending
+              </h3>
+              <span className="text-xs text-gray-500">This week</span>
+            </div>
+            <div className="space-y-1">
+              {trendingPosts.map((post, index) => (
+                <CompactCard key={post.id} post={post} index={index} />
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Quick Actions */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold">Share Your Stack</h3>
+                <p className="text-sm text-gray-400">Create a new post</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-300 mb-4">
+              Share your latest project, tech stack, or coding insights with the community.
+            </p>
+            <NavLink
+              to="/create-post"
+              className="block w-full py-3 bg-white text-gray-900 rounded-xl font-medium text-center hover:bg-gray-100 transition-colors"
+            >
+              Create Post
+            </NavLink>
+          </motion.div>
+
+          {/* Top Technologies */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/40"
+          >
+            <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <Star size={18} className="text-orange-500" /> Popular Tech
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {['React', 'TypeScript', 'Node.js', 'Tailwind', 'Prisma', 'Bun'].map((tech) => (
+                <TechTag key={tech} tech={tech} size="md" />
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   )
