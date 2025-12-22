@@ -1,28 +1,32 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, ArrowLeft, Mail, Lock } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, AlertCircle } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
-interface LoginProps {
-  onLogin: () => void
-}
-
-const Login = ({ onLogin }: LoginProps) => {
+const Login = () => {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     setIsLoading(true)
-    // Simulate login
-    setTimeout(() => {
+
+    const result = await login(email, password)
+
+    if (result.error) {
+      setError(result.error)
       setIsLoading(false)
-      onLogin()
-      navigate('/dashboard')
-    }, 1000)
+      return
+    }
+
+    navigate('/dashboard')
   }
 
   return (
@@ -49,13 +53,26 @@ const Login = ({ onLogin }: LoginProps) => {
               alt="Stack-it"
               className="w-12 h-12 object-contain"
             />
-            <span className="text-2xl font-semibold text-gray-900">Stack-it</span>
+            <span className="text-2xl font-semibold text-gray-900">
+              Stack-it
+            </span>
           </div>
 
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
           <p className="text-gray-600 mb-8">
             Sign in to continue to your account
           </p>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-200 rounded-xl text-red-700"
+            >
+              <AlertCircle size={18} />
+              <span className="text-sm">{error}</span>
+            </motion.div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -174,8 +191,8 @@ const Login = ({ onLogin }: LoginProps) => {
             Share your stack with the world
           </h2>
           <p className="text-gray-400">
-            Join thousands of developers sharing their tech stacks, 
-            discovering new tools, and building connections.
+            Join developers sharing their tech stacks, discovering new tools,
+            and building connections.
           </p>
         </div>
       </motion.div>

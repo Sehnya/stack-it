@@ -16,7 +16,6 @@ import { Magnet } from '../components/Magnet'
 import { SpotlightCard } from '../components/SpotlightCard'
 import Prism from '../components/Prism'
 import CardSwap, { Card } from '../components/CardSwap'
-import PillNav from '../components/PillNav'
 
 const Landing = () => {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -37,35 +36,13 @@ const Landing = () => {
     'Elysia',
   ]
 
-  const navItems = [
-    { label: 'Home', href: '/' },
-    { label: 'Login', href: '/login' },
-    { label: 'Sign Up', href: '/register' },
-  ]
-
   return (
     <div ref={containerRef} className="min-h-screen bg-[#e5e7eb] relative">
-      {/* Navigation */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 relative">
-          <PillNav
-            logo="/images/black-logo.png"
-            logoAlt="Stack-it"
-            items={navItems}
-            activeHref="/"
-            baseColor="#000000"
-            pillColor="#ffffff"
-            hoveredPillTextColor="#000000"
-            pillTextColor="#000000"
-            ease="power2.easeOut"
-          />
-        </div>
-      </div>
 
       {/* Hero Section with ColorBends Background */}
       <motion.section
         style={{ opacity: heroOpacity, scale: heroScale }}
-        className="min-h-screen flex items-center justify-center px-6 pt-20 relative overflow-hidden"
+        className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden"
       >
         {/* Prism Background */}
         <div className="absolute inset-0 z-0 bg-black">
@@ -88,6 +65,16 @@ const Landing = () => {
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#e5e7eb] to-transparent z-[1]" />
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
+          {/* White Stack-it Logo */}
+          <motion.img
+            src="/images/white-logo.png"
+            alt="Stack-it"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="w-32 h-32 mx-auto mb-6 -mt-5 object-contain"
+          />
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -95,7 +82,7 @@ const Landing = () => {
             className="inline-flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-xl rounded-full text-sm text-white/80 mb-8 border border-white/10"
           >
             <Sparkles size={14} className="text-yellow-400" />
-            <span>Join 10,000+ developers</span>
+            <span>Built by developers, for developers</span>
             <ChevronRight size={14} />
           </motion.div>
 
@@ -183,8 +170,76 @@ const Landing = () => {
       </motion.section>
 
       {/* Features Section with CardSwap */}
-      <section className="py-32 px-6 relative bg-[#e5e7eb]">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-32 px-6 relative bg-[#e5e7eb] overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Floating gradient orbs */}
+          <motion.div
+            className="absolute w-[500px] h-[500px] rounded-full bg-gradient-to-br from-gray-300/40 to-gray-400/20 blur-3xl"
+            animate={{
+              x: [0, 100, 0],
+              y: [0, -50, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ top: '-10%', left: '-10%' }}
+          />
+          <motion.div
+            className="absolute w-[400px] h-[400px] rounded-full bg-gradient-to-br from-gray-200/50 to-gray-300/30 blur-3xl"
+            animate={{
+              x: [0, -80, 0],
+              y: [0, 60, 0],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ bottom: '10%', right: '-5%' }}
+          />
+          <motion.div
+            className="absolute w-[300px] h-[300px] rounded-full bg-gradient-to-br from-gray-400/30 to-transparent blur-2xl"
+            animate={{
+              x: [0, 50, 0],
+              y: [0, -30, 0],
+            }}
+            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ top: '40%', left: '30%' }}
+          />
+          
+          {/* Subtle grid pattern */}
+          <div 
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, #000 1px, transparent 1px),
+                linear-gradient(to bottom, #000 1px, transparent 1px)
+              `,
+              backgroundSize: '60px 60px',
+            }}
+          />
+          
+          {/* Floating dots */}
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 rounded-full bg-gray-400/40"
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{
+                duration: 3 + i * 0.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: i * 0.3,
+              }}
+              style={{
+                left: `${15 + i * 15}%`,
+                top: `${20 + (i % 3) * 25}%`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="max-w-6xl mx-auto relative z-10">
           <div className="grid grid-cols-2 gap-16 items-center">
             {/* Left side - Text content */}
             <motion.div
@@ -371,7 +426,7 @@ const Landing = () => {
           >
             <div className="flex items-center justify-center gap-4 mb-8">
               <div className="flex -space-x-3">
-                {[1, 2, 3, 4, 5].map((i) => (
+                {[1, 2].map((i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, x: -20 }}
@@ -387,9 +442,8 @@ const Landing = () => {
                 ))}
               </div>
               <span className="text-gray-600">
-                Loved by{' '}
-                <span className="font-semibold text-gray-900">10,000+</span>{' '}
-                developers
+                From our{' '}
+                <span className="font-semibold text-gray-900">founding team</span>
               </span>
             </div>
 
@@ -400,22 +454,22 @@ const Landing = () => {
                 viewport={{ once: true }}
                 className="text-2xl text-gray-700 italic mb-6"
               >
-                "Stack-it helped me discover the perfect tools for my project
-                and connect with developers who use similar stacks. It's become
-                an essential part of my workflow."
+                "We built Stack-it because we wanted a place to share our tech
+                stacks and learn from other developers. We're excited to grow
+                this community together."
               </motion.p>
               <div className="flex items-center justify-center gap-3">
                 <div
                   className="w-12 h-12 rounded-full bg-gray-300"
                   style={{
-                    backgroundImage: 'url(https://i.pravatar.cc/100?img=32)',
+                    backgroundImage: 'url(https://i.pravatar.cc/100?img=11)',
                     backgroundSize: 'cover',
                   }}
                 />
                 <div className="text-left">
-                  <div className="font-semibold text-gray-900">Sarah Chen</div>
+                  <div className="font-semibold text-gray-900">Stack-it Team</div>
                   <div className="text-gray-500 text-sm">
-                    Senior Developer @ Vercel
+                    Founders
                   </div>
                 </div>
               </div>
@@ -486,7 +540,7 @@ const Landing = () => {
               Ready to share your stack?
             </h2>
             <p className="text-xl text-gray-600 mb-10">
-              Join thousands of developers already on Stack-it.
+              Be one of the first to join our growing community.
             </p>
             <Magnet strength={0.15}>
               <NavLink

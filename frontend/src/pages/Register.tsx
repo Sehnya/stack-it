@@ -1,29 +1,63 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, User } from 'lucide-react'
+import {
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  Mail,
+  Lock,
+  User,
+  AlertCircle,
+  Check,
+} from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
-interface RegisterProps {
-  onRegister: () => void
-}
-
-const Register = ({ onRegister }: RegisterProps) => {
+const Register = () => {
   const navigate = useNavigate()
+  const { signup } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+
+  // Password strength indicators
+  const passwordChecks = {
+    length: password.length >= 6,
+    hasLetter: /[a-zA-Z]/.test(password),
+    hasNumber: /\d/.test(password),
+  }
+
+  const isPasswordValid = Object.values(passwordChecks).every(Boolean)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
+
+    if (!agreedToTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy')
+      return
+    }
+
+    if (!isPasswordValid) {
+      setError('Please meet all password requirements')
+      return
+    }
+
     setIsLoading(true)
-    // Simulate registration
-    setTimeout(() => {
+
+    const result = await signup(username, email, password)
+
+    if (result.error) {
+      setError(result.error)
       setIsLoading(false)
-      onRegister()
-      navigate('/dashboard')
-    }, 1000)
+      return
+    }
+
+    navigate('/dashboard')
   }
 
   return (
@@ -51,10 +85,10 @@ const Register = ({ onRegister }: RegisterProps) => {
             Join the community
           </h2>
           <p className="text-gray-400">
-            Create your account and start sharing your tech stack with 
+            Create your account and start sharing your tech stack with
             developers around the world.
           </p>
-          
+
           {/* Feature highlights */}
           <div className="mt-12 space-y-4 text-left">
             {[
@@ -101,13 +135,28 @@ const Register = ({ onRegister }: RegisterProps) => {
               alt="Stack-it"
               className="w-12 h-12 object-contain"
             />
-            <span className="text-2xl font-semibold text-gray-900">Stack-it</span>
+            <span className="text-2xl font-semibold text-gray-900">
+              Stack-it
+            </span>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create account</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Create account
+          </h1>
           <p className="text-gray-600 mb-8">
             Start your journey with Stack-it today
           </p>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-200 rounded-xl text-red-700"
+            >
+              <AlertCircle size={18} />
+              <span className="text-sm">{error}</span>
+            </motion.div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -126,6 +175,7 @@ const Register = ({ onRegister }: RegisterProps) => {
                   placeholder="johndoe"
                   className="w-full pl-11 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition-colors"
                   required
+                  minLength={3}
                 />
               </div>
             </div>
@@ -166,7 +216,6 @@ const Register = ({ onRegister }: RegisterProps) => {
                   placeholder="••••••••"
                   className="w-full pl-11 pr-12 py-3 bg-white rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition-colors"
                   required
-                  minLength={8}
                 />
                 <button
                   type="button"
@@ -176,21 +225,50 @@ const Register = ({ onRegister }: RegisterProps) => {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
+
+              {/* Password requirements */}
+              {password && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-3 space-y-1"
+                >
+                  {[
+                    { check: passwordChecks.length, label: 'At least 6 characters' },
+                    { check: passwordChecks.hasLetter, label: 'Contains a letter' },
+                    { check: passwordChecks.hasNumber, label: 'Contains a number' },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-center gap-2 text-xs ${
+                        item.check ? 'text-green-600' : 'text-gray-400'
+                      }`}
+                    >
+                      <Check size={12} />
+                      {item.label}
+                    </div>
+                  ))}
+                </motion.div>
+              )}
             </div>
 
             <div className="flex items-start gap-2">
               <input
                 type="checkbox"
                 id="terms"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
                 className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
-                required
               />
               <label htmlFor="terms" className="text-sm text-gray-600">
                 I agree to the{' '}
-                <a href="#" className="text-gray-900 hover:underline">Terms of Service</a>
-                {' '}and{' '}
-                <a href="#" className="text-gray-900 hover:underline">Privacy Policy</a>
+                <a href="#" className="text-gray-900 hover:underline">
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a href="#" className="text-gray-900 hover:underline">
+                  Privacy Policy
+                </a>
               </label>
             </div>
 

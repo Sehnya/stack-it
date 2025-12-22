@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { useState } from 'react'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import Community from './pages/Community'
@@ -18,63 +19,70 @@ const CreatePost = () => (
 const Settings = () => <div className="text-gray-800 text-2xl">Settings</div>
 const Admin = () => <div className="text-gray-800 text-2xl">Admin Panel</div>
 
+// Loading spinner
+const LoadingScreen = () => (
+  <div className="min-h-screen bg-[#e5e7eb] flex items-center justify-center">
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+      className="w-8 h-8 border-3 border-gray-300 border-t-gray-900 rounded-full"
+    />
+  </div>
+)
+
 // Protected Route wrapper
-const ProtectedRoute = ({
-  children,
-  isAuthenticated,
-}: {
-  children: React.ReactNode
-  isAuthenticated: boolean
-}) => {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return <LoadingScreen />
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
+
   return <>{children}</>
 }
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState<{
-    id: number
-    username: string
-    email: string
-    avatar: string
-    isOnline: boolean
-    isAdmin: boolean
-  } | null>(null)
+// Public route - redirects to dashboard if authenticated
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth()
 
+  if (isLoading) {
+    return <LoadingScreen />
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return <>{children}</>
+}
+
+// Authenticated layout with sidebar
+const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
+  const { user, logout } = useAuth()
   const [sidebarExpanded, setSidebarExpanded] = useState(true)
 
-  const handleLogin = () => {
-    setIsAuthenticated(true)
-    setUser({
-      id: 1,
-      username: 'Todd Smith',
-      email: 'todd@example.com',
-      avatar:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-      isOnline: true,
-      isAdmin: true,
-    })
-  }
+  const sidebarUser = user
+    ? {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatar: user.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}`,
+        isOnline: true,
+        isAdmin: user.role === 'admin',
+      }
+    : null
 
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-    setUser(null)
-  }
-
-  const toggleSidebar = () => {
-    setSidebarExpanded(!sidebarExpanded)
-  }
-
-  // Authenticated layout with sidebar
-  const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => (
+  return (
     <div className="flex min-h-screen bg-[#e5e7eb]">
       <Sidebar
-        user={user}
-        onLogout={handleLogout}
+        user={sidebarUser}
+        onLogout={logout}
         isExpanded={sidebarExpanded}
-        onToggle={toggleSidebar}
+        onToggle={() => setSidebarExpanded(!sidebarExpanded)}
       />
       <motion.main
         className="flex-1 p-8"
@@ -88,103 +96,111 @@ function App() {
       </motion.main>
     </div>
   )
+}
 
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <Landing />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        }
+      />
+
+      {/* Protected routes */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <Dashboard />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/community"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <Community />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/favorites/*"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <Favorites />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create-post"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <CreatePost />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <Settings />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <Admin />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Catch all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Landing />
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Login onLogin={handleLogin} />
-            )
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Register onRegister={handleLogin} />
-            )
-          }
-        />
-
-        {/* Protected routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <AuthenticatedLayout>
-                <Dashboard />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/community"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <AuthenticatedLayout>
-                <Community />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/favorites/*"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <AuthenticatedLayout>
-                <Favorites />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/create-post"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <AuthenticatedLayout>
-                <CreatePost />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <AuthenticatedLayout>
-                <Settings />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <AuthenticatedLayout>
-                <Admin />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   )
 }
