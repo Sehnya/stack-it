@@ -1,0 +1,10 @@
+# Cloudflare Pages configuration
+name = "stack-it"
+compatibility_date = "2024-01-01"
+
+[site]
+bucket = "./dist"
+
+# Build settings (configured in Cloudflare dashboard or via CLI)
+# Build command: bun install && bun run build
+# Build output directory: dist

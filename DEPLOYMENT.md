@@ -1,87 +1,89 @@
-# Railway Deployment Guide
+# Cloudflare Deployment Guide
 
-Stack-it is deployed on Railway with two services: Backend (Bun + Elysia) and Frontend (Vite + React).
+Stack-it frontend is deployed on Cloudflare Pages.
 
-## Project Structure
+## Frontend Deployment (Cloudflare Pages)
 
-```
-stack-it/
-├── backend/          # Bun + Elysia API server
-│   ├── railway.json  # Railway config for backend
-│   └── ...
-├── frontend/         # Vite + React SPA
-│   ├── railway.json  # Railway config for frontend
-│   └── ...
-└── railway.json      # Root config (optional)
-```
+### Option 1: Connect GitHub (Recommended)
 
-## Deployment Steps
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → Pages
+2. Click "Create a project" → "Connect to Git"
+3. Select your GitHub repository
+4. Configure build settings:
+   - **Project name:** `stack-it`
+   - **Production branch:** `main`
+   - **Framework preset:** None
+   - **Build command:** `cd frontend && bun install && bun run build`
+   - **Build output directory:** `frontend/dist`
+   - **Root directory:** `/` (leave empty)
 
-### 1. Create Railway Project
+5. Add environment variables if needed:
+   - `VITE_API_URL` - Your backend API URL
 
-1. Go to [railway.app](https://railway.app) and sign in
-2. Click "New Project" → "Deploy from GitHub repo"
-3. Select the `stack-it` repository
+6. Click "Save and Deploy"
 
-### 2. Set Up Backend Service
+### Option 2: Direct Upload via CLI
 
-1. In Railway dashboard, click "New Service" → "GitHub Repo"
-2. Select the repo and set **Root Directory** to `backend`
-3. Railway will auto-detect Bun and use the `railway.json` config
+```bash
+# Install Wrangler CLI
+bun add -g wrangler
 
-**Environment Variables (Backend):**
-```
-DATABASE_URL=your_database_url
-JWT_SECRET=your_jwt_secret
-PORT=3001
-```
+# Login to Cloudflare
+wrangler login
 
-### 3. Set Up Frontend Service
+# Build the frontend
+cd frontend
+bun install
+bun run build
 
-1. Click "New Service" → "GitHub Repo" again
-2. Select the repo and set **Root Directory** to `frontend`
-3. Railway will build and serve the Vite app
-
-**Environment Variables (Frontend):**
-```
-VITE_API_URL=https://your-backend-service.railway.app
+# Deploy to Cloudflare Pages
+wrangler pages deploy dist --project-name=stack-it
 ```
 
-### 4. Add Database (Optional)
+## Build Settings Summary
 
-1. Click "New Service" → "Database" → "PostgreSQL" or use external DB
-2. Copy the `DATABASE_URL` to backend environment variables
+| Setting | Value |
+|---------|-------|
+| Build command | `cd frontend && bun install && bun run build` |
+| Build output | `frontend/dist` |
+| Node version | 18+ (or Bun) |
 
-## Build Commands
+## Custom Domain
 
-**Backend:**
-- Build: `bun install && bunx prisma generate`
-- Start: `bun run start`
+1. Go to Pages project → Custom domains
+2. Add your domain
+3. Update DNS records as instructed
 
-**Frontend:**
-- Build: `bun install && bun run build`
-- Start: `bun run preview --host --port $PORT`
+## Environment Variables
 
-## Custom Domains
+Set these in Cloudflare Pages dashboard:
 
-1. Go to service settings → "Domains"
-2. Add custom domain or use Railway's generated domain
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Backend API URL |
 
-## Monitoring
+## SPA Routing
 
-- View logs in Railway dashboard
-- Set up health checks via `healthcheckPath` in railway.json
+The `_redirects` file handles client-side routing:
+```
+/*    /index.html   200
+```
+
+This ensures all routes serve `index.html` for React Router to handle.
 
 ## Local Development
 
 ```bash
-# Backend
-cd backend
-bun install
-bun run dev
-
-# Frontend (separate terminal)
 cd frontend
 bun install
 bun run dev
 ```
+
+## Backend Options
+
+For the backend API, consider:
+- **Cloudflare Workers** - Serverless functions
+- **Railway/Render** - Traditional Node.js hosting
+- **Supabase** - Database + Auth + API
+
+The frontend is a static SPA that can work with any backend.

@@ -87,23 +87,23 @@ const PillNav: React.FC<PillNavProps> = ({
 
         tl.to(
           circle,
-          { scale: 1.2, xPercent: -50, duration: 2, ease, overwrite: 'auto' },
+          { scale: 1.2, xPercent: -50, duration: 0.4, ease: 'power2.out', overwrite: 'auto' },
           0
         )
 
         if (label) {
           tl.to(
             label,
-            { y: -(h + 8), duration: 2, ease, overwrite: 'auto' },
+            { y: -(h + 8), duration: 0.4, ease: 'power2.out', overwrite: 'auto' },
             0
           )
         }
 
         if (white) {
-          gsap.set(white, { y: Math.ceil(h + 100), opacity: 0 })
+          gsap.set(white, { y: Math.ceil(h + 30), opacity: 0 })
           tl.to(
             white,
-            { y: 0, opacity: 1, duration: 2, ease, overwrite: 'auto' },
+            { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', overwrite: 'auto' },
             0
           )
         }
@@ -131,20 +131,23 @@ const PillNav: React.FC<PillNavProps> = ({
       const navItems = navItemsRef.current
 
       if (logoEl) {
-        gsap.set(logoEl, { scale: 0 })
+        gsap.set(logoEl, { scale: 0, opacity: 0 })
         gsap.to(logoEl, {
           scale: 1,
-          duration: 0.6,
-          ease,
+          opacity: 1,
+          duration: 0.5,
+          ease: 'back.out(1.7)',
         })
       }
 
       if (navItems) {
-        gsap.set(navItems, { width: 0, overflow: 'hidden' })
+        gsap.set(navItems, { width: 0, opacity: 0, overflow: 'hidden' })
         gsap.to(navItems, {
           width: 'auto',
+          opacity: 1,
           duration: 0.6,
-          ease,
+          delay: 0.2,
+          ease: 'power3.out',
         })
       }
     }
@@ -158,8 +161,8 @@ const PillNav: React.FC<PillNavProps> = ({
     if (!tl) return
     activeTweenRefs.current[i]?.kill()
     activeTweenRefs.current[i] = tl.tweenTo(tl.duration(), {
-      duration: 0.3,
-      ease,
+      duration: 0.35,
+      ease: 'power2.out',
       overwrite: 'auto',
     })
   }
@@ -169,8 +172,8 @@ const PillNav: React.FC<PillNavProps> = ({
     if (!tl) return
     activeTweenRefs.current[i]?.kill()
     activeTweenRefs.current[i] = tl.tweenTo(0, {
-      duration: 0.2,
-      ease,
+      duration: 0.25,
+      ease: 'power2.inOut',
       overwrite: 'auto',
     })
   }
@@ -182,8 +185,8 @@ const PillNav: React.FC<PillNavProps> = ({
     gsap.set(img, { rotate: 0 })
     logoTweenRef.current = gsap.to(img, {
       rotate: 360,
-      duration: 0.2,
-      ease,
+      duration: 0.5,
+      ease: 'power2.out',
       overwrite: 'auto',
     })
   }
