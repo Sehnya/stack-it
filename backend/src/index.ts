@@ -3,6 +3,7 @@ import { cors } from "@elysiajs/cors";
 import { jwt } from "@elysiajs/jwt";
 import { staticPlugin } from "@elysiajs/static";
 import { resolve } from "path";
+import { existsSync } from "fs";
 import { authRoutes } from "./routes/auth";
 import { postRoutes } from "./routes/posts";
 import { userRoutes } from "./routes/users";
@@ -11,6 +12,7 @@ import { pageRoutes } from "./routes/pages";
 
 // Resolve static path relative to this file's directory
 const staticPath = resolve(import.meta.dir, "../../static");
+const hasStaticFolder = existsSync(staticPath);
 
 const app = new Elysia()
   .use(cors({
@@ -21,11 +23,17 @@ const app = new Elysia()
     name: "jwt",
     secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
     exp: "7d",
-  }))
-  .use(staticPlugin({
+  }));
+
+// Only add static plugin if folder exists (local dev)
+if (hasStaticFolder) {
+  app.use(staticPlugin({
     assets: staticPath,
     prefix: "/static",
-  }))
+  }));
+}
+
+app
   // Health check
   .get("/healthz", () => ({
     status: "ok",
