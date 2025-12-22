@@ -13,11 +13,20 @@ import { pageRoutes } from "./routes/pages";
 const staticPath = resolve(import.meta.dir, "../../static");
 const hasStaticFolder = existsSync(staticPath);
 
+// Allow multiple origins for dev and production
+const allowedOrigins = [
+  process.env.CORS_ORIGIN,
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://stack-it.dev",
+  "https://www.stack-it.dev",
+].filter(Boolean) as string[];
+
 const app = new Elysia()
   .use(cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   }))
   .use(jwt({
