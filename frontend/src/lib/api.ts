@@ -78,6 +78,20 @@ export interface UserStats {
   following: number
 }
 
+export interface TopUser {
+  id: number
+  name: string
+  avatar: string
+  stacks: number
+  rank: number
+}
+
+export interface TrendingTech {
+  name: string
+  posts: number
+  hot: boolean
+}
+
 export const api = {
   auth: {
     login: (email: string, password: string) =>
@@ -132,5 +146,11 @@ export const api = {
 
     getStats: () =>
       request<UserStats>('/api/posts/stats/me'),
+
+    getTopUsers: () =>
+      request<TopUser[]>('/api/posts/top-users'),
+
+    getTrendingTech: () =>
+      request<TrendingTech[]>('/api/posts/trending-tech'),
   },
 }
