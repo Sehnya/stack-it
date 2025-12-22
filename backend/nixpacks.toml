@@ -2,7 +2,7 @@
 nixPkgs = ["bun"]
 
 [phases.install]
-cmds = ["rm -f bun.lock", "bun install"]
+cmds = ["rm -rf node_modules bun.lock", "bun install"]
 
 [phases.build]
 cmds = ["bunx prisma generate"]
