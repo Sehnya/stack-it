@@ -1,5 +1,6 @@
 [phases.setup]
-nixPkgs = ["bun", "openssl"]
+nixPkgs = ["bun", "openssl_3"]
+aptPkgs = ["libssl3"]
 
 [phases.install]
 cmds = ["rm -rf node_modules bun.lock", "bun install"]
