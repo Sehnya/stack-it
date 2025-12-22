@@ -14,52 +14,67 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
   .post(
     "/signup",
     async ({ body, jwt, cookie: { auth } }) => {
-      const { username, email, password } = body;
+      try {
+        const { username, email, password } = body;
+        console.log(`[SIGNUP] Attempting signup for: ${email}`);
 
-      // Check if user exists
-      const existing = await db.user.findFirst({
-        where: { OR: [{ email }, { username }] },
-      });
+        // Check if user exists
+        console.log("[SIGNUP] Checking for existing user...");
+        const existing = await db.user.findFirst({
+          where: { OR: [{ email }, { username }] },
+        });
 
-      if (existing) {
-        return { error: "Username or email already exists" };
-      }
+        if (existing) {
+          console.log("[SIGNUP] User already exists");
+          return { error: "Username or email already exists" };
+        }
 
-      // Hash password
-      const hashedPassword = await Bun.password.hash(password);
+        // Hash password
+        console.log("[SIGNUP] Hashing password...");
+        const hashedPassword = await Bun.password.hash(password);
 
-      // Create user
-      const user = await db.user.create({
-        data: {
-          username,
-          email,
-          password: hashedPassword,
-        },
-      });
+        // Create user
+        console.log("[SIGNUP] Creating user...");
+        const user = await db.user.create({
+          data: {
+            username,
+            email,
+            password: hashedPassword,
+          },
+        });
+        console.log(`[SIGNUP] User created with ID: ${user.id}`);
 
-      // Generate JWT
-      const token = await jwt.sign({
-        userId: user.id,
-        username: user.username,
-        role: user.role,
-      });
-
-      auth.set({
-        value: token,
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60, // 7 days
-        path: "/",
-      });
-
-      return {
-        message: "User created successfully",
-        user: {
-          id: user.id,
+        // Generate JWT
+        const token = await jwt.sign({
+          userId: user.id,
           username: user.username,
-          email: user.email,
           role: user.role,
-        },
-      };
+        });
+
+        auth.set({
+          value: token,
+          httpOnly: true,
+          maxAge: 7 * 24 * 60 * 60, // 7 days
+          path: "/",
+        });
+
+        console.log("[SIGNUP] Success!");
+        return {
+          message: "User created successfully",
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+          },
+        };
+      } catch (error) {
+        console.error("[SIGNUP] Error:", error);
+        return {
+          error: "Signup failed",
+          details: error instanceof Error ? error.message : String(error),
+        };
+      }
     },
     {
       body: t.Object({

@@ -7,6 +7,9 @@ import { resolve } from "path";
 const dbPath = process.env.TURSO_DATABASE_URL || 
   `file:${resolve(import.meta.dir, "../prisma/dev.db")}`;
 
+console.log(`[DB] Connecting to: ${dbPath.substring(0, 50)}...`);
+console.log(`[DB] Auth token present: ${!!process.env.TURSO_AUTH_TOKEN}`);
+
 const libsql = createClient({
   url: dbPath,
   authToken: process.env.TURSO_AUTH_TOKEN,
