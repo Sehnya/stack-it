@@ -14,6 +14,8 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+import LetterGlitch from '../components/LetterGlitch'
+import { useAuth } from '../context/AuthContext'
 
 interface Post {
   id: number
@@ -172,6 +174,7 @@ const PostCard = ({ post, index }: { post: Post; index: number }) => {
 }
 
 const Dashboard = () => {
+  const { user } = useAuth()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
 
@@ -201,6 +204,42 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Welcome Header with LetterGlitch */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative h-48 rounded-3xl overflow-hidden mb-8"
+      >
+        <div className="absolute inset-0">
+          <LetterGlitch
+            glitchColors={['#ffffff', '#d1d5db', '#9ca3af', '#6b7280']}
+            glitchSpeed={75}
+            centerVignette={true}
+            outerVignette={true}
+            smooth={true}
+          />
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center z-10">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-4xl font-bold text-white mb-2 drop-shadow-lg"
+            >
+              Welcome back, {user?.username || 'Developer'}!
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-gray-300 text-lg drop-shadow-md"
+            >
+              Ready to share your stack today?
+            </motion.p>
+          </div>
+        </div>
+      </motion.div>
       {/* Hero Section with Paginating Gallery */}
       <motion.div
         initial={{ opacity: 0 }}
