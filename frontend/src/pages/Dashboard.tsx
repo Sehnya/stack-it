@@ -5,13 +5,13 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  Sparkles,
   Users,
   Zap,
   ArrowRight,
   Plus,
   ChevronLeft,
   ChevronRight,
+  Bookmark,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import LetterGlitch from '../components/LetterGlitch'
@@ -22,9 +22,9 @@ interface Post {
   title: string
   author: string
   avatar: string
-  likes: number
+  favorites: number
   comments: number
-  tags: string[]
+  technologies: string[]
   excerpt: string
   image?: string
 }
@@ -35,9 +35,9 @@ const topPosts: Post[] = [
     title: 'Building a Full-Stack App with Bun & Elysia',
     author: 'Sarah Chen',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-    likes: 234,
+    favorites: 234,
     comments: 45,
-    tags: ['Bun', 'Elysia', 'TypeScript'],
+    technologies: ['Bun', 'Elysia', 'TypeScript'],
     excerpt: 'Learn how to build blazing fast APIs with the new JavaScript runtime and framework combo.',
     image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600',
   },
@@ -46,9 +46,9 @@ const topPosts: Post[] = [
     title: 'React 19 Features You Need to Know',
     author: 'Mike Johnson',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-    likes: 189,
+    favorites: 189,
     comments: 32,
-    tags: ['React', 'Frontend'],
+    technologies: ['React', 'Frontend'],
     excerpt: 'Explore the exciting new features coming in React 19 and how they will change your workflow.',
     image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600',
   },
@@ -57,9 +57,9 @@ const topPosts: Post[] = [
     title: 'Prisma vs Drizzle: Which ORM to Choose?',
     author: 'Emma Wilson',
     avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-    likes: 156,
+    favorites: 156,
     comments: 28,
-    tags: ['Database', 'ORM'],
+    technologies: ['Prisma', 'Drizzle', 'Database'],
     excerpt: 'A comprehensive comparison of two popular TypeScript ORMs for your next project.',
     image: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=600',
   },
@@ -68,9 +68,9 @@ const topPosts: Post[] = [
     title: 'Mastering Tailwind CSS in 2024',
     author: 'Alex Rivera',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
-    likes: 203,
+    favorites: 203,
     comments: 41,
-    tags: ['CSS', 'Tailwind'],
+    technologies: ['CSS', 'Tailwind'],
     excerpt: 'Tips and tricks to level up your Tailwind CSS skills and build beautiful UIs faster.',
     image: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=600',
   },
@@ -82,9 +82,9 @@ const trendingPosts: Post[] = [
     title: 'Getting Started with Turso Database',
     author: 'Jordan Lee',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100',
-    likes: 98,
+    favorites: 98,
     comments: 15,
-    tags: ['Database', 'SQLite'],
+    technologies: ['Turso', 'SQLite'],
     excerpt: 'Edge-ready SQLite for modern applications.',
   },
   {
@@ -92,9 +92,9 @@ const trendingPosts: Post[] = [
     title: 'The Art of Code Reviews',
     author: 'Taylor Swift',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
-    likes: 145,
+    favorites: 145,
     comments: 23,
-    tags: ['Best Practices'],
+    technologies: ['Best Practices'],
     excerpt: 'How to give and receive feedback effectively.',
   },
   {
@@ -102,16 +102,16 @@ const trendingPosts: Post[] = [
     title: 'TypeScript 5.4 Deep Dive',
     author: 'Chris Park',
     avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100',
-    likes: 167,
+    favorites: 167,
     comments: 29,
-    tags: ['TypeScript'],
+    technologies: ['TypeScript'],
     excerpt: 'New features and improvements in the latest release.',
   },
 ]
 
 const PostCard = ({ post, index }: { post: Post; index: number }) => {
   const [liked, setLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(post.likes)
+  const [likeCount, setLikeCount] = useState(post.favorites)
 
   const handleLike = () => {
     setLiked(!liked)
@@ -140,12 +140,12 @@ const PostCard = ({ post, index }: { post: Post; index: number }) => {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {post.tags.map((tag) => (
+        {post.technologies.map((tech) => (
           <span
-            key={tag}
+            key={tech}
             className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
           >
-            {tag}
+            {tech}
           </span>
         ))}
       </div>
@@ -244,21 +244,10 @@ const Dashboard = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-8 mb-8"
+        className="mb-8"
       >
         <div className="flex items-start justify-between mb-6">
           <div>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center gap-2 mb-2"
-            >
-              <Sparkles size={20} className="text-yellow-500" />
-              <span className="text-sm font-medium text-gray-600">
-                Welcome back!
-              </span>
-            </motion.div>
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -284,9 +273,9 @@ const Dashboard = () => {
           </motion.div>
         </div>
 
-        {/* Gallery */}
+        {/* Gallery - Full Image Card Style */}
         <div className="relative">
-          <div className="overflow-hidden rounded-2xl">
+          <div className="overflow-hidden rounded-3xl">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSlide}
@@ -294,66 +283,68 @@ const Dashboard = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -100 }}
                 transition={{ duration: 0.4 }}
-                className="flex gap-6 bg-white rounded-2xl p-6"
+                className="relative h-[420px] rounded-3xl overflow-hidden"
               >
-                {/* Featured Image */}
-                <div className="w-1/2 relative overflow-hidden rounded-xl">
-                  <img
-                    src={topPosts[currentSlide].image}
-                    alt={topPosts[currentSlide].title}
-                    className="w-full h-64 object-cover"
-                  />
-                  <div className="absolute top-3 left-3 flex items-center gap-1 bg-orange-500 text-white text-xs font-medium px-2 py-1 rounded-full">
-                    <TrendingUp size={12} />
-                    <span>#{currentSlide + 1} Today</span>
-                  </div>
+                {/* Full Background Image */}
+                <img
+                  src={topPosts[currentSlide].image}
+                  alt={topPosts[currentSlide].title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                
+                {/* Gradient Overlay - transparent to dark gray */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-900/95" />
+                
+                {/* Bookmark Icon - Top Right */}
+                <button className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+                  <Bookmark size={20} className="text-white" />
+                </button>
+                
+                {/* Trending Badge - Top Left */}
+                <div className="absolute top-4 left-4 flex items-center gap-1 bg-orange-500 text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                  <TrendingUp size={12} />
+                  <span>#{currentSlide + 1} Today</span>
                 </div>
 
-                {/* Post Details */}
-                <div className="w-1/2 flex flex-col justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                {/* Content Overlay - Bottom */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  {/* Title and Favorites */}
+                  <div className="flex items-start justify-between mb-3">
+                    <h2 className="text-2xl font-bold text-white flex-1 pr-4">
                       {topPosts[currentSlide].title}
                     </h2>
-                    <p className="text-gray-600 mb-4">
-                      {topPosts[currentSlide].excerpt}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {topPosts[currentSlide].tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                    <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                      <Heart size={14} className="text-white" />
+                      <span className="text-white text-sm font-medium">
+                        {topPosts[currentSlide].favorites}
+                      </span>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={topPosts[currentSlide].avatar}
-                        alt={topPosts[currentSlide].author}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {topPosts[currentSlide].author}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {topPosts[currentSlide].likes} likes · {topPosts[currentSlide].comments} comments
-                        </div>
-                      </div>
-                    </div>
-                    <NavLink
-                      to={`/post/${topPosts[currentSlide].id}`}
-                      className="flex items-center gap-1 text-gray-900 font-medium hover:text-gray-600 transition-colors"
-                    >
-                      Read more
-                      <ArrowRight size={16} />
-                    </NavLink>
+                  
+                  {/* Excerpt */}
+                  <p className="text-gray-200 mb-4 line-clamp-2">
+                    {topPosts[currentSlide].excerpt}
+                  </p>
+                  
+                  {/* Technologies */}
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    {topPosts[currentSlide].technologies.map((tech) => (
+                      <span
+                        key={tech}
+                        className="px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white text-sm rounded-full"
+                      >
+                        {tech}
+                      </span>
+                    ))}
                   </div>
+                  
+                  {/* View Post Button */}
+                  <NavLink
+                    to={`/post/${topPosts[currentSlide].id}`}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-800/80 backdrop-blur-sm text-white rounded-2xl font-medium hover:bg-gray-700/80 transition-colors"
+                  >
+                    View Post
+                  </NavLink>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -362,15 +353,15 @@ const Dashboard = () => {
           {/* Navigation Arrows */}
           <button
             onClick={prevSlide}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={20} className="text-white" />
           </button>
           <button
             onClick={nextSlide}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={20} className="text-white" />
           </button>
 
           {/* Pagination Dots */}
