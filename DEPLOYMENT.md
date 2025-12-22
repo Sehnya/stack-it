@@ -1,89 +1,106 @@
-# Cloudflare Deployment Guide
+# Stack-it Deployment Guide
 
-Stack-it frontend is deployed on Cloudflare Pages.
+## Architecture
 
-## Frontend Deployment (Cloudflare Pages)
+- **Frontend:** Cloudflare Pages (React SPA)
+- **Backend:** Railway (Elysia/Bun API)
+- **Database:** Turso (SQLite edge database)
 
-### Option 1: Connect GitHub (Recommended)
+---
+
+## 1. Database Setup (Turso)
+
+1. Sign up at [turso.tech](https://turso.tech)
+2. Install Turso CLI:
+   ```bash
+   brew install tursodatabase/tap/turso
+   turso auth login
+   ```
+3. Create database:
+   ```bash
+   turso db create stack-it
+   turso db show stack-it --url  # Copy the URL
+   turso db tokens create stack-it  # Copy the token
+   ```
+4. Push schema:
+   ```bash
+   cd backend
+   TURSO_DATABASE_URL=libsql://your-db.turso.io TURSO_AUTH_TOKEN=your-token bunx prisma db push
+   ```
+
+---
+
+## 2. Backend Deployment (Railway)
+
+1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
+2. Select your repo, set **Root Directory** to `backend`
+3. Add environment variables:
+   | Variable | Value |
+   |----------|-------|
+   | `TURSO_DATABASE_URL` | `libsql://your-db.turso.io` |
+   | `TURSO_AUTH_TOKEN` | Your Turso token |
+   | `JWT_SECRET` | Generate secure random string |
+   | `CORS_ORIGIN` | `https://stack-it.pages.dev` |
+
+4. Railway auto-detects Bun and deploys
+5. Copy your Railway URL (e.g., `https://stack-it-backend.up.railway.app`)
+
+---
+
+## 3. Frontend Deployment (Cloudflare Pages)
 
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → Pages
-2. Click "Create a project" → "Connect to Git"
-3. Select your GitHub repository
-4. Configure build settings:
-   - **Project name:** `stack-it`
-   - **Production branch:** `main`
-   - **Framework preset:** None
-   - **Build command:** `cd frontend && bun install && bun run build`
-   - **Build output directory:** `frontend/dist`
-   - **Root directory:** `/` (leave empty)
+2. Create project → Connect to Git → Select repo
+3. Configure:
+   - **Root directory:** `frontend`
+   - **Build command:** `bun install && bun run build`
+   - **Build output:** `dist`
+4. Add environment variable:
+   | Variable | Value |
+   |----------|-------|
+   | `VITE_API_URL` | Your Railway backend URL |
 
-5. Add environment variables if needed:
-   - `VITE_API_URL` - Your backend API URL
+5. Deploy
 
-6. Click "Save and Deploy"
+---
 
-### Option 2: Direct Upload via CLI
+## Environment Variables Summary
 
-```bash
-# Install Wrangler CLI
-bun add -g wrangler
-
-# Login to Cloudflare
-wrangler login
-
-# Build the frontend
-cd frontend
-bun install
-bun run build
-
-# Deploy to Cloudflare Pages
-wrangler pages deploy dist --project-name=stack-it
+### Backend (Railway)
+```
+TURSO_DATABASE_URL=libsql://your-db.turso.io
+TURSO_AUTH_TOKEN=your-turso-token
+JWT_SECRET=your-secure-secret
+CORS_ORIGIN=https://stack-it.pages.dev
 ```
 
-## Build Settings Summary
-
-| Setting | Value |
-|---------|-------|
-| Build command | `cd frontend && bun install && bun run build` |
-| Build output | `frontend/dist` |
-| Node version | 18+ (or Bun) |
-
-## Custom Domain
-
-1. Go to Pages project → Custom domains
-2. Add your domain
-3. Update DNS records as instructed
-
-## Environment Variables
-
-Set these in Cloudflare Pages dashboard:
-
-| Variable | Description |
-|----------|-------------|
-| `VITE_API_URL` | Backend API URL |
-
-## SPA Routing
-
-The `_redirects` file handles client-side routing:
+### Frontend (Cloudflare)
 ```
-/*    /index.html   200
+VITE_API_URL=https://your-backend.up.railway.app
 ```
 
-This ensures all routes serve `index.html` for React Router to handle.
+---
 
 ## Local Development
 
 ```bash
+# Backend
+cd backend
+bun install
+bun run dev
+
+# Frontend (separate terminal)
 cd frontend
 bun install
 bun run dev
 ```
 
-## Backend Options
+---
 
-For the backend API, consider:
-- **Cloudflare Workers** - Serverless functions
-- **Railway/Render** - Traditional Node.js hosting
-- **Supabase** - Database + Auth + API
+## Custom Domain
 
-The frontend is a static SPA that can work with any backend.
+### Frontend (Cloudflare)
+Pages → Custom domains → Add domain
+
+### Backend (Railway)
+Settings → Domains → Add custom domain
