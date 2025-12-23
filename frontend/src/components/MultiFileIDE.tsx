@@ -166,7 +166,7 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
           }
         )
 
-        // Handle: export default class/function Name
+        // Handle: export default class Name { or export default function Name(
         code = code.replace(
           /export\s+default\s+(class|function)\s+(\w+)/g,
           (_, type, name) => {
@@ -175,7 +175,16 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
           }
         )
 
-        // Handle: export default expression
+        // Handle: export default <identifier> (at end of file, like "export default Calculator")
+        code = code.replace(
+          /export\s+default\s+(\w+)\s*$/gm,
+          (_, name) => {
+            exportedNames.push(`default:${name}`)
+            return `// export default ${name}`
+          }
+        )
+
+        // Handle: export default <expression> (inline)
         code = code.replace(/export\s+default\s+/g, 'module.exports.default = ')
 
         // Handle: export function name() or export class Name
