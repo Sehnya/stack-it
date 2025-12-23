@@ -11,10 +11,10 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Post from './pages/Post'
 import CreatePost from './pages/CreatePost'
+import Admin from './pages/Admin'
 
 // Placeholder pages
 const Settings = () => <div className="text-gray-800 text-2xl">Settings</div>
-const Admin = () => <div className="text-gray-800 text-2xl">Admin Panel</div>
 
 // Loading spinner
 const LoadingScreen = () => (

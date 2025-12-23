@@ -8,6 +8,7 @@ import { authRoutes } from "./routes/auth";
 import { postsRoutes } from "./routes/posts";
 import { userRoutes } from "./routes/users";
 import { pageRoutes } from "./routes/pages";
+import { adminRoutes } from "./routes/admin";
 
 // Resolve static path relative to this file's directory
 const staticPath = resolve(import.meta.dir, "../../static");
@@ -54,6 +55,7 @@ app
   .use(authRoutes)      // /api/auth/*
   .use(postsRoutes)     // /api/posts/*
   .use(userRoutes)      // /api/users/*
+  .use(adminRoutes)     // /api/admin/*
   // Global error handler
   .onError(({ code, error }) => {
     console.error(`Error [${code}]:`, error);
