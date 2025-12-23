@@ -243,11 +243,17 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
             throw new Error(`Module not found: ${moduleName}`)
           }
 
-          const moduleObj = { exports: {} }
+          const moduleObj: { exports: any } = { exports: {} }
           moduleCache[cleanName] = moduleObj.exports
 
           try {
-            const moduleFunc = new Function('module', 'exports', 'require', 'console', moduleCode)
+            // Use indirect eval to support ES6 class syntax
+            const wrappedCode = `
+              (function(module, exports, require, console) {
+                ${moduleCode}
+              })
+            `
+            const moduleFunc = (0, eval)(wrappedCode)
             moduleFunc(moduleObj, moduleObj.exports, createRequire(), customConsole)
             moduleCache[cleanName] = moduleObj.exports
           } catch (e: any) {
@@ -264,9 +270,18 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
 
       const entryCode = modules[entry.replace(/\.(js|ts|jsx|tsx)$/, '')]
       if (entryCode) {
-        const moduleObj = { exports: {} }
-        const entryFunc = new Function('module', 'exports', 'require', 'console', entryCode)
-        entryFunc(moduleObj, moduleObj.exports, createRequire(), customConsole)
+        const moduleObj: { exports: any } = { exports: {} }
+        try {
+          const wrappedCode = `
+            (function(module, exports, require, console) {
+              ${entryCode}
+            })
+          `
+          const entryFunc = (0, eval)(wrappedCode)
+          entryFunc(moduleObj, moduleObj.exports, createRequire(), customConsole)
+        } catch (e: any) {
+          logs.push(`[Error] ${e.message}`)
+        }
       } else {
         logs.push(`[Error] Entry point not found: ${entry}`)
       }
