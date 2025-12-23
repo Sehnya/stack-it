@@ -170,6 +170,9 @@ export const api = {
 
     getTrendingTech: () =>
       request<TrendingTech[]>('/api/posts/trending-tech'),
+
+    getByTech: (tech: string) =>
+      request<Post[]>(`/api/posts/tech/${encodeURIComponent(tech)}`),
   },
 
   users: {

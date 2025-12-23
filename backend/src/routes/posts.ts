@@ -148,6 +148,29 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
       return []
     }
   })
+  // Get posts by technology
+  .get("/tech/:tech", async ({ params }) => {
+    const tech = decodeURIComponent(params.tech)
+    try {
+      const posts = await db.post.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          author: { select: { id: true, username: true, profilePhoto: true } },
+          files: true,
+          _count: { select: { favorites: true, comments: true } },
+        },
+      })
+      // Filter posts that contain the technology (case-insensitive)
+      const filtered = posts.filter((p: any) => {
+        const techs = JSON.parse(p.technologies || "[]")
+        return techs.some((t: string) => t.toLowerCase() === tech.toLowerCase())
+      })
+      return filtered.map(formatPost)
+    } catch (error) {
+      console.error("[POSTS] Error fetching posts by tech:", error)
+      return []
+    }
+  })
   // Get all posts
   .get("/", async ({ query }) => {
     const { sort = "latest", limit = "20", offset = "0" } = query as any

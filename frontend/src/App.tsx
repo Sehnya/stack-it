@@ -15,6 +15,7 @@ import EditPost from './pages/EditPost'
 import Admin from './pages/Admin'
 import Settings from './pages/Settings'
 import Profile from './pages/Profile'
+import Tech from './pages/Tech'
 
 // Loading spinner
 const LoadingScreen = () => (
@@ -211,6 +212,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <AuthenticatedLayout>
               <Profile />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tech/:techName"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <Tech />
             </AuthenticatedLayout>
           </ProtectedRoute>
         }

@@ -98,7 +98,9 @@ const PostCard = ({ post, index }: { post: Post; index: number }) => {
 
         <div className="flex flex-wrap gap-1.5 mb-4">
           {post.technologies.slice(0, 4).map((tech) => (
-            <TechTag key={tech} tech={tech} size="sm" />
+            <NavLink key={tech} to={`/tech/${encodeURIComponent(tech)}`}>
+              <TechTag tech={tech} size="sm" />
+            </NavLink>
           ))}
           {post.technologies.length > 4 && (
             <span className="text-xs text-gray-400 self-center">+{post.technologies.length - 4}</span>
@@ -213,7 +215,11 @@ const RightSidebar = ({ user, stats, topUsers, trendingTech }: RightSidebarProps
             </h3>
             <div className="space-y-1">
               {trendingTech.map((topic, i) => (
-                <div key={topic.name} className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors">
+                <NavLink 
+                  key={topic.name} 
+                  to={`/tech/${encodeURIComponent(topic.name)}`}
+                  className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded-xl transition-colors"
+                >
                   <div className="flex items-center gap-2.5">
                     <span className="w-6 h-6 flex items-center justify-center text-xs font-bold text-gray-400 bg-gray-100 rounded-lg">
                       {i + 1}
@@ -222,7 +228,7 @@ const RightSidebar = ({ user, stats, topUsers, trendingTech }: RightSidebarProps
                     {topic.hot && <Zap size={12} className="text-yellow-500" />}
                   </div>
                   <span className="text-xs text-gray-500">{topic.posts} posts</span>
-                </div>
+                </NavLink>
               ))}
             </div>
           </motion.div>

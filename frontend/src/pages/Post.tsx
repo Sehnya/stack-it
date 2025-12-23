@@ -168,7 +168,9 @@ const Post = () => {
         <div className="absolute bottom-0 left-0 right-0 p-8">
           <div className="flex flex-wrap gap-2 mb-4">
             {post.technologies.map((tech) => (
-              <TechTag key={tech} tech={tech} size="md" />
+              <NavLink key={tech} to={`/tech/${encodeURIComponent(tech)}`}>
+                <TechTag tech={tech} size="md" />
+              </NavLink>
             ))}
           </div>
           <h1 className="text-4xl font-bold text-white drop-shadow-lg">
