@@ -135,6 +135,24 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
+    update: (id: string, data: {
+      title: string
+      excerpt: string
+      content: string
+      coverImage?: string
+      technologies: string[]
+      files?: PostFile[]
+    }) =>
+      request<Post>(`/api/posts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+
+    delete: (id: string) =>
+      request<{ message: string }>(`/api/posts/${id}`, {
+        method: 'DELETE',
+      }),
+
     like: (id: string) =>
       request<{ liked: boolean }>(`/api/posts/${id}/like`, { method: 'POST' }),
 

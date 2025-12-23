@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Post from './pages/Post'
 import CreatePost from './pages/CreatePost'
+import EditPost from './pages/EditPost'
 import Admin from './pages/Admin'
 
 // Placeholder pages
@@ -161,6 +162,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <AuthenticatedLayout>
               <CreatePost />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/edit-post/:postId"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <EditPost />
             </AuthenticatedLayout>
           </ProtectedRoute>
         }

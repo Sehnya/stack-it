@@ -1,20 +1,29 @@
-import { useParams, NavLink } from 'react-router-dom'
+import { useParams, NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Heart, Bookmark, ArrowLeft, Calendar, Share2 } from 'lucide-react'
+import { Heart, Bookmark, ArrowLeft, Calendar, Share2, Edit, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { FilesSidebar, FileModal } from '../components/CodeBlock'
 import { TechTag } from '../components/TechTag'
 import { PostContent } from '../components/PostContent'
 import { api, Post as PostType } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
 
 const Post = () => {
   const { postId } = useParams<{ postId: string }>()
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [bookmarked, setBookmarked] = useState(false)
   const [liked, setLiked] = useState(false)
   const [activeFile, setActiveFile] = useState<string | null>(null)
   const [post, setPost] = useState<PostType | null>(null)
   const [likeCount, setLikeCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState(false)
+
+  // Check if current user can edit/delete
+  const canEdit = post && user && (
+    String(user.id) === post.author.id || user.role === 'admin'
+  )
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -30,6 +39,18 @@ const Post = () => {
     }
     fetchPost()
   }, [postId])
+
+  const handleDelete = async () => {
+    if (!postId || !confirm('Are you sure you want to delete this post?')) return
+    setDeleting(true)
+    const { error } = await api.posts.delete(postId)
+    if (!error) {
+      navigate('/community')
+    } else {
+      alert('Failed to delete post')
+      setDeleting(false)
+    }
+  }
 
   // Get the selected file for the modal
   const selectedFile = activeFile && post
@@ -112,6 +133,23 @@ const Post = () => {
 
         {/* Action Buttons */}
         <div className="absolute top-4 right-4 flex gap-2">
+          {canEdit && (
+            <>
+              <NavLink
+                to={`/edit-post/${post.id}`}
+                className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+              >
+                <Edit size={20} className="text-white" />
+              </NavLink>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="w-12 h-12 bg-red-500/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-red-600/80 transition-colors disabled:opacity-50"
+              >
+                <Trash2 size={20} className="text-white" />
+              </button>
+            </>
+          )}
           <button
             onClick={() => setBookmarked(!bookmarked)}
             className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
