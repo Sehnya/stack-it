@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Copy, Check, Download, FileCode, ChevronRight, X } from 'lucide-react'
+import { Copy, Check, Download, FileCode, ChevronRight, X, Play } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { CodeRunner } from './CodeRunner'
 
 interface CodeBlockProps {
   code: string
@@ -144,10 +145,15 @@ interface FileModalProps {
   onClose: () => void
 }
 
+const runnableLanguages = ['javascript', 'typescript', 'js', 'ts', 'jsx', 'tsx']
+
 export const FileModal = ({ file, onClose }: FileModalProps) => {
   const [copied, setCopied] = useState(false)
+  const [showRunner, setShowRunner] = useState(false)
 
   if (!file) return null
+
+  const canRun = runnableLanguages.includes(file.language.toLowerCase())
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(file.code)
@@ -163,6 +169,18 @@ export const FileModal = ({ file, onClose }: FileModalProps) => {
     a.download = file.name
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  // Show CodeRunner if user clicked Run
+  if (showRunner) {
+    return (
+      <CodeRunner
+        initialCode={file.code}
+        language={file.language}
+        filename={file.name}
+        onClose={() => setShowRunner(false)}
+      />
+    )
   }
 
   const lines = file.code.trim().split('\n')
@@ -205,6 +223,16 @@ export const FileModal = ({ file, onClose }: FileModalProps) => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Run button for JS/TS */}
+              {canRun && (
+                <button
+                  onClick={() => setShowRunner(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <Play size={14} />
+                  Run & Edit
+                </button>
+              )}
               {/* Language badge */}
               <span 
                 className="px-2 py-0.5 text-xs font-mono rounded"
@@ -260,7 +288,10 @@ export const FileModal = ({ file, onClose }: FileModalProps) => {
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-t border-[#3d3d3d] text-xs text-gray-500">
             <span>{lines.length} lines</span>
-            <span>Press ESC to close</span>
+            <div className="flex items-center gap-4">
+              {canRun && <span className="text-green-500">Click "Run & Edit" to execute</span>}
+              <span>Press ESC to close</span>
+            </div>
           </div>
         </motion.div>
       </motion.div>
