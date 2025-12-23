@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Copy, Check, Download, FileCode, ChevronRight, X, Play } from 'lucide-react'
+import { Copy, Check, Download, FileCode, ChevronRight, X, Play, Code2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CodeRunner } from './CodeRunner'
+import { MultiFileIDE } from './MultiFileIDE'
 
 interface CodeBlockProps {
   code: string
@@ -307,6 +308,12 @@ interface FilesSidebarProps {
 
 export const FilesSidebar = ({ files, activeFile, onSelectFile }: FilesSidebarProps) => {
   const [isOpen, setIsOpen] = useState(true)
+  const [showIDE, setShowIDE] = useState(false)
+
+  // Check if there are runnable files
+  const hasRunnableFiles = files.some((f) =>
+    runnableLanguages.includes(f.language.toLowerCase())
+  )
 
   const downloadAll = () => {
     files.forEach((file) => {
@@ -321,64 +328,82 @@ export const FilesSidebar = ({ files, activeFile, onSelectFile }: FilesSidebarPr
   }
 
   return (
-    <div className="bg-[#252526] rounded-xl overflow-hidden h-fit sticky top-8">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-[#3d3d3d]">
-        <div className="flex items-center gap-2">
-          <button onClick={() => setIsOpen(!isOpen)} className="text-gray-400 hover:text-white">
-            <ChevronRight 
-              size={16} 
-              className={`transition-transform ${isOpen ? 'rotate-90' : ''}`} 
-            />
+    <>
+      <div className="bg-[#252526] rounded-xl overflow-hidden h-fit sticky top-8">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-[#3d3d3d]">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setIsOpen(!isOpen)} className="text-gray-400 hover:text-white">
+              <ChevronRight
+                size={16}
+                className={`transition-transform ${isOpen ? 'rotate-90' : ''}`}
+              />
+            </button>
+            <span className="text-sm font-medium text-gray-300">Project Files</span>
+          </div>
+          <button
+            onClick={downloadAll}
+            className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+          >
+            <Download size={12} />
+            All
           </button>
-          <span className="text-sm font-medium text-gray-300">Project Files</span>
         </div>
-        <button
-          onClick={downloadAll}
-          className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
-        >
-          <Download size={12} />
-          All
-        </button>
+
+        {/* File list */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ height: 0 }}
+              animate={{ height: 'auto' }}
+              exit={{ height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="p-2">
+                {files.map((file) => {
+                  const langColor = languageColors[file.language] || '#6b7280'
+                  return (
+                    <button
+                      key={file.name}
+                      onClick={() => onSelectFile(file.name)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
+                        activeFile === file.name
+                          ? 'bg-[#37373d] text-white'
+                          : 'text-gray-400 hover:bg-[#2a2d2e] hover:text-gray-200'
+                      }`}
+                    >
+                      <span
+                        className="w-5 h-5 flex items-center justify-center text-[10px] font-bold rounded"
+                        style={{ backgroundColor: langColor + '30', color: langColor }}
+                      >
+                        {languageIcons[file.language] || '?'}
+                      </span>
+                      <span className="text-sm truncate">{file.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Open IDE Button */}
+              {hasRunnableFiles && files.length > 1 && (
+                <div className="p-2 pt-0">
+                  <button
+                    onClick={() => setShowIDE(true)}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <Code2 size={16} />
+                    Open in IDE
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* File list */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            exit={{ height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="p-2">
-              {files.map((file) => {
-                const langColor = languageColors[file.language] || '#6b7280'
-                return (
-                  <button
-                    key={file.name}
-                    onClick={() => onSelectFile(file.name)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
-                      activeFile === file.name
-                        ? 'bg-[#37373d] text-white'
-                        : 'text-gray-400 hover:bg-[#2a2d2e] hover:text-gray-200'
-                    }`}
-                  >
-                    <span 
-                      className="w-5 h-5 flex items-center justify-center text-[10px] font-bold rounded"
-                      style={{ backgroundColor: langColor + '30', color: langColor }}
-                    >
-                      {languageIcons[file.language] || '?'}
-                    </span>
-                    <span className="text-sm truncate">{file.name}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      {/* Multi-File IDE Modal */}
+      {showIDE && <MultiFileIDE files={files} onClose={() => setShowIDE(false)} />}
+    </>
   )
 }
 
