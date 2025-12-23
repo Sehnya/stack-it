@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import AceEditor from 'react-ace'
+import Editor from '@monaco-editor/react'
 import {
   Play,
   Copy,
@@ -14,16 +14,6 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-import 'ace-builds/src-noconflict/mode-javascript'
-import 'ace-builds/src-noconflict/mode-typescript'
-import 'ace-builds/src-noconflict/mode-python'
-import 'ace-builds/src-noconflict/mode-html'
-import 'ace-builds/src-noconflict/mode-css'
-import 'ace-builds/src-noconflict/mode-json'
-import 'ace-builds/src-noconflict/mode-sh'
-import 'ace-builds/src-noconflict/theme-one_dark'
-import 'ace-builds/src-noconflict/ext-language_tools'
-
 interface FileItem {
   name: string
   language: string
@@ -36,7 +26,7 @@ interface MultiFileIDEProps {
   onClose: () => void
 }
 
-const languageToMode: Record<string, string> = {
+const languageToMonaco: Record<string, string> = {
   javascript: 'javascript',
   typescript: 'typescript',
   js: 'javascript',
@@ -48,9 +38,11 @@ const languageToMode: Record<string, string> = {
   html: 'html',
   css: 'css',
   json: 'json',
-  bash: 'sh',
-  shell: 'sh',
-  sh: 'sh',
+  bash: 'shell',
+  shell: 'shell',
+  sh: 'shell',
+  md: 'markdown',
+  markdown: 'markdown',
 }
 
 const languageColors: Record<string, string> = {
@@ -79,12 +71,12 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
   const [showExplorer, setShowExplorer] = useState(true)
 
   const currentFile = files.find((f) => f.name === activeFile)
-  const mode = currentFile ? languageToMode[currentFile.language.toLowerCase()] || 'javascript' : 'javascript'
+  const monacoLang = currentFile
+    ? languageToMonaco[currentFile.language.toLowerCase()] || 'plaintext'
+    : 'plaintext'
 
-  // Check if any file is runnable
   const hasRunnableFiles = files.some((f) => runnableLanguages.includes(f.language.toLowerCase()))
 
-  // Find entry point (index.js, main.js, app.js, or first JS file)
   const findEntryPoint = (): string => {
     const entryNames = ['index.js', 'index.ts', 'main.js', 'main.ts', 'app.js', 'app.ts']
     for (const name of entryNames) {
@@ -96,7 +88,8 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
     return jsFile?.name || files[0]?.name || ''
   }
 
-  const updateFileCode = (code: string) => {
+  const updateFileCode = (code: string | undefined) => {
+    if (code === undefined) return
     setFiles((prev) => prev.map((f) => (f.name === activeFile ? { ...f, code } : f)))
   }
 
@@ -126,11 +119,9 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
     const logs: string[] = []
 
     try {
-      // Build a module system
-      const modules: Record<string, any> = {}
+      const modules: Record<string, string> = {}
       const moduleCache: Record<string, any> = {}
 
-      // Create custom console
       const customConsole = {
         log: (...args: any[]) => logs.push(args.map(formatOutput).join(' ')),
         error: (...args: any[]) => logs.push(`[Error] ${args.map(formatOutput).join(' ')}`),
@@ -140,15 +131,14 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
         clear: () => (logs.length = 0),
       }
 
-      // Process each file and create module factories
+      // Transform files
       files.forEach((file) => {
         if (!runnableLanguages.includes(file.language.toLowerCase())) return
 
-        // Transform imports/exports to CommonJS
         let code = file.code
         const exportedNames: string[] = []
 
-        // Handle ES6 imports: import { x, y } from './file'
+        // Transform imports
         code = code.replace(
           /import\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/g,
           (_, imports, path) => {
@@ -157,67 +147,46 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
           }
         )
 
-        // Handle default imports: import x from './file'
-        code = code.replace(
-          /import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g,
-          (_, name, path) => {
-            const cleanPath = path.replace(/^\.\//, '').replace(/\.(js|ts|jsx|tsx)$/, '')
-            return `const ${name} = require('${cleanPath}').default || require('${cleanPath}')`
-          }
-        )
-
-        // Handle: export default class Name { or export default function Name(
-        code = code.replace(
-          /export\s+default\s+(class|function)\s+(\w+)/g,
-          (_, type, name) => {
-            exportedNames.push(`default:${name}`)
-            return `${type} ${name}`
-          }
-        )
-
-        // Handle: export default <identifier> (at end of file, like "export default Calculator")
-        code = code.replace(
-          /export\s+default\s+(\w+)\s*$/gm,
-          (_, name) => {
-            exportedNames.push(`default:${name}`)
-            return `// export default ${name}`
-          }
-        )
-
-        // Handle: export default <expression> (inline)
-        code = code.replace(/export\s+default\s+/g, 'module.exports.default = ')
-
-        // Handle: export function name() or export class Name
-        code = code.replace(
-          /export\s+(function|class)\s+(\w+)/g,
-          (_, type, name) => {
-            exportedNames.push(name)
-            return `${type} ${name}`
-          }
-        )
-
-        // Handle: export const/let/var name =
-        code = code.replace(
-          /export\s+(const|let|var)\s+(\w+)\s*=/g,
-          (_, type, name) => {
-            exportedNames.push(name)
-            return `${type} ${name} =`
-          }
-        )
-
-        // Handle: export { x, y }
-        code = code.replace(/export\s+\{([^}]+)\}/g, (_, exports) => {
-          const names = exports.split(',').map((n: string) => n.trim())
-          names.forEach((n: string) => exportedNames.push(n))
-          return '' // Remove the export statement, we'll add exports at the end
+        code = code.replace(/import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g, (_, name, path) => {
+          const cleanPath = path.replace(/^\.\//, '').replace(/\.(js|ts|jsx|tsx)$/, '')
+          return `const ${name} = require('${cleanPath}').default || require('${cleanPath}')`
         })
 
-        // Add module.exports at the end for collected exports
+        // Transform exports
+        code = code.replace(/export\s+default\s+(class|function)\s+(\w+)/g, (_, type, name) => {
+          exportedNames.push(`default:${name}`)
+          return `${type} ${name}`
+        })
+
+        code = code.replace(/export\s+default\s+(\w+)\s*$/gm, (_, name) => {
+          exportedNames.push(`default:${name}`)
+          return `// export default ${name}`
+        })
+
+        code = code.replace(/export\s+default\s+/g, 'module.exports.default = ')
+
+        code = code.replace(/export\s+(function|class)\s+(\w+)/g, (_, type, name) => {
+          exportedNames.push(name)
+          return `${type} ${name}`
+        })
+
+        code = code.replace(/export\s+(const|let|var)\s+(\w+)\s*=/g, (_, type, name) => {
+          exportedNames.push(name)
+          return `${type} ${name} =`
+        })
+
+        code = code.replace(/export\s+\{([^}]+)\}/g, (_, exports) => {
+          exports
+            .split(',')
+            .map((n: string) => n.trim())
+            .forEach((n: string) => exportedNames.push(n))
+          return ''
+        })
+
         if (exportedNames.length > 0) {
           const exportStatements = exportedNames.map((name) => {
             if (name.startsWith('default:')) {
-              const actualName = name.replace('default:', '')
-              return `module.exports.default = ${actualName}`
+              return `module.exports.default = ${name.replace('default:', '')}`
             }
             return `module.exports.${name} = ${name}`
           })
@@ -226,33 +195,23 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
 
         const fileName = file.name.replace(/\.(js|ts|jsx|tsx)$/, '')
         modules[fileName] = code
-        modules[file.name] = code // Also store with extension
+        modules[file.name] = code
       })
 
-      // Create require function
-      const createRequire = () => {
+      const createRequire = (): ((moduleName: string) => any) => {
         return (moduleName: string) => {
           const cleanName = moduleName.replace(/^\.\//, '').replace(/\.(js|ts|jsx|tsx)$/, '')
 
-          if (moduleCache[cleanName]) {
-            return moduleCache[cleanName]
-          }
+          if (moduleCache[cleanName]) return moduleCache[cleanName]
 
           const moduleCode = modules[cleanName]
-          if (!moduleCode) {
-            throw new Error(`Module not found: ${moduleName}`)
-          }
+          if (!moduleCode) throw new Error(`Module not found: ${moduleName}`)
 
           const moduleObj: { exports: any } = { exports: {} }
           moduleCache[cleanName] = moduleObj.exports
 
           try {
-            // Use indirect eval to support ES6 class syntax
-            const wrappedCode = `
-              (function(module, exports, require, console) {
-                ${moduleCode}
-              })
-            `
+            const wrappedCode = `(function(module, exports, require, console) { ${moduleCode} })`
             const moduleFunc = (0, eval)(wrappedCode)
             moduleFunc(moduleObj, moduleObj.exports, createRequire(), customConsole)
             moduleCache[cleanName] = moduleObj.exports
@@ -264,7 +223,6 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
         }
       }
 
-      // Find and run entry point
       const entry = findEntryPoint()
       logs.push(`Running ${entry}...\n`)
 
@@ -272,11 +230,7 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
       if (entryCode) {
         const moduleObj: { exports: any } = { exports: {} }
         try {
-          const wrappedCode = `
-            (function(module, exports, require, console) {
-              ${entryCode}
-            })
-          `
+          const wrappedCode = `(function(module, exports, require, console) { ${entryCode} })`
           const entryFunc = (0, eval)(wrappedCode)
           entryFunc(moduleObj, moduleObj.exports, createRequire(), customConsole)
         } catch (e: any) {
@@ -286,10 +240,7 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
         logs.push(`[Error] Entry point not found: ${entry}`)
       }
 
-      if (logs.length === 1) {
-        logs.push('(No output)')
-      }
-
+      if (logs.length === 1) logs.push('(No output)')
       setOutput(logs)
     } catch (error: any) {
       setOutput([...logs, `[Error] ${error.message}`])
@@ -331,7 +282,6 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
     })
   }
 
-  // Handle ESC to close
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -354,7 +304,7 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-6xl h-[90vh] flex flex-col rounded-2xl overflow-hidden bg-[#1e1e1e] shadow-2xl"
+        className="relative w-full max-w-6xl h-[90vh] flex flex-col rounded-xl overflow-hidden bg-[#1e1e1e] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -382,7 +332,11 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
             <button onClick={handleCopy} className="p-2 hover:bg-white/10 rounded-lg transition-colors" title="Copy">
               {copied ? <Check size={18} className="text-green-400" /> : <Copy size={18} className="text-gray-400" />}
             </button>
-            <button onClick={downloadAll} className="p-2 hover:bg-white/10 rounded-lg transition-colors" title="Download All">
+            <button
+              onClick={downloadAll}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              title="Download All"
+            >
               <Download size={18} className="text-gray-400" />
             </button>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors ml-2" title="Close">
@@ -400,7 +354,7 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
                 initial={{ width: 0 }}
                 animate={{ width: 200 }}
                 exit={{ width: 0 }}
-                className="bg-[#252526] border-r border-[#3d3d3d] overflow-hidden"
+                className="bg-[#252526] border-r border-[#3d3d3d] overflow-hidden flex-shrink-0"
               >
                 <div className="p-2">
                   <div className="flex items-center gap-2 px-2 py-1 text-xs font-semibold text-gray-400 uppercase">
@@ -432,14 +386,17 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
           </AnimatePresence>
 
           {/* Editor Area */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             {/* Tabs */}
-            <div className="flex items-center bg-[#252526] border-b border-[#3d3d3d] overflow-x-auto">
+            <div className="flex items-center bg-[#252526] border-b border-[#3d3d3d] overflow-x-auto flex-shrink-0">
               <button
                 onClick={() => setShowExplorer(!showExplorer)}
-                className="p-2 hover:bg-white/10 transition-colors border-r border-[#3d3d3d]"
+                className="p-2 hover:bg-white/10 transition-colors border-r border-[#3d3d3d] flex-shrink-0"
               >
-                <ChevronRight size={16} className={`text-gray-400 transition-transform ${showExplorer ? 'rotate-180' : ''}`} />
+                <ChevronRight
+                  size={16}
+                  className={`text-gray-400 transition-transform ${showExplorer ? 'rotate-180' : ''}`}
+                />
               </button>
               {openTabs.map((tab) => {
                 const file = files.find((f) => f.name === tab)
@@ -448,16 +405,13 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
                   <div
                     key={tab}
                     onClick={() => setActiveFile(tab)}
-                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer border-r border-[#3d3d3d] ${
+                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer border-r border-[#3d3d3d] flex-shrink-0 ${
                       activeFile === tab ? 'bg-[#1e1e1e] text-white' : 'text-gray-400 hover:text-gray-200'
                     }`}
                   >
                     <FileCode size={14} style={{ color: langColor }} />
-                    <span className="text-sm">{tab}</span>
-                    <button
-                      onClick={(e) => closeTab(tab, e)}
-                      className="ml-1 p-0.5 hover:bg-white/20 rounded"
-                    >
+                    <span className="text-sm whitespace-nowrap">{tab}</span>
+                    <button onClick={(e) => closeTab(tab, e)} className="ml-1 p-0.5 hover:bg-white/20 rounded">
                       <X size={12} />
                     </button>
                   </div>
@@ -465,30 +419,31 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
               })}
             </div>
 
-            {/* Editor */}
+            {/* Monaco Editor */}
             <div className={`${showOutput ? 'h-[55%]' : 'flex-1'} overflow-hidden`}>
               {currentFile && (
-                <AceEditor
-                  mode={mode}
-                  theme="one_dark"
+                <Editor
+                  height="100%"
+                  language={monacoLang}
                   value={currentFile.code}
                   onChange={updateFileCode}
-                  name="multi-file-editor"
-                  width="100%"
-                  height="100%"
-                  fontSize={14}
-                  showPrintMargin={false}
-                  showGutter={true}
-                  highlightActiveLine={true}
-                  setOptions={{
-                    enableBasicAutocompletion: true,
-                    enableLiveAutocompletion: true,
-                    enableSnippets: true,
-                    showLineNumbers: true,
+                  theme="vs-dark"
+                  options={{
+                    fontSize: 14,
+                    fontFamily: "'Fira Code', 'Cascadia Code', Consolas, monospace",
+                    fontLigatures: true,
+                    minimap: { enabled: true, scale: 1 },
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
                     tabSize: 2,
-                    useWorker: false,
+                    wordWrap: 'on',
+                    lineNumbers: 'on',
+                    renderLineHighlight: 'all',
+                    cursorBlinking: 'smooth',
+                    cursorSmoothCaretAnimation: 'on',
+                    smoothScrolling: true,
+                    padding: { top: 16 },
                   }}
-                  editorProps={{ $blockScrolling: true }}
                 />
               )}
             </div>
@@ -526,12 +481,12 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
                           line.startsWith('[Error')
                             ? 'text-red-400'
                             : line.startsWith('[Warn]')
-                            ? 'text-yellow-400'
-                            : line.startsWith('[Info]')
-                            ? 'text-blue-400'
-                            : line.startsWith('Running')
-                            ? 'text-green-400'
-                            : 'text-gray-300'
+                              ? 'text-yellow-400'
+                              : line.startsWith('[Info]')
+                                ? 'text-blue-400'
+                                : line.startsWith('Running')
+                                  ? 'text-green-400'
+                                  : 'text-gray-300'
                         }`}
                       >
                         {line}
@@ -549,6 +504,7 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
           <div className="flex items-center gap-4">
             <span>{files.length} files</span>
             {currentFile && <span>{currentFile.code.split('\n').length} lines</span>}
+            {currentFile && <span>{monacoLang}</span>}
           </div>
           <div className="flex items-center gap-4">
             {hasRunnableFiles && <span>Entry: {findEntryPoint()}</span>}

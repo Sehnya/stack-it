@@ -1,18 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
-import AceEditor from 'react-ace'
+import { useState, useEffect } from 'react'
+import Editor from '@monaco-editor/react'
 import { Play, Square, Copy, Check, Download, Trash2, Terminal, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-
-// Import ace modes and themes
-import 'ace-builds/src-noconflict/mode-javascript'
-import 'ace-builds/src-noconflict/mode-typescript'
-import 'ace-builds/src-noconflict/mode-python'
-import 'ace-builds/src-noconflict/mode-html'
-import 'ace-builds/src-noconflict/mode-css'
-import 'ace-builds/src-noconflict/mode-json'
-import 'ace-builds/src-noconflict/mode-sh'
-import 'ace-builds/src-noconflict/theme-one_dark'
-import 'ace-builds/src-noconflict/ext-language_tools'
 
 interface CodeRunnerProps {
   initialCode: string
@@ -21,7 +10,7 @@ interface CodeRunnerProps {
   onClose: () => void
 }
 
-const languageToMode: Record<string, string> = {
+const languageToMonaco: Record<string, string> = {
   javascript: 'javascript',
   typescript: 'typescript',
   js: 'javascript',
@@ -33,9 +22,9 @@ const languageToMode: Record<string, string> = {
   html: 'html',
   css: 'css',
   json: 'json',
-  bash: 'sh',
-  shell: 'sh',
-  sh: 'sh',
+  bash: 'shell',
+  shell: 'shell',
+  sh: 'shell',
 }
 
 const runnableLanguages = ['javascript', 'typescript', 'js', 'ts', 'jsx', 'tsx']
@@ -46,18 +35,9 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
   const [isRunning, setIsRunning] = useState(false)
   const [copied, setCopied] = useState(false)
   const [showOutput, setShowOutput] = useState(false)
-  const workerRef = useRef<Worker | null>(null)
 
-  const mode = languageToMode[language.toLowerCase()] || 'javascript'
+  const monacoLang = languageToMonaco[language.toLowerCase()] || 'plaintext'
   const canRun = runnableLanguages.includes(language.toLowerCase())
-
-  useEffect(() => {
-    return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate()
-      }
-    }
-  }, [])
 
   const runCode = () => {
     if (!canRun) return
@@ -66,30 +46,20 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
     setShowOutput(true)
     setOutput(['Running...'])
 
-    // Create a sandboxed execution environment
     const logs: string[] = []
-    
+
     try {
-      // Create custom console that captures output
       const customConsole = {
         log: (...args: any[]) => logs.push(args.map(formatOutput).join(' ')),
         error: (...args: any[]) => logs.push(`[Error] ${args.map(formatOutput).join(' ')}`),
         warn: (...args: any[]) => logs.push(`[Warn] ${args.map(formatOutput).join(' ')}`),
         info: (...args: any[]) => logs.push(`[Info] ${args.map(formatOutput).join(' ')}`),
         table: (data: any) => logs.push(JSON.stringify(data, null, 2)),
-        clear: () => logs.length = 0,
+        clear: () => (logs.length = 0),
       }
 
-      // Execute code in a function scope with custom console
-      const executeCode = new Function('console', `
-        "use strict";
-        try {
-          ${code}
-        } catch (e) {
-          console.error(e.message);
-        }
-      `)
-
+      const wrappedCode = `(function(console) { ${code} })`
+      const executeCode = (0, eval)(wrappedCode)
       executeCode(customConsole)
 
       if (logs.length === 0) {
@@ -98,7 +68,7 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
 
       setOutput(logs)
     } catch (error: any) {
-      setOutput([`Error: ${error.message}`])
+      setOutput([`[Error] ${error.message}`])
     }
 
     setIsRunning(false)
@@ -133,10 +103,13 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
     URL.revokeObjectURL(url)
   }
 
-  const clearOutput = () => {
-    setOutput([])
-    setShowOutput(false)
-  }
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [onClose])
 
   return (
     <motion.div
@@ -152,18 +125,18 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-5xl h-[85vh] flex flex-col rounded-2xl overflow-hidden bg-[#282c34] shadow-2xl"
+        className="relative w-full max-w-5xl h-[85vh] flex flex-col rounded-xl overflow-hidden bg-[#1e1e1e] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-[#21252b] border-b border-[#181a1f]">
+        <div className="flex items-center justify-between px-4 py-3 bg-[#323233] border-b border-[#3d3d3d]">
           <div className="flex items-center gap-3">
             <div className="flex gap-2">
               <button onClick={onClose} className="w-3 h-3 rounded-full bg-[#ff5f56] hover:brightness-110" />
               <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
               <div className="w-3 h-3 rounded-full bg-[#27ca40]" />
             </div>
-            <div className="flex items-center gap-2 ml-4 px-3 py-1 bg-[#282c34] rounded-lg">
+            <div className="flex items-center gap-2 ml-4 px-3 py-1 bg-[#1e1e1e] rounded-lg">
               <Terminal size={14} className="text-gray-400" />
               <span className="text-sm font-medium text-gray-200">{filename}</span>
             </div>
@@ -189,11 +162,7 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
                 )}
               </button>
             )}
-            <button
-              onClick={handleCopy}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              title="Copy code"
-            >
+            <button onClick={handleCopy} className="p-2 hover:bg-white/10 rounded-lg transition-colors" title="Copy">
               {copied ? <Check size={18} className="text-green-400" /> : <Copy size={18} className="text-gray-400" />}
             </button>
             <button
@@ -203,11 +172,7 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
             >
               <Download size={18} className="text-gray-400" />
             </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors ml-2"
-              title="Close"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors ml-2" title="Close">
               <X size={18} className="text-gray-400" />
             </button>
           </div>
@@ -217,27 +182,28 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Editor */}
           <div className={`${showOutput ? 'h-[60%]' : 'flex-1'} overflow-hidden`}>
-            <AceEditor
-              mode={mode}
-              theme="one_dark"
-              value={code}
-              onChange={setCode}
-              name="code-editor"
-              width="100%"
+            <Editor
               height="100%"
-              fontSize={14}
-              showPrintMargin={false}
-              showGutter={true}
-              highlightActiveLine={true}
-              setOptions={{
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                enableSnippets: true,
-                showLineNumbers: true,
+              language={monacoLang}
+              value={code}
+              onChange={(value) => setCode(value || '')}
+              theme="vs-dark"
+              options={{
+                fontSize: 14,
+                fontFamily: "'Fira Code', 'Cascadia Code', Consolas, monospace",
+                fontLigatures: true,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
                 tabSize: 2,
-                useWorker: false,
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                renderLineHighlight: 'all',
+                cursorBlinking: 'smooth',
+                cursorSmoothCaretAnimation: 'on',
+                smoothScrolling: true,
+                padding: { top: 16 },
               }}
-              editorProps={{ $blockScrolling: true }}
             />
           </div>
 
@@ -248,15 +214,18 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
                 initial={{ height: 0 }}
                 animate={{ height: '40%' }}
                 exit={{ height: 0 }}
-                className="border-t border-[#181a1f] bg-[#1e2127] overflow-hidden flex flex-col"
+                className="border-t border-[#3d3d3d] bg-[#1e1e1e] overflow-hidden flex flex-col"
               >
-                <div className="flex items-center justify-between px-4 py-2 bg-[#21252b] border-b border-[#181a1f]">
+                <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#3d3d3d]">
                   <div className="flex items-center gap-2">
                     <Terminal size={14} className="text-gray-400" />
                     <span className="text-sm font-medium text-gray-300">Output</span>
                   </div>
                   <button
-                    onClick={clearOutput}
+                    onClick={() => {
+                      setOutput([])
+                      setShowOutput(false)
+                    }}
                     className="p-1 hover:bg-white/10 rounded transition-colors"
                     title="Clear output"
                   >
@@ -271,10 +240,10 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
                         line.startsWith('[Error]')
                           ? 'text-red-400'
                           : line.startsWith('[Warn]')
-                          ? 'text-yellow-400'
-                          : line.startsWith('[Info]')
-                          ? 'text-blue-400'
-                          : 'text-gray-300'
+                            ? 'text-yellow-400'
+                            : line.startsWith('[Info]')
+                              ? 'text-blue-400'
+                              : 'text-gray-300'
                       }`}
                     >
                       {line}
@@ -287,11 +256,14 @@ export const CodeRunner = ({ initialCode, language, filename, onClose }: CodeRun
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-2 bg-[#21252b] border-t border-[#181a1f] text-xs text-gray-500">
-          <span>{code.split('\n').length} lines</span>
+        <div className="flex items-center justify-between px-4 py-1 bg-[#007acc] text-white text-xs">
           <div className="flex items-center gap-4">
-            {canRun && <span className="text-green-500">Runnable</span>}
-            <span>Press ESC to close</span>
+            <span>{code.split('\n').length} lines</span>
+            <span>{monacoLang}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            {canRun && <span className="text-green-300">Runnable</span>}
+            <span>ESC to close</span>
           </div>
         </div>
       </motion.div>
