@@ -171,4 +171,18 @@ export const api = {
     getTrendingTech: () =>
       request<TrendingTech[]>('/api/posts/trending-tech'),
   },
+
+  users: {
+    getById: (id: string) =>
+      request<{ user: any }>(`/api/users/${id}`),
+
+    getPosts: (id: string, limit = 20, offset = 0) =>
+      request<{ posts: any[] }>(`/api/users/${id}/posts?limit=${limit}&offset=${offset}`),
+
+    updateProfile: (data: { username?: string; profilePhoto?: string }) =>
+      request<{ message: string; user: User }>('/api/users/profile', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+  },
 }

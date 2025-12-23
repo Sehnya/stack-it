@@ -64,13 +64,20 @@ const PostCard = ({ post, index }: { post: Post; index: number }) => {
 
       <div className="p-5">
         <div className="flex items-center gap-3 mb-3">
-          <img
-            src={post.author.avatar}
-            alt={post.author.username}
-            className="w-9 h-9 rounded-full ring-2 ring-gray-100"
-          />
+          <NavLink to={`/profile/${post.author.id}`}>
+            <img
+              src={post.author.avatar}
+              alt={post.author.username}
+              className="w-9 h-9 rounded-full ring-2 ring-gray-100 hover:ring-gray-300 transition-all"
+            />
+          </NavLink>
           <div className="flex-1">
-            <span className="font-medium text-gray-900 text-sm">{post.author.username}</span>
+            <NavLink 
+              to={`/profile/${post.author.id}`}
+              className="font-medium text-gray-900 text-sm hover:text-gray-700 transition-colors"
+            >
+              {post.author.username}
+            </NavLink>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <span>{timeAgo()}</span>
               <span>•</span>
@@ -234,7 +241,11 @@ const RightSidebar = ({ user, stats, topUsers, trendingTech }: RightSidebarProps
             </h3>
             <div className="space-y-1">
               {topUsers.map((dev) => (
-                <div key={dev.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors">
+                <NavLink 
+                  key={dev.id} 
+                  to={`/profile/${dev.id}`}
+                  className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition-colors"
+                >
                   <div className="flex items-center gap-2.5">
                     <span className={`w-6 h-6 flex items-center justify-center text-xs font-bold rounded-lg ${
                       dev.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
@@ -248,7 +259,7 @@ const RightSidebar = ({ user, stats, topUsers, trendingTech }: RightSidebarProps
                     <span className="text-sm font-medium text-gray-700">{dev.name}</span>
                   </div>
                   <span className="text-xs text-gray-500">{dev.stacks} stacks</span>
-                </div>
+                </NavLink>
               ))}
             </div>
           </motion.div>

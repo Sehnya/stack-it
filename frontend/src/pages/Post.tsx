@@ -188,7 +188,7 @@ const Post = () => {
         >
           {/* Meta Info */}
           <div className="flex items-center gap-6 mb-8 text-gray-600 pb-6 border-b border-gray-200">
-            <div className="flex items-center gap-2">
+            <NavLink to={`/profile/${post.author.id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <img
                 src={post.author.avatar}
                 alt={post.author.username}
@@ -197,7 +197,7 @@ const Post = () => {
               <span className="font-medium text-gray-900">
                 {post.author.username}
               </span>
-            </div>
+            </NavLink>
             <div className="flex items-center gap-2">
               <Calendar size={18} />
               <span>

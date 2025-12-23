@@ -13,9 +13,8 @@ import Post from './pages/Post'
 import CreatePost from './pages/CreatePost'
 import EditPost from './pages/EditPost'
 import Admin from './pages/Admin'
-
-// Placeholder pages
-const Settings = () => <div className="text-gray-800 text-2xl">Settings</div>
+import Settings from './pages/Settings'
+import Profile from './pages/Profile'
 
 // Loading spinner
 const LoadingScreen = () => (
@@ -202,6 +201,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <AuthenticatedLayout>
               <Post />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:userId"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <Profile />
             </AuthenticatedLayout>
           </ProtectedRoute>
         }
