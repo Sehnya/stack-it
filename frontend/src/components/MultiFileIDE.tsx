@@ -144,10 +144,11 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
       files.forEach((file) => {
         if (!runnableLanguages.includes(file.language.toLowerCase())) return
 
-        // Transform imports to our require system
+        // Transform imports/exports to CommonJS
         let code = file.code
+        const exportedNames: string[] = []
 
-        // Handle ES6 imports: import { x } from './file'
+        // Handle ES6 imports: import { x, y } from './file'
         code = code.replace(
           /import\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/g,
           (_, imports, path) => {
@@ -165,19 +166,54 @@ export const MultiFileIDE = ({ files: initialFiles, entryFile, onClose }: MultiF
           }
         )
 
-        // Handle export default
+        // Handle: export default class/function Name
+        code = code.replace(
+          /export\s+default\s+(class|function)\s+(\w+)/g,
+          (_, type, name) => {
+            exportedNames.push(`default:${name}`)
+            return `${type} ${name}`
+          }
+        )
+
+        // Handle: export default expression
         code = code.replace(/export\s+default\s+/g, 'module.exports.default = ')
 
-        // Handle named exports: export const/function/class
-        code = code.replace(/export\s+(const|let|var|function|class)\s+(\w+)/g, (_, type, name) => {
-          return `${type} ${name}; module.exports.${name} = ${name}`
-        })
+        // Handle: export function name() or export class Name
+        code = code.replace(
+          /export\s+(function|class)\s+(\w+)/g,
+          (_, type, name) => {
+            exportedNames.push(name)
+            return `${type} ${name}`
+          }
+        )
 
-        // Handle export { x, y }
+        // Handle: export const/let/var name =
+        code = code.replace(
+          /export\s+(const|let|var)\s+(\w+)\s*=/g,
+          (_, type, name) => {
+            exportedNames.push(name)
+            return `${type} ${name} =`
+          }
+        )
+
+        // Handle: export { x, y }
         code = code.replace(/export\s+\{([^}]+)\}/g, (_, exports) => {
           const names = exports.split(',').map((n: string) => n.trim())
-          return names.map((n: string) => `module.exports.${n} = ${n}`).join('; ')
+          names.forEach((n: string) => exportedNames.push(n))
+          return '' // Remove the export statement, we'll add exports at the end
         })
+
+        // Add module.exports at the end for collected exports
+        if (exportedNames.length > 0) {
+          const exportStatements = exportedNames.map((name) => {
+            if (name.startsWith('default:')) {
+              const actualName = name.replace('default:', '')
+              return `module.exports.default = ${actualName}`
+            }
+            return `module.exports.${name} = ${name}`
+          })
+          code = code + '\n' + exportStatements.join(';\n')
+        }
 
         const fileName = file.name.replace(/\.(js|ts|jsx|tsx)$/, '')
         modules[fileName] = code
