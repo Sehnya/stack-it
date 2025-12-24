@@ -23,10 +23,11 @@ if (tursoUrl && tursoToken) {
   const adapter = new PrismaLibSQL(libsql);
   db = new PrismaClient({ adapter });
 } else {
-  // Local SQLite fallback
-  const localPath = `file:${resolve(import.meta.dir, "../prisma/dev.db")}`;
+  // Local SQLite fallback - convert relative path to absolute for libsql
+  const dbPath = resolve(process.cwd(), "prisma/dev.db");
+  const localPath = `file:${dbPath}`;
   console.log(`[DB] Using local SQLite: ${localPath}`);
-  
+
   const libsql = createClient({
     url: localPath,
   });
