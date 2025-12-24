@@ -8,7 +8,8 @@
     "db:generate": "bunx prisma generate",
     "db:push": "bunx prisma db push",
     "db:studio": "bunx prisma studio",
-    "db:seed": "bun run src/seed.ts"
+    "db:seed": "bun run src/seed.ts",
+    "db:reset": "rm -f prisma/dev.db && bunx prisma db push --force-reset && bunx prisma generate && bun run src/seed.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.1.0",

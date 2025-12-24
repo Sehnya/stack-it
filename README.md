@@ -42,43 +42,35 @@ cd ../frontend
 bun install
 ```
 
-### 3. Set Up Database
-
-```bash
-cd backend
-
-# Generate Prisma client
-bun run db:generate
-
-# Push schema to database
-bun run db:push
-
-# Seed sample data (optional)
-bun run db:seed
-```
-
-### 4. Configure Environment
+### 3. Configure Environment
 
 Create `backend/.env`:
 
 ```bash
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL="file:./dev.db"
 JWT_SECRET="your-secret-key"
 PORT=3001
 ```
 
-### 5. Run Development Servers
+### 4. Set Up Database
+
+From the project root:
 
 ```bash
-# Terminal 1 - Backend
-cd backend
-bun run dev
+bun run db:setup
+```
 
-# Terminal 2 - Frontend
-cd frontend
+This generates the Prisma client, pushes the schema, and seeds sample data.
+
+### 5. Run Development Servers
+
+From the project root:
+
+```bash
 bun run dev
 ```
 
+This starts both servers concurrently:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
 
@@ -110,17 +102,26 @@ stack-it/
 
 ## Available Scripts
 
-**Backend:**
+**Root (recommended):**
 ```bash
-bun run dev        # Start dev server with hot reload
-bun run start      # Start production server
-bun run db:generate # Generate Prisma client
-bun run db:push    # Push schema changes
-bun run db:studio  # Open Prisma Studio
-bun run db:seed    # Seed database
+bun run dev          # Start both frontend and backend
+bun run dev:backend  # Start backend only
+bun run dev:frontend # Start frontend only
+bun run db:setup     # Set up database (generate, push, seed)
+bun run db:reset     # Reset database (delete, regenerate, reseed)
 ```
 
-**Frontend:**
+**Backend (`cd backend`):**
+```bash
+bun run dev         # Start dev server with hot reload
+bun run start       # Start production server
+bun run db:generate # Generate Prisma client
+bun run db:push     # Push schema changes
+bun run db:studio   # Open Prisma Studio
+bun run db:seed     # Seed database
+```
+
+**Frontend (`cd frontend`):**
 ```bash
 bun run dev        # Start Vite dev server
 bun run build      # Build for production
