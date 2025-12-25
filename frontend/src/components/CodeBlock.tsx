@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Copy, Check, Download, FileCode, ChevronRight, X, Play, Code2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CodeRunner } from './CodeRunner'
-import { MultiFileIDE } from './MultiFileIDE'
+import { SandpackIDE } from './SandpackIDE'
 
 interface CodeBlockProps {
   code: string
@@ -401,8 +401,8 @@ export const FilesSidebar = ({ files, activeFile, onSelectFile }: FilesSidebarPr
         </AnimatePresence>
       </div>
 
-      {/* Multi-File IDE Modal */}
-      {showIDE && <MultiFileIDE files={files} onClose={() => setShowIDE(false)} />}
+      {/* Sandpack IDE Modal */}
+      {showIDE && <SandpackIDE files={files} onClose={() => setShowIDE(false)} />}
     </>
   )
 }

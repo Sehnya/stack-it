@@ -92,6 +92,12 @@ export interface TrendingTech {
   hot: boolean
 }
 
+export interface PinnedTech {
+  techName: string
+  unreadCount: number
+  lastReadAt: string
+}
+
 export const api = {
   auth: {
     login: (email: string, password: string) =>
@@ -186,6 +192,26 @@ export const api = {
       request<{ message: string; user: User }>('/api/users/profile', {
         method: 'PUT',
         body: JSON.stringify(data),
+      }),
+  },
+
+  pinnedTech: {
+    getAll: () =>
+      request<PinnedTech[]>('/api/pinned-tech'),
+
+    pin: (tech: string) =>
+      request<{ pinned: boolean }>(`/api/pinned-tech/${encodeURIComponent(tech)}`, {
+        method: 'POST',
+      }),
+
+    unpin: (tech: string) =>
+      request<{ pinned: boolean }>(`/api/pinned-tech/${encodeURIComponent(tech)}`, {
+        method: 'DELETE',
+      }),
+
+    markAsRead: (tech: string) =>
+      request<{ success: boolean }>(`/api/pinned-tech/${encodeURIComponent(tech)}/read`, {
+        method: 'POST',
       }),
   },
 }

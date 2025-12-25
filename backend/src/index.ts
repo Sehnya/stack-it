@@ -1,11 +1,10 @@
 import { Elysia } from "elysia";
-import { cors } from "@elysiajs/cors";
 import { jwt } from "@elysiajs/jwt";
 import { staticPlugin } from "@elysiajs/static";
 import { resolve } from "path";
 import { existsSync } from "fs";
 import { authRoutes } from "./routes/auth";
-import { postsRoutes } from "./routes/posts";
+import { postsRoutes, pinnedTechRoutes } from "./routes/posts";
 import { userRoutes } from "./routes/users";
 import { pageRoutes } from "./routes/pages";
 import { adminRoutes } from "./routes/admin";
@@ -17,6 +16,8 @@ const hasStaticFolder = existsSync(staticPath);
 // Allow multiple origins for dev and production
 const allowedOrigins = [
   process.env.CORS_ORIGIN,
+  "http://localhost:3000",
+  "http://localhost:3001",
   "http://localhost:5173",
   "http://localhost:5174",
   "https://stack-it.dev",
@@ -24,12 +25,19 @@ const allowedOrigins = [
 ].filter(Boolean) as string[];
 
 const app = new Elysia()
-  .use(cors({
-    origin: allowedOrigins,
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  }))
+  .onRequest(({ request, set }) => {
+    const origin = request.headers.get('origin')
+    if (origin && allowedOrigins.includes(origin)) {
+      set.headers['Access-Control-Allow-Origin'] = origin
+      set.headers['Access-Control-Allow-Credentials'] = 'true'
+      set.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS'
+      set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Cookie'
+    }
+    if (request.method === 'OPTIONS') {
+      set.status = 204
+      return new Response(null, { status: 204 })
+    }
+  })
   .use(jwt({
     name: "jwt",
     secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
@@ -54,6 +62,7 @@ app
   .use(pageRoutes)      // HTML pages
   .use(authRoutes)      // /api/auth/*
   .use(postsRoutes)     // /api/posts/*
+  .use(pinnedTechRoutes) // /api/pinned-tech/*
   .use(userRoutes)      // /api/users/*
   .use(adminRoutes)     // /api/admin/*
   // Global error handler

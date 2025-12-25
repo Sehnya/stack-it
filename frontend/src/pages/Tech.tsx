@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, FileCode, Heart, Eye, Code2, Zap } from 'lucide-react'
+import { ArrowLeft, FileCode, Heart, Eye, Code2, Zap, Pin, PinOff, Users, MessageSquare, TrendingUp } from 'lucide-react'
 import { api, Post } from '../lib/api'
 import { TechTag, getTechColor } from '../components/TechTag'
 
@@ -9,31 +9,55 @@ const Tech = () => {
   const { techName } = useParams<{ techName: string }>()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [isPinned, setIsPinned] = useState(false)
+  const [pinLoading, setPinLoading] = useState(false)
 
   const decodedTech = decodeURIComponent(techName || '')
   const techColor = getTechColor(decodedTech)
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       if (!techName) return
       setLoading(true)
 
-      const { data } = await api.posts.getByTech(decodedTech)
-      if (data) {
-        setPosts(data)
+      const [postsRes, pinnedRes] = await Promise.all([
+        api.posts.getByTech(decodedTech),
+        api.pinnedTech.getAll(),
+      ])
+
+      if (postsRes.data) setPosts(postsRes.data)
+      if (pinnedRes.data) {
+        setIsPinned(pinnedRes.data.some(pt => pt.techName.toLowerCase() === decodedTech.toLowerCase()))
       }
+
+      // Mark as read when visiting
+      await api.pinnedTech.markAsRead(decodedTech)
 
       setLoading(false)
     }
-    fetchPosts()
+    fetchData()
   }, [techName, decodedTech])
+
+  const handleTogglePin = async () => {
+    setPinLoading(true)
+    if (isPinned) {
+      await api.pinnedTech.unpin(decodedTech)
+      setIsPinned(false)
+    } else {
+      await api.pinnedTech.pin(decodedTech)
+      setIsPinned(true)
+    }
+    // Notify sidebar to refresh
+    window.dispatchEvent(new CustomEvent('pinnedTechUpdated'))
+    setPinLoading(false)
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-10 h-10 border-2 border-gray-300 border-t-gray-900 rounded-full mx-auto mb-4" />
-          <p className="text-gray-500">Loading posts...</p>
+          <p className="text-gray-500">Loading community...</p>
         </div>
       </div>
     )
@@ -47,8 +71,11 @@ const Tech = () => {
     return `${Math.floor(hours / 24)}d ago`
   }
 
+  const totalViews = posts.reduce((sum, p) => sum + p.viewCount, 0)
+  const totalLikes = posts.reduce((sum, p) => sum + p.favorites, 0)
+
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -64,31 +91,98 @@ const Tech = () => {
         </NavLink>
       </motion.div>
 
-      {/* Tech Header */}
+      {/* Tech Community Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-gray-200/50 overflow-hidden mb-6"
-        style={{ backgroundColor: techColor.bg + '20' }}
+        className="rounded-2xl border border-gray-200/50 overflow-hidden mb-6 bg-white/70 backdrop-blur-sm"
       >
         <div 
-          className="h-24"
+          className="h-32 relative"
           style={{ 
-            background: `linear-gradient(135deg, ${techColor.bg} 0%, ${techColor.bg}cc 100%)` 
+            background: `linear-gradient(135deg, ${techColor.bg} 0%, ${techColor.bg}cc 50%, ${techColor.bg}99 100%)` 
           }}
-        />
-        <div className="px-6 pb-6 -mt-8">
-          <div className="flex items-end gap-4">
-            <div 
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold border-4 border-white shadow-lg"
-              style={{ backgroundColor: techColor.bg, color: techColor.text }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+        </div>
+        <div className="px-6 pb-6 -mt-10">
+          <div className="flex items-end justify-between">
+            <div className="flex items-end gap-4">
+              <div 
+                className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold border-4 border-white shadow-lg"
+                style={{ backgroundColor: techColor.bg, color: techColor.text }}
+              >
+                {decodedTech.charAt(0).toUpperCase()}
+              </div>
+              <div className="pb-2">
+                <h1 className="text-2xl font-bold text-gray-900">{decodedTech}</h1>
+                <p className="text-gray-500 text-sm flex items-center gap-4 mt-1">
+                  <span className="flex items-center gap-1">
+                    <FileCode size={14} /> {posts.length} stacks
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Eye size={14} /> {totalViews.toLocaleString()} views
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Heart size={14} /> {totalLikes} likes
+                  </span>
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleTogglePin}
+              disabled={pinLoading}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                isPinned 
+                  ? 'bg-gray-900 text-white hover:bg-gray-800' 
+                  : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+              } ${pinLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {decodedTech.charAt(0).toUpperCase()}
-            </div>
-            <div className="pb-1">
-              <h1 className="text-2xl font-bold text-gray-900">{decodedTech}</h1>
-              <p className="text-gray-500 text-sm">{posts.length} stacks using this technology</p>
-            </div>
+              {isPinned ? (
+                <>
+                  <PinOff size={16} />
+                  Unpin from Sidebar
+                </>
+              ) : (
+                <>
+                  <Pin size={16} />
+                  Pin to Sidebar
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Community Stats */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="grid grid-cols-4 gap-4 mb-6"
+      >
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-gray-200/50 p-4 text-center">
+          <div className="text-2xl font-bold text-gray-900">{posts.length}</div>
+          <div className="text-sm text-gray-500 flex items-center justify-center gap-1">
+            <FileCode size={14} /> Stacks
+          </div>
+        </div>
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-gray-200/50 p-4 text-center">
+          <div className="text-2xl font-bold text-gray-900">{totalViews.toLocaleString()}</div>
+          <div className="text-sm text-gray-500 flex items-center justify-center gap-1">
+            <Eye size={14} /> Views
+          </div>
+        </div>
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-gray-200/50 p-4 text-center">
+          <div className="text-2xl font-bold text-gray-900">{totalLikes}</div>
+          <div className="text-sm text-gray-500 flex items-center justify-center gap-1">
+            <Heart size={14} /> Likes
+          </div>
+        </div>
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-gray-200/50 p-4 text-center">
+          <div className="text-2xl font-bold text-gray-900">{new Set(posts.map(p => p.author.id)).size}</div>
+          <div className="text-sm text-gray-500 flex items-center justify-center gap-1">
+            <Users size={14} /> Contributors
           </div>
         </div>
       </motion.div>
@@ -99,20 +193,29 @@ const Tech = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <FileCode size={20} />
-          Stacks with {decodedTech}
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <TrendingUp size={20} />
+            Latest Stacks
+          </h2>
+          <NavLink
+            to="/create-post"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors"
+          >
+            Share a Stack
+          </NavLink>
+        </div>
 
         {posts.length === 0 ? (
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-8 text-center">
             <FileCode size={48} className="mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500">No stacks using {decodedTech} yet</p>
+            <p className="text-gray-500 mb-2">No stacks using {decodedTech} yet</p>
+            <p className="text-sm text-gray-400 mb-4">Be the first to share your {decodedTech} project!</p>
             <NavLink
               to="/create-post"
-              className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors"
             >
-              Be the first to share
+              Share Your Stack
             </NavLink>
           </div>
         ) : (
@@ -186,6 +289,9 @@ const Tech = () => {
                     </span>
                     <span className="flex items-center gap-1">
                       <Code2 size={14} /> {post.files?.length || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MessageSquare size={14} /> {post.comments || 0}
                     </span>
                   </div>
                 </div>

@@ -32,7 +32,7 @@ import {
   Subscript as SubIcon, Superscript as SuperIcon, CheckSquare,
   Table as TableIcon, Trash2, ArrowLeft, Save, Eye,
   Palette, FileCode, X, RowsIcon, ColumnsIcon, Upload, FileUp, File,
-  ChevronDown, Type, ALargeSmall,
+  ChevronDown, ChevronRight, Type, ALargeSmall, Folder, FolderOpen,
 } from 'lucide-react'
 import { TechTag } from '../components/TechTag'
 import { useAuth } from '../context/AuthContext'
@@ -40,6 +40,125 @@ import { getLanguageFromFilename } from '../lib/postStore'
 import { api, PostFile } from '../lib/api'
 
 type CodeFile = PostFile
+
+// File tree node for nested folder display
+interface FileTreeNode {
+  name: string
+  path: string
+  isFolder: boolean
+  children: FileTreeNode[]
+  file?: CodeFile
+}
+
+// Build a tree structure from flat file list
+const buildFileTree = (files: CodeFile[]): FileTreeNode[] => {
+  const root: FileTreeNode[] = []
+  
+  files.forEach((file) => {
+    const parts = file.name.split('/')
+    let currentLevel = root
+    
+    parts.forEach((part, index) => {
+      const isLast = index === parts.length - 1
+      const path = parts.slice(0, index + 1).join('/')
+      
+      let existing = currentLevel.find((n) => n.name === part && n.isFolder === !isLast)
+      
+      if (!existing) {
+        existing = {
+          name: part,
+          path,
+          isFolder: !isLast,
+          children: [],
+          file: isLast ? file : undefined,
+        }
+        currentLevel.push(existing)
+      }
+      
+      if (!isLast) {
+        currentLevel = existing.children
+      }
+    })
+  })
+  
+  // Sort: folders first, then alphabetically
+  const sortNodes = (nodes: FileTreeNode[]): FileTreeNode[] =>
+    nodes
+      .sort((a, b) => {
+        if (a.isFolder && !b.isFolder) return -1
+        if (!a.isFolder && b.isFolder) return 1
+        return a.name.localeCompare(b.name)
+      })
+      .map((n) => ({ ...n, children: sortNodes(n.children) }))
+  
+  return sortNodes(root)
+}
+
+// Recursive file tree node component
+const FileTreeNodeComponent = ({
+  node,
+  depth,
+  expandedFolders,
+  onToggleFolder,
+  onRemoveFile,
+}: {
+  node: FileTreeNode
+  depth: number
+  expandedFolders: Set<string>
+  onToggleFolder: (path: string) => void
+  onRemoveFile: (path: string) => void
+}) => {
+  const isExpanded = expandedFolders.has(node.path)
+  const paddingLeft = depth * 12 + 8
+
+  if (node.isFolder) {
+    return (
+      <div>
+        <button
+          onClick={() => onToggleFolder(node.path)}
+          className="w-full flex items-center gap-1.5 py-1 text-left text-xs text-gray-400 hover:bg-[#37373d] hover:text-gray-200 transition-colors rounded"
+          style={{ paddingLeft: `${paddingLeft}px` }}
+        >
+          {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          {isExpanded ? <FolderOpen size={12} className="text-amber-400" /> : <Folder size={12} className="text-amber-400" />}
+          <span className="truncate">{node.name}</span>
+        </button>
+        {isExpanded && (
+          <div>
+            {node.children.map((child) => (
+              <FileTreeNodeComponent
+                key={child.path}
+                node={child}
+                depth={depth + 1}
+                expandedFolders={expandedFolders}
+                onToggleFolder={onToggleFolder}
+                onRemoveFile={onRemoveFile}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="flex items-center justify-between py-1 text-xs text-gray-300 hover:bg-[#37373d] rounded group pr-2"
+      style={{ paddingLeft: `${paddingLeft + 16}px` }}
+    >
+      <div className="flex items-center gap-1.5 min-w-0">
+        <File size={12} className="text-gray-400 shrink-0" />
+        <span className="truncate" title={node.path}>{node.name}</span>
+      </div>
+      <button
+        onClick={() => onRemoveFile(node.path)}
+        className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+      >
+        <X size={12} />
+      </button>
+    </div>
+  )
+}
 
 const lowlight = createLowlight(common)
 
@@ -151,8 +270,10 @@ const CreatePost = () => {
   const [showFontSize, setShowFontSize] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [isFileDragging, setIsFileDragging] = useState(false)
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const fileInputRef = useRef<HTMLInputElement>(null)
   const codeFileInputRef = useRef<HTMLInputElement>(null)
+  const folderInputRef = useRef<HTMLInputElement>(null)
   const inlineImageInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (file: File) => {
@@ -169,15 +290,83 @@ const CreatePost = () => {
     if (!files) return
     
     const newFiles: CodeFile[] = []
+    const foldersToExpand = new Set<string>()
+    
     for (const file of Array.from(files)) {
+      // Use webkitRelativePath for folder uploads, fallback to name
+      const relativePath = (file as any).webkitRelativePath || file.name
+      // Remove the root folder name from the path for cleaner display
+      const pathParts = relativePath.split('/')
+      const cleanPath = pathParts.length > 1 ? pathParts.slice(1).join('/') : relativePath
+      
+      // Track folders to auto-expand
+      const cleanParts = cleanPath.split('/')
+      for (let i = 1; i < cleanParts.length; i++) {
+        foldersToExpand.add(cleanParts.slice(0, i).join('/'))
+      }
+      
       const text = await file.text()
       newFiles.push({
-        name: file.name,
+        name: cleanPath,
         language: getLanguageFromFilename(file.name),
         code: text,
       })
     }
     setCodeFiles([...codeFiles, ...newFiles])
+    setExpandedFolders(prev => new Set([...prev, ...foldersToExpand]))
+  }
+
+  const handleFolderSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    
+    const newFiles: CodeFile[] = []
+    const foldersToExpand = new Set<string>()
+    
+    for (const file of Array.from(files)) {
+      // Skip hidden files and common non-code directories
+      const relativePath = (file as any).webkitRelativePath || file.name
+      if (relativePath.includes('/node_modules/') || 
+          relativePath.includes('/.git/') ||
+          relativePath.includes('/dist/') ||
+          relativePath.includes('/build/') ||
+          file.name.startsWith('.')) {
+        continue
+      }
+      
+      // Remove the root folder name from the path
+      const pathParts = relativePath.split('/')
+      const cleanPath = pathParts.length > 1 ? pathParts.slice(1).join('/') : relativePath
+      
+      // Track folders to auto-expand
+      for (let i = 1; i < pathParts.length; i++) {
+        foldersToExpand.add(pathParts.slice(1, i).join('/'))
+      }
+      
+      const text = await file.text()
+      newFiles.push({
+        name: cleanPath,
+        language: getLanguageFromFilename(file.name),
+        code: text,
+      })
+    }
+    
+    setCodeFiles([...codeFiles, ...newFiles])
+    setExpandedFolders(prev => new Set([...prev, ...foldersToExpand]))
+    // Reset the input so the same folder can be selected again
+    e.target.value = ''
+  }
+
+  const toggleFolder = (path: string) => {
+    setExpandedFolders(prev => {
+      const next = new Set(prev)
+      if (next.has(path)) {
+        next.delete(path)
+      } else {
+        next.add(path)
+      }
+      return next
+    })
   }
 
   const removeCodeFile = (name: string) => {
@@ -590,10 +779,16 @@ const CreatePost = () => {
           <div className="bg-[#252526] rounded-xl overflow-hidden sticky top-8">
             <div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-[#3d3d3d]">
               <span className="text-sm font-medium text-gray-300">Project Files</span>
-              <button onClick={() => codeFileInputRef.current?.click()} className="text-xs text-gray-400 hover:text-white flex items-center gap-1">
-                <FileUp size={14} />
-                Add
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => folderInputRef.current?.click()} className="text-xs text-gray-400 hover:text-white flex items-center gap-1" title="Upload Folder">
+                  <Upload size={14} />
+                  Folder
+                </button>
+                <button onClick={() => codeFileInputRef.current?.click()} className="text-xs text-gray-400 hover:text-white flex items-center gap-1" title="Upload Files">
+                  <FileUp size={14} />
+                  Files
+                </button>
+              </div>
             </div>
             
             {/* File Drop Zone */}
@@ -606,21 +801,20 @@ const CreatePost = () => {
               {codeFiles.length === 0 ? (
                 <div className="text-center py-6">
                   <FileUp size={24} className="mx-auto text-gray-500 mb-2" />
-                  <p className="text-gray-400 text-sm">Drop code files here</p>
+                  <p className="text-gray-400 text-sm">Drop files or folders here</p>
                   <p className="text-gray-500 text-xs mt-1">.js, .ts, .html, .css, etc.</p>
                 </div>
               ) : (
-                <div className="space-y-1">
-                  {codeFiles.map((file) => (
-                    <div key={file.name} className="flex items-center justify-between px-3 py-2 bg-[#37373d] rounded-lg group">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <File size={14} className="text-gray-400 shrink-0" />
-                        <span className="text-sm text-gray-300 truncate">{file.name}</span>
-                      </div>
-                      <button onClick={() => removeCodeFile(file.name)} className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <X size={14} />
-                      </button>
-                    </div>
+                <div className="max-h-80 overflow-y-auto py-1">
+                  {buildFileTree(codeFiles).map((node) => (
+                    <FileTreeNodeComponent
+                      key={node.path}
+                      node={node}
+                      depth={0}
+                      expandedFolders={expandedFolders}
+                      onToggleFolder={toggleFolder}
+                      onRemoveFile={removeCodeFile}
+                    />
                   ))}
                 </div>
               )}
@@ -634,10 +828,25 @@ const CreatePost = () => {
               className="hidden"
               onChange={(e) => handleCodeFileSelect(e.target.files)}
             />
+            
+            {/* Folder input with webkitdirectory */}
+            <input
+              ref={(input) => {
+                if (input) {
+                  input.setAttribute('webkitdirectory', '')
+                  input.setAttribute('directory', '')
+                  ;(folderInputRef as any).current = input
+                }
+              }}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFolderSelect}
+            />
 
             {/* Help text */}
             <div className="px-4 py-3 text-xs text-gray-500">
-              Upload code files to display in the post sidebar. Readers can view and download them.
+              Upload code files or entire folders. Nested folder structure is preserved.
             </div>
           </div>
         </motion.div>

@@ -403,3 +403,136 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
       return { error: "Failed to toggle favorite" }
     }
   })
+
+// Pinned tech routes
+export const pinnedTechRoutes = new Elysia({ prefix: "/api/pinned-tech" })
+  .use(jwt({
+    name: "jwt",
+    secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
+  }))
+  // Get user's pinned techs with unread counts
+  .get("/", async ({ set, jwt, cookie: { auth } }) => {
+    const authValue = auth?.value
+    if (!authValue || typeof authValue !== "string") {
+      set.status = 401
+      return { error: "Not authenticated" }
+    }
+    const payload = await jwt.verify(authValue)
+    if (!payload) {
+      set.status = 401
+      return { error: "Invalid token" }
+    }
+    const userId = payload.userId as number
+    try {
+      const pinnedTechs = await db.pinnedTech.findMany({
+        where: { userId },
+        orderBy: { createdAt: "asc" },
+      })
+
+      // Get unread counts for each pinned tech
+      const result = await Promise.all(
+        pinnedTechs.map(async (pt: any) => {
+          const posts = await db.post.findMany({
+            where: { createdAt: { gt: pt.lastReadAt } },
+            select: { technologies: true, createdAt: true },
+          })
+          const unreadCount = posts.filter((p: any) => {
+            const techs = JSON.parse(p.technologies || "[]")
+            return techs.some((t: string) => t.toLowerCase() === pt.techName.toLowerCase())
+          }).length
+          return {
+            techName: pt.techName,
+            unreadCount,
+            lastReadAt: pt.lastReadAt.toISOString(),
+          }
+        })
+      )
+      return result
+    } catch (error) {
+      console.error("[PINNED] Error fetching pinned techs:", error)
+      return []
+    }
+  })
+  // Pin a tech
+  .post("/:tech", async ({ params, set, jwt, cookie: { auth } }) => {
+    const authValue = auth?.value
+    if (!authValue || typeof authValue !== "string") {
+      set.status = 401
+      return { error: "Not authenticated" }
+    }
+    const payload = await jwt.verify(authValue)
+    if (!payload) {
+      set.status = 401
+      return { error: "Invalid token" }
+    }
+    const userId = payload.userId as number
+    const techName = decodeURIComponent(params.tech)
+    console.log(`[PINNED] Pinning tech "${techName}" for user ${userId}`)
+    try {
+      // Check if pinnedTech table exists
+      const existing = await db.pinnedTech.findFirst({
+        where: { userId, techName },
+      })
+      if (existing) {
+        return { pinned: true, message: "Already pinned" }
+      }
+      await db.pinnedTech.create({
+        data: { userId, techName, lastReadAt: new Date() },
+      })
+      console.log(`[PINNED] Successfully pinned "${techName}"`)
+      return { pinned: true }
+    } catch (error) {
+      console.error("[PINNED] Error pinning tech:", error)
+      set.status = 500
+      return { error: "Failed to pin tech" }
+    }
+  })
+  // Unpin a tech
+  .delete("/:tech", async ({ params, set, jwt, cookie: { auth } }) => {
+    const authValue = auth?.value
+    if (!authValue || typeof authValue !== "string") {
+      set.status = 401
+      return { error: "Not authenticated" }
+    }
+    const payload = await jwt.verify(authValue)
+    if (!payload) {
+      set.status = 401
+      return { error: "Invalid token" }
+    }
+    const userId = payload.userId as number
+    const techName = decodeURIComponent(params.tech)
+    try {
+      await db.pinnedTech.deleteMany({ where: { userId, techName } })
+      return { pinned: false }
+    } catch (error) {
+      console.error("[PINNED] Error unpinning tech:", error)
+      set.status = 500
+      return { error: "Failed to unpin tech" }
+    }
+  })
+  // Mark tech as read (update lastReadAt)
+  .post("/:tech/read", async ({ params, set, jwt, cookie: { auth } }) => {
+    const authValue = auth?.value
+    if (!authValue || typeof authValue !== "string") {
+      set.status = 401
+      return { error: "Not authenticated" }
+    }
+    const payload = await jwt.verify(authValue)
+    if (!payload) {
+      set.status = 401
+      return { error: "Invalid token" }
+    }
+    const userId = payload.userId as number
+    const techName = decodeURIComponent(params.tech)
+    try {
+      await db.pinnedTech.updateMany({
+        where: { userId, techName },
+        data: { lastReadAt: new Date() },
+      })
+      return { success: true }
+    } catch (error) {
+      console.error("[PINNED] Error marking as read:", error)
+      set.status = 500
+      return { error: "Failed to mark as read" }
+    }
+  })
