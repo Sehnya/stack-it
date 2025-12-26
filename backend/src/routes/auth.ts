@@ -3,6 +3,7 @@ import { jwt } from "@elysiajs/jwt";
 import { db } from "../db";
 import { jwtConfig } from "../middleware/auth";
 import { log } from "../lib/logger";
+import { sendEmail, generateVerificationCode, getVerificationEmailHtml } from "../lib/email";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -47,37 +48,49 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         // Hash password and create user
         const hashedPassword = await Bun.password.hash(password);
         const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        
+        // Generate verification code
+        const verificationCode = generateVerificationCode();
+        const verificationExpires = new Date();
+        verificationExpires.setMinutes(verificationExpires.getMinutes() + 15); // 15 minutes
+        
         const user = await db.user.create({
           data: {
             username,
             email,
             password: hashedPassword,
             role: isAdminEmail ? "admin" : "user",
+            verificationCode,
+            verificationExpires,
+            emailVerified: isAdminEmail, // Auto-verify admin emails
           },
         });
         log.auth.info("User created", { userId: user.id, role: user.role });
 
-        // Generate JWT
-        const token = await jwt.sign({
-          userId: user.id,
-          username: user.username,
-          role: user.role,
-        });
+        // Send verification email (skip for admin or if email sending fails)
+        if (!isAdminEmail) {
+          const emailSent = await sendEmail({
+            to: email,
+            subject: "Verify your Stack-it account",
+            html: getVerificationEmailHtml(verificationCode, username),
+          });
 
-        auth.set({
-          value: token,
-          ...getCookieOptions(),
-        });
+          if (!emailSent) {
+            log.auth.warn("Failed to send verification email", { email });
+          }
+        }
 
         set.status = 201; // Created
         return {
           message: "User created successfully",
-          user: {
+          requiresVerification: !isAdminEmail,
+          email: email,
+          user: isAdminEmail ? {
             id: user.id,
             username: user.username,
             email: user.email,
             role: user.role,
-          },
+          } : undefined,
         };
       } catch (error) {
         log.auth.error("Signup failed", { email: body.email }, error as Error);
@@ -113,6 +126,17 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         log.auth.debug("Login failed - invalid password", { email });
         set.status = 401;
         return { error: "Invalid credentials" };
+      }
+
+      // Check if email is verified
+      if (!user.emailVerified) {
+        log.auth.info("Login blocked - email not verified", { email, userId: user.id });
+        set.status = 401;
+        return {
+          error: "Email not verified",
+          requiresVerification: true,
+          email: user.email,
+        };
       }
 
       // Update last seen
@@ -162,6 +186,165 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     });
     return { message: "Logged out successfully" };
   })
+  // Verify email with code
+  .post(
+    "/verify",
+    async ({ body, set, jwt, cookie: { auth } }) => {
+      try {
+        const { email, code } = body;
+
+        const user = await db.user.findUnique({ where: { email } });
+
+        if (!user) {
+          log.auth.warn("Verification attempt - user not found", { email });
+          set.status = 404;
+          return { error: "User not found" };
+        }
+
+        if (user.emailVerified) {
+          log.auth.info("Verification attempt - already verified", { email, userId: user.id });
+          // Still return success and generate token
+          const token = await jwt.sign({
+            userId: user.id,
+            username: user.username,
+            role: user.role,
+          });
+
+          auth.set({
+            value: token,
+            ...getCookieOptions(),
+          });
+
+          return {
+            message: "Email already verified",
+            user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              role: user.role,
+            },
+          };
+        }
+
+        // Check if code matches and hasn't expired
+        if (!user.verificationCode || user.verificationCode !== code) {
+          log.auth.warn("Verification attempt - invalid code", { email, userId: user.id });
+          set.status = 400;
+          return { error: "Invalid verification code" };
+        }
+
+        if (!user.verificationExpires || user.verificationExpires < new Date()) {
+          log.auth.warn("Verification attempt - expired code", { email, userId: user.id });
+          set.status = 400;
+          return { error: "Verification code has expired" };
+        }
+
+        // Verify email
+        await db.user.update({
+          where: { id: user.id },
+          data: {
+            emailVerified: true,
+            verificationCode: null,
+            verificationExpires: null,
+          },
+        });
+
+        log.auth.info("Email verified successfully", { email, userId: user.id });
+
+        // Generate JWT
+        const token = await jwt.sign({
+          userId: user.id,
+          username: user.username,
+          role: user.role,
+        });
+
+        auth.set({
+          value: token,
+          ...getCookieOptions(),
+        });
+
+        return {
+          message: "Email verified successfully",
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+          },
+        };
+      } catch (error) {
+        log.auth.error("Verification failed", { email: body.email }, error as Error);
+        set.status = 500;
+        return { error: "Verification failed" };
+      }
+    },
+    {
+      body: t.Object({
+        email: t.String({ format: "email" }),
+        code: t.String({ minLength: 6, maxLength: 6 }),
+      }),
+    }
+  )
+  // Resend verification code
+  .post(
+    "/resend-code",
+    async ({ body, set }) => {
+      try {
+        const { email } = body;
+
+        const user = await db.user.findUnique({ where: { email } });
+
+        if (!user) {
+          log.auth.warn("Resend code attempt - user not found", { email });
+          set.status = 404;
+          return { error: "User not found" };
+        }
+
+        if (user.emailVerified) {
+          log.auth.info("Resend code attempt - already verified", { email, userId: user.id });
+          return { message: "Email already verified" };
+        }
+
+        // Generate new verification code
+        const verificationCode = generateVerificationCode();
+        const verificationExpires = new Date();
+        verificationExpires.setMinutes(verificationExpires.getMinutes() + 15); // 15 minutes
+
+        await db.user.update({
+          where: { id: user.id },
+          data: {
+            verificationCode,
+            verificationExpires,
+          },
+        });
+
+        // Send verification email
+        const emailSent = await sendEmail({
+          to: email,
+          subject: "Verify your Stack-it account",
+          html: getVerificationEmailHtml(verificationCode, user.username),
+        });
+
+        if (!emailSent) {
+          log.auth.warn("Failed to send verification email", { email });
+          set.status = 500;
+          return { error: "Failed to send verification email" };
+        }
+
+        log.auth.info("Verification code resent", { email, userId: user.id });
+        return { message: "Verification code sent successfully" };
+      } catch (error) {
+        log.auth.error("Resend code failed", { email: body.email }, error as Error);
+        set.status = 500;
+        return { error: "Failed to resend verification code" };
+      }
+    },
+    {
+      body: t.Object({
+        email: t.String({ format: "email" }),
+      }),
+    }
+  )
   // Check username availability
   .get("/check-username", async ({ query, set }) => {
     const { username } = query;
