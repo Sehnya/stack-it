@@ -162,6 +162,36 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     });
     return { message: "Logged out successfully" };
   })
+  // Check username availability
+  .get("/check-username", async ({ query, set }) => {
+    const { username } = query;
+    
+    if (!username || typeof username !== "string") {
+      set.status = 400;
+      return { error: "Username is required" };
+    }
+
+    // Validate username format (alphanumeric, 3-20 characters)
+    if (!/^[a-zA-Z0-9]{3,20}$/.test(username)) {
+      return { available: false, error: "Username must be 3-20 alphanumeric characters" };
+    }
+
+    try {
+      const existing = await db.user.findUnique({
+        where: { username },
+      });
+
+      return { available: !existing };
+    } catch (error) {
+      log.auth.error("Check username failed", { username }, error as Error);
+      set.status = 500;
+      return { error: "Failed to check username availability" };
+    }
+  }, {
+    query: t.Object({
+      username: t.String(),
+    }),
+  })
   // Get current user
   .get("/me", async ({ set, jwt, cookie: { auth } }) => {
     const authValue = auth?.value;
