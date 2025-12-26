@@ -58,25 +58,9 @@ const Register = () => {
       return
     }
 
-    const timer = setTimeout(async () => {
-      setUsernameChecking(true)
-      try {
-        const res = await api.auth.checkUsername(username)
-        if (res.data) {
-          setUsernameAvailable(res.data.available)
-          setUsernameError(res.data.available ? '' : 'Username already taken')
-        } else if (res.error) {
-          setUsernameError('')
-          setUsernameAvailable(null)
-        }
-      } catch {
-        setUsernameAvailable(null)
-        setUsernameError('')
-      }
-      setUsernameChecking(false)
-    }, 500)
-
-    return () => clearTimeout(timer)
+    // Username format is valid, allow signup (server will validate uniqueness)
+    setUsernameAvailable(true)
+    setUsernameError('')
   }, [username, isUsernameValid])
 
   // Resend cooldown timer
