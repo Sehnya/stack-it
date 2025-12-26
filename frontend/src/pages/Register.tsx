@@ -95,8 +95,8 @@ const Register = () => {
       return
     }
 
-    if (!isUsernameValid || !usernameAvailable) {
-      setError('Please choose a valid, available username')
+    if (!isUsernameValid) {
+      setError('Please choose a valid username (3-20 alphanumeric characters)')
       return
     }
 
@@ -536,7 +536,7 @@ const Register = () => {
 
             <motion.button
               type="submit"
-              disabled={isLoading || !usernameAvailable}
+              disabled={isLoading || !isUsernameValid}
               whileTap={{ scale: 0.98 }}
               className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
