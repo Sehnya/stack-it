@@ -1,8 +1,13 @@
 import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { db } from "../db";
+import { jwtConfig } from "../middleware/auth";
+import { log } from "../lib/logger";
 
 const isProduction = process.env.NODE_ENV === "production";
+
+// The only email allowed to have admin role
+const ADMIN_EMAIL = "sehnyaw@gmail.com";
 
 // Cookie options for cross-domain auth
 const getCookieOptions = () => ({
@@ -16,44 +21,41 @@ const getCookieOptions = () => ({
 export const authRoutes = new Elysia({ prefix: "/api/auth" })
   .use(
     jwt({
-      name: "jwt",
-      secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
+      ...jwtConfig,
       exp: "7d",
     })
   )
   // Sign up
   .post(
     "/signup",
-    async ({ body, jwt, cookie: { auth } }) => {
+    async ({ body, set, jwt, cookie: { auth } }) => {
       try {
         const { username, email, password } = body;
-        console.log(`[SIGNUP] Attempting signup for: ${email}`);
+        log.auth.info("Signup attempt", { email });
 
         // Check if user exists
-        console.log("[SIGNUP] Checking for existing user...");
         const existing = await db.user.findFirst({
           where: { OR: [{ email }, { username }] },
         });
 
         if (existing) {
-          console.log("[SIGNUP] User already exists");
+          log.auth.info("Signup rejected - user exists", { email });
+          set.status = 409; // Conflict
           return { error: "Username or email already exists" };
         }
 
-        // Hash password
-        console.log("[SIGNUP] Hashing password...");
+        // Hash password and create user
         const hashedPassword = await Bun.password.hash(password);
-
-        // Create user
-        console.log("[SIGNUP] Creating user...");
+        const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
         const user = await db.user.create({
           data: {
             username,
             email,
             password: hashedPassword,
+            role: isAdminEmail ? "admin" : "user",
           },
         });
-        console.log(`[SIGNUP] User created with ID: ${user.id}`);
+        log.auth.info("User created", { userId: user.id, role: user.role });
 
         // Generate JWT
         const token = await jwt.sign({
@@ -67,7 +69,7 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
           ...getCookieOptions(),
         });
 
-        console.log("[SIGNUP] Success!");
+        set.status = 201; // Created
         return {
           message: "User created successfully",
           user: {
@@ -78,11 +80,9 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
           },
         };
       } catch (error) {
-        console.error("[SIGNUP] Error:", error);
-        return {
-          error: "Signup failed",
-          details: error instanceof Error ? error.message : String(error),
-        };
+        log.auth.error("Signup failed", { email: body.email }, error as Error);
+        set.status = 500;
+        return { error: "Signup failed" };
       }
     },
     {
@@ -96,18 +96,22 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
   // Login
   .post(
     "/login",
-    async ({ body, jwt, cookie: { auth } }) => {
+    async ({ body, set, jwt, cookie: { auth } }) => {
       const { email, password } = body;
 
       const user = await db.user.findUnique({ where: { email } });
 
       if (!user) {
+        log.auth.debug("Login failed - user not found", { email });
+        set.status = 401;
         return { error: "Invalid credentials" };
       }
 
       const validPassword = await Bun.password.verify(password, user.password);
 
       if (!validPassword) {
+        log.auth.debug("Login failed - invalid password", { email });
+        set.status = 401;
         return { error: "Invalid credentials" };
       }
 
@@ -129,6 +133,7 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         ...getCookieOptions(),
       });
 
+      log.auth.info("Login successful", { userId: user.id });
       return {
         message: "Login successful",
         user: {
@@ -158,14 +163,16 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     return { message: "Logged out successfully" };
   })
   // Get current user
-  .get("/me", async ({ jwt, cookie: { auth } }) => {
+  .get("/me", async ({ set, jwt, cookie: { auth } }) => {
     const authValue = auth?.value;
     if (!authValue || typeof authValue !== "string") {
+      set.status = 401;
       return { error: "Not authenticated" };
     }
 
     const payload = await jwt.verify(authValue);
     if (!payload) {
+      set.status = 401;
       return { error: "Invalid token" };
     }
 
@@ -183,6 +190,7 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
     });
 
     if (!user) {
+      set.status = 404;
       return { error: "User not found" };
     }
 

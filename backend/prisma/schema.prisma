@@ -16,16 +16,23 @@ model User {
   role                   String     @default("user")
   profilePhoto           String?    @map("profile_photo")
   bio                    String?
+  emailVerified          Boolean    @default(false) @map("email_verified")
+  verificationCode       String?    @map("verification_code")
+  verificationExpires    DateTime?  @map("verification_expires")
   lastSeen               DateTime?  @map("last_seen")
   dismissedWelcomeBanner Boolean    @default(false) @map("dismissed_welcome_banner")
   createdAt              DateTime   @default(now()) @map("created_at")
   
-  posts      Post[]
-  favorites  Favorite[]
-  likes      Like[]
-  comments   Comment[]
-  followers  Follow[]   @relation("following")
-  following  Follow[]   @relation("followers")
+  posts             Post[]
+  favorites         Favorite[]
+  likes             Like[]
+  comments          Comment[]
+  followers         Follow[]           @relation("following")
+  following         Follow[]           @relation("followers")
+  threads           ForumThread[]
+  snippets          Snippet[]
+  snippetRatings    SnippetRating[]
+  snippetFavorites  SnippetFavorite[]
 
   @@map("users")
 }
@@ -47,8 +54,21 @@ model Post {
   likes     Like[]
   files     PostFile[]
   comments  Comment[]
+  views     PostView[]
 
   @@map("posts")
+}
+
+model PostView {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("post_views")
 }
 
 model PostFile {
@@ -138,4 +158,84 @@ model PinnedTech {
 
   @@unique([userId, techName])
   @@map("pinned_techs")
+}
+
+model ForumThread {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String
+  category   String   @default("general") // general, help, showcase, feedback
+  tags       String   // JSON array stored as string
+  authorId   Int      @map("author_id")
+  postId     Int?     @map("post_id") // optional link to a stack post
+  resolved   Boolean  @default(false)
+  pinned     Boolean  @default(false)
+  viewCount  Int      @default(0) @map("view_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  author  User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies ForumReply[]
+
+  @@map("forum_threads")
+}
+
+model ForumReply {
+  id        Int      @id @default(autoincrement())
+  content   String
+  threadId  Int      @map("thread_id")
+  authorId  Int      @map("author_id")
+  isAnswer  Boolean  @default(false) @map("is_answer")
+  likes     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  thread ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@map("forum_replies")
+}
+
+model Snippet {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  code        String
+  language    String
+  tags        String   // JSON array stored as string
+  authorId    Int      @map("author_id")
+  viewCount   Int      @default(0) @map("view_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  author          User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  ratings         SnippetRating[]
+  favorites       SnippetFavorite[]
+
+  @@map("snippets")
+}
+
+model SnippetRating {
+  id        Int      @id @default(autoincrement())
+  snippetId Int      @map("snippet_id")
+  userId    Int      @map("user_id")
+  rating    Int      // 1-5 stars
+  createdAt DateTime @default(now()) @map("created_at")
+
+  snippet Snippet @relation(fields: [snippetId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([snippetId, userId])
+  @@map("snippet_ratings")
+}
+
+model SnippetFavorite {
+  id        Int      @id @default(autoincrement())
+  snippetId Int      @map("snippet_id")
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  snippet Snippet @relation(fields: [snippetId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([snippetId, userId])
+  @@map("snippet_favorites")
 }

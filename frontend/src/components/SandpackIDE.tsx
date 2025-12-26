@@ -49,6 +49,33 @@ const detectTemplate = (files: FileItem[]): 'vanilla' | 'vanilla-ts' | 'react' |
   return hasTs ? 'vanilla-ts' : 'vanilla'
 }
 
+// Auto-detect dependencies from imports
+const detectDependencies = (files: FileItem[]): Record<string, string> => {
+  const deps: Record<string, string> = {}
+  const builtins = ['react', 'react-dom', 'react/jsx-runtime']
+  
+  files.forEach((file) => {
+    // Match import statements: import x from 'package' or import 'package'
+    const importRegex = /import\s+(?:[\w\s{},*]+\s+from\s+)?['"]([^'"./][^'"]*)['"]/g
+    let match
+    while ((match = importRegex.exec(file.code)) !== null) {
+      const pkg = match[1].split('/')[0] // Get base package name
+      if (!builtins.includes(pkg) && !deps[pkg]) {
+        deps[pkg] = 'latest'
+      }
+    }
+    
+    // Detect Tailwind from @tailwind directives or config files
+    if (file.code.includes('@tailwind') || file.name.includes('tailwind.config')) {
+      deps['tailwindcss'] = 'latest'
+      deps['autoprefixer'] = 'latest'
+      deps['postcss'] = 'latest'
+    }
+  })
+  
+  return deps
+}
+
 // Create entry file if needed
 const ensureEntryFile = (files: FileItem[], template: string): Record<string, string> => {
   const spFiles = toSandpackFiles(files)
@@ -192,10 +219,11 @@ export const SandpackIDE = ({
   title = 'Code Playground',
 }: SandpackIDEProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [activeView, setActiveView] = useState<'preview' | 'console'>('console')
+  const [activeView, setActiveView] = useState<'preview' | 'console'>('preview')
 
   const template = detectTemplate(initialFiles)
   const sandpackFiles = ensureEntryFile(initialFiles, template)
+  const dependencies = detectDependencies(initialFiles)
 
   let activeFile = entryFile ? (entryFile.startsWith('/') ? entryFile : `/${entryFile}`) : undefined
   if (!activeFile) {
@@ -292,6 +320,9 @@ export const SandpackIDE = ({
           template={template}
           files={sandpackFiles}
           theme={customTheme}
+          customSetup={{
+            dependencies,
+          }}
           options={{
             activeFile,
             visibleFiles: Object.keys(sandpackFiles),

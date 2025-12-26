@@ -14,7 +14,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { api, PinnedTech } from '../lib/api'
-import { getTechColor } from './TechTag'
+import { getTechColor, getTechIconUrl } from './TechTag'
 import './Sidebar.css'
 
 interface User {
@@ -146,6 +146,7 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
               <div className="sidebar-rail-divider" />
               {pinnedTechs.slice(0, 5).map((pt) => {
                 const colors = getTechColor(pt.techName)
+                const iconUrl = getTechIconUrl(pt.techName)
                 return (
                   <NavLink
                     key={pt.techName}
@@ -155,10 +156,31 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
                     title={pt.techName}
                   >
                     <div 
-                      className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold"
-                      style={{ backgroundColor: colors.bg, color: colors.text }}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: colors.bg + '20' }}
                     >
-                      {pt.techName.charAt(0).toUpperCase()}
+                      {iconUrl ? (
+                        <img 
+                          src={iconUrl} 
+                          alt={pt.techName}
+                          className="w-5 h-5"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none'
+                            const parent = (e.target as HTMLImageElement).parentElement
+                            if (parent) {
+                              parent.innerHTML = `<span style="color: ${colors.text}; font-weight: bold; font-size: 12px;">${pt.techName.charAt(0).toUpperCase()}</span>`
+                              parent.style.backgroundColor = colors.bg
+                            }
+                          }}
+                        />
+                      ) : (
+                        <span 
+                          className="text-xs font-bold"
+                          style={{ color: colors.text, backgroundColor: colors.bg }}
+                        >
+                          {pt.techName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
                     </div>
                     {pt.unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
@@ -266,6 +288,7 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
                   ) : (
                     pinnedTechs.map((pt) => {
                       const colors = getTechColor(pt.techName)
+                      const iconUrl = getTechIconUrl(pt.techName)
                       return (
                         <NavLink
                           key={pt.techName}
@@ -275,10 +298,26 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
                         >
                           <div className="flex items-center gap-2.5">
                             <div 
-                              className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold"
-                              style={{ backgroundColor: colors.bg, color: colors.text }}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center"
+                              style={{ backgroundColor: colors.bg + '20' }}
                             >
-                              {pt.techName.charAt(0).toUpperCase()}
+                              {iconUrl ? (
+                                <img 
+                                  src={iconUrl} 
+                                  alt={pt.techName}
+                                  className="w-4 h-4"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none'
+                                  }}
+                                />
+                              ) : (
+                                <span 
+                                  className="text-xs font-bold"
+                                  style={{ color: colors.bg }}
+                                >
+                                  {pt.techName.charAt(0).toUpperCase()}
+                                </span>
+                              )}
                             </div>
                             <span className="truncate">{pt.techName}</span>
                           </div>

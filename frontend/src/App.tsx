@@ -1,21 +1,28 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import Sidebar from './components/Sidebar'
+
+// Eagerly loaded pages (critical path)
 import Dashboard from './pages/Dashboard'
-import Community from './pages/Community'
-import Favorites from './pages/Favorites'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import Post from './pages/Post'
-import CreatePost from './pages/CreatePost'
-import EditPost from './pages/EditPost'
-import Admin from './pages/Admin'
-import Settings from './pages/Settings'
-import Profile from './pages/Profile'
-import Tech from './pages/Tech'
+
+// Lazy loaded pages (code-split)
+const Community = lazy(() => import('./pages/Community'))
+const Favorites = lazy(() => import('./pages/Favorites'))
+const Post = lazy(() => import('./pages/Post'))
+const CreatePost = lazy(() => import('./pages/CreatePost'))
+const CreateSnippet = lazy(() => import('./pages/CreateSnippet'))
+const CreateDiscussion = lazy(() => import('./pages/CreateDiscussion'))
+const Discussion = lazy(() => import('./pages/Discussion'))
+const EditPost = lazy(() => import('./pages/EditPost'))
+const Admin = lazy(() => import('./pages/Admin'))
+const Settings = lazy(() => import('./pages/Settings'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Tech = lazy(() => import('./pages/Tech'))
 
 // Loading spinner
 const LoadingScreen = () => (
@@ -25,6 +32,13 @@ const LoadingScreen = () => (
       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
       className="w-8 h-8 border-3 border-gray-300 border-t-gray-900 rounded-full"
     />
+  </div>
+)
+
+// Page loading fallback (lighter than full screen)
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
   </div>
 )
 
@@ -90,7 +104,9 @@ const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
         }}
         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
       >
-        {children}
+        <Suspense fallback={<PageLoader />}>
+          {children}
+        </Suspense>
       </motion.main>
     </div>
   )
@@ -167,6 +183,26 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/create-discussion"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <CreateDiscussion />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create-snippet"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <CreateSnippet />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/edit-post/:postId"
         element={
           <ProtectedRoute>
@@ -222,6 +258,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <AuthenticatedLayout>
               <Tech />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/discussion/:discussionId"
+        element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <Discussion />
             </AuthenticatedLayout>
           </ProtectedRoute>
         }

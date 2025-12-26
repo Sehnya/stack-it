@@ -1,8 +1,10 @@
-import { Elysia } from "elysia"
+import { Elysia, t } from "elysia"
 import { jwt } from "@elysiajs/jwt"
 import { db } from "../db"
+import { jwtConfig, schemas, verifyAuth, requireAuth } from "../middleware/auth"
+import { log } from "../lib/logger"
 
-// Helper to format post response
+// Helper to format post response (full - for single post view)
 function formatPost(post: any): any {
   return {
     id: String(post.id),
@@ -11,7 +13,7 @@ function formatPost(post: any): any {
     content: post.content,
     coverImage: post.coverImage,
     technologies: JSON.parse(post.technologies || "[]"),
-    viewCount: post.viewCount,
+    viewCount: post._count?.views ?? post.viewCount ?? 0,
     createdAt: post.createdAt.toISOString(),
     author: {
       id: String(post.author.id),
@@ -25,67 +27,80 @@ function formatPost(post: any): any {
   }
 }
 
+// Helper to format post for list views (excludes content and files for smaller payload)
+function formatPostSummary(post: any): any {
+  return {
+    id: String(post.id),
+    title: post.title,
+    excerpt: post.excerpt,
+    coverImage: post.coverImage,
+    technologies: JSON.parse(post.technologies || "[]"),
+    viewCount: post._count?.views ?? post.viewCount ?? 0,
+    createdAt: post.createdAt.toISOString(),
+    author: {
+      id: String(post.author.id),
+      username: post.author.username,
+      avatar: post.author.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author.username}`,
+    },
+    files: post.files ? post.files.map((f: any) => ({ id: f.id, name: f.name, language: f.language })) : [],
+    likes: post._count?.favorites || 0,
+    favorites: post._count?.favorites || 0,
+    comments: post._count?.comments || 0,
+  }
+}
+
 export const postsRoutes = new Elysia({ prefix: "/api/posts" })
-  .use(jwt({
-    name: "jwt",
-    secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
-  }))
+  .use(jwt(jwtConfig))
   // STATIC ROUTES FIRST (before /:id to avoid route conflicts)
   // Get user's favorites
   .get("/favorites/me", async ({ set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
-    const userId = payload.userId as number
     try {
       const favorites = await db.favorite.findMany({
-        where: { userId },
+        where: { userId: payload.userId },
         orderBy: { createdAt: "desc" },
         include: {
           post: {
-            include: {
+            select: {
+              id: true,
+              title: true,
+              excerpt: true,
+              coverImage: true,
+              technologies: true,
+              viewCount: true,
+              createdAt: true,
               author: { select: { id: true, username: true, profilePhoto: true } },
-              files: true,
+              files: { select: { id: true, name: true, language: true } },
               _count: { select: { favorites: true, comments: true } },
             },
           },
         },
       })
       return favorites.map((fav: any) => ({
-        ...formatPost(fav.post),
+        ...formatPostSummary(fav.post),
         savedAt: fav.createdAt.toISOString(),
       }))
     } catch (error) {
-      console.error("[POSTS] Error fetching favorites:", error)
-      return []
+      log.posts.error("Error fetching favorites", {}, error as Error)
+      set.status = 500
+      return { error: "Failed to fetch favorites" }
     }
   })
   // Get user stats
   .get("/stats/me", async ({ set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
-    const userId = payload.userId as number
     try {
       const [postCount, totalViews, followerCount, followingCount] = await Promise.all([
-        db.post.count({ where: { authorId: userId } }),
-        db.post.aggregate({ where: { authorId: userId }, _sum: { viewCount: true } }),
-        db.follow.count({ where: { followingId: userId } }),
-        db.follow.count({ where: { followerId: userId } }),
+        db.post.count({ where: { authorId: payload.userId } }),
+        db.post.aggregate({ where: { authorId: payload.userId }, _sum: { viewCount: true } }),
+        db.follow.count({ where: { followingId: payload.userId } }),
+        db.follow.count({ where: { followerId: payload.userId } }),
       ])
       return {
         posts: postCount,
@@ -95,8 +110,9 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         following: followingCount,
       }
     } catch (error) {
-      console.error("[POSTS] Error fetching stats:", error)
-      return { posts: 0, likes: 0, views: 0, followers: 0, following: 0 }
+      log.posts.error("Error fetching stats", {}, error as Error)
+      set.status = 500
+      return { error: "Failed to fetch stats" }
     }
   })
   // Get top users
@@ -120,7 +136,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         rank: i + 1,
       }))
     } catch (error) {
-      console.error("[POSTS] Error fetching top users:", error)
+      log.posts.error("Error fetching top users", {}, error as Error)
       return []
     }
   })
@@ -144,7 +160,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         .slice(0, 5)
         .map(([name, count], i) => ({ name, posts: count, hot: i < 3 }))
     } catch (error) {
-      console.error("[POSTS] Error fetching trending tech:", error)
+      log.posts.error("Error fetching trending tech", {}, error as Error)
       return []
     }
   })
@@ -154,9 +170,16 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
     try {
       const posts = await db.post.findMany({
         orderBy: { createdAt: "desc" },
-        include: {
+        select: {
+          id: true,
+          title: true,
+          excerpt: true,
+          coverImage: true,
+          technologies: true,
+          viewCount: true,
+          createdAt: true,
           author: { select: { id: true, username: true, profilePhoto: true } },
-          files: true,
+          files: { select: { id: true, name: true, language: true } },
           _count: { select: { favorites: true, comments: true } },
         },
       })
@@ -165,9 +188,9 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         const techs = JSON.parse(p.technologies || "[]")
         return techs.some((t: string) => t.toLowerCase() === tech.toLowerCase())
       })
-      return filtered.map(formatPost)
+      return filtered.map(formatPostSummary)
     } catch (error) {
-      console.error("[POSTS] Error fetching posts by tech:", error)
+      log.posts.error("Error fetching posts by tech", { tech }, error as Error)
       return []
     }
   })
@@ -178,43 +201,58 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
       const posts = await db.post.findMany({
         take: parseInt(limit),
         skip: parseInt(offset),
-        orderBy: sort === "popular" ? { viewCount: "desc" } : { createdAt: "desc" },
-        include: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          excerpt: true,
+          coverImage: true,
+          technologies: true,
+          viewCount: true,
+          createdAt: true,
           author: { select: { id: true, username: true, profilePhoto: true } },
-          files: true,
+          files: { select: { id: true, name: true, language: true } },
           _count: { select: { favorites: true, comments: true } },
         },
       })
-      return posts.map(formatPost)
+      
+      // Get view counts for each post
+      const postsWithViews = await Promise.all(posts.map(async (post) => {
+        const viewCount = await db.$queryRaw<[{count: number}]>`
+          SELECT COUNT(*) as count FROM post_views WHERE post_id = ${post.id}
+        `
+        return { ...post, viewCount: Number(viewCount[0]?.count || 0) }
+      }))
+      
+      // Sort by views if popular
+      if (sort === "popular") {
+        postsWithViews.sort((a, b) => b.viewCount - a.viewCount)
+      }
+      
+      return postsWithViews.map(formatPostSummary)
     } catch (error) {
-      console.error("[POSTS] Error fetching posts:", error)
+      log.posts.error("Error fetching posts", {}, error as Error)
       return []
     }
   })
   // Create post
   .post("/", async ({ body, set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
-    const { title, excerpt, content, coverImage, technologies, files } = body as any
+    const { title, excerpt, content, coverImage, technologies, files } = body
     try {
       const post = await db.post.create({
         data: {
           title,
-          excerpt,
+          excerpt: excerpt || "",
           content,
-          coverImage,
+          coverImage: coverImage || null,
           technologies: JSON.stringify(technologies || []),
-          authorId: payload.userId as number,
+          authorId: payload.userId,
           files: files?.length
-            ? { create: files.map((f: any) => ({ name: f.name, language: f.language, code: f.code })) }
+            ? { create: files.map((f) => ({ name: f.name, language: f.language, code: f.code })) }
             : undefined,
         },
         include: {
@@ -222,16 +260,19 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
           files: true,
         },
       })
+      set.status = 201
       return formatPost({ ...post, _count: { favorites: 0, comments: 0 } })
     } catch (error) {
-      console.error("[POSTS] Error creating post:", error)
+      log.posts.error("Error creating post", {}, error as Error)
       set.status = 500
       return { error: "Failed to create post" }
     }
+  }, {
+    body: schemas.createPost,
   })
   // PARAMETERIZED ROUTES LAST (after static routes)
   // Get single post
-  .get("/:id", async ({ params, set }) => {
+  .get("/:id", async ({ params, set, jwt, cookie: { auth } }) => {
     try {
       const post = await db.post.findUnique({
         where: { id: Number(params.id) },
@@ -245,54 +286,72 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         set.status = 404
         return { error: "Post not found" }
       }
-      await db.post.update({
-        where: { id: post.id },
-        data: { viewCount: { increment: 1 } },
-      })
-      return formatPost({ ...post, viewCount: post.viewCount + 1 })
+
+      // Track unique view per user (only if authenticated)
+      const authValue = auth?.value
+      if (authValue && typeof authValue === "string") {
+        const payload = await jwt.verify(authValue)
+        if (payload) {
+          const userId = payload.userId as number
+          // Only count view if user hasn't viewed this post before
+          try {
+            await db.$executeRaw`
+              INSERT OR IGNORE INTO post_views (user_id, post_id, created_at) 
+              VALUES (${userId}, ${post.id}, datetime('now'))
+            `
+          } catch (e) {
+            // Ignore duplicate key errors
+          }
+        }
+      }
+
+      // Get actual unique view count
+      const viewCountResult = await db.$queryRaw<[{count: number}]>`
+        SELECT COUNT(*) as count FROM post_views WHERE post_id = ${post.id}
+      `
+      const viewCount = Number(viewCountResult[0]?.count || 0)
+      
+      return formatPost({ ...post, viewCount })
     } catch (error) {
-      console.error("[POSTS] Error fetching post:", error)
+      log.posts.error("Error fetching post", { postId: params.id }, error as Error)
       set.status = 500
       return { error: "Failed to fetch post" }
     }
   })
   // Update post
   .put("/:id", async ({ params, body, set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
     const postId = Number(params.id)
-    const userId = payload.userId as number
+    if (isNaN(postId)) {
+      set.status = 400
+      return { error: "Invalid post ID" }
+    }
     try {
       const existing = await db.post.findUnique({ where: { id: postId } })
       if (!existing) {
         set.status = 404
         return { error: "Post not found" }
       }
-      const user = await db.user.findUnique({ where: { id: userId } })
-      if (existing.authorId !== userId && user?.role !== "admin") {
+      const user = await db.user.findUnique({ where: { id: payload.userId } })
+      if (existing.authorId !== payload.userId && user?.role !== "admin") {
         set.status = 403
         return { error: "Not authorized" }
       }
-      const { title, excerpt, content, coverImage, technologies, files } = body as any
+      const { title, excerpt, content, coverImage, technologies, files } = body
       await db.postFile.deleteMany({ where: { postId } })
       const post = await db.post.update({
         where: { id: postId },
         data: {
-          title,
-          excerpt,
-          content,
-          coverImage,
-          technologies: JSON.stringify(technologies || []),
+          ...(title && { title }),
+          ...(excerpt !== undefined && { excerpt }),
+          ...(content && { content }),
+          ...(coverImage !== undefined && { coverImage }),
+          ...(technologies && { technologies: JSON.stringify(technologies) }),
           files: files?.length
-            ? { create: files.map((f: any) => ({ name: f.name, language: f.language, code: f.code })) }
+            ? { create: files.map((f) => ({ name: f.name, language: f.language, code: f.code })) }
             : undefined,
         },
         include: {
@@ -303,33 +362,33 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
       })
       return formatPost(post)
     } catch (error) {
-      console.error("[POSTS] Error updating post:", error)
+      log.posts.error("Error updating post", { postId }, error as Error)
       set.status = 500
       return { error: "Failed to update post" }
     }
+  }, {
+    params: schemas.idParam,
+    body: schemas.updatePost,
   })
   // Delete post
   .delete("/:id", async ({ params, set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
     const postId = Number(params.id)
-    const userId = payload.userId as number
+    if (isNaN(postId)) {
+      set.status = 400
+      return { error: "Invalid post ID" }
+    }
     try {
       const existing = await db.post.findUnique({ where: { id: postId } })
       if (!existing) {
         set.status = 404
         return { error: "Post not found" }
       }
-      const user = await db.user.findUnique({ where: { id: userId } })
-      if (existing.authorId !== userId && user?.role !== "admin") {
+      const user = await db.user.findUnique({ where: { id: payload.userId } })
+      if (existing.authorId !== payload.userId && user?.role !== "admin") {
         set.status = 403
         return { error: "Not authorized" }
       }
@@ -340,65 +399,61 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
       await db.post.delete({ where: { id: postId } })
       return { message: "Post deleted" }
     } catch (error) {
-      console.error("[POSTS] Error deleting post:", error)
+      log.posts.error("Error deleting post", { postId }, error as Error)
       set.status = 500
       return { error: "Failed to delete post" }
     }
+  }, {
+    params: schemas.idParam,
   })
   // Like post (toggle favorite)
   .post("/:id/like", async ({ params, set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
-    const userId = payload.userId as number
     const postId = Number(params.id)
+    if (isNaN(postId)) {
+      set.status = 400
+      return { error: "Invalid post ID" }
+    }
     try {
-      const existing = await db.favorite.findUnique({ where: { userId_postId: { userId, postId } } })
+      const existing = await db.favorite.findUnique({ where: { userId_postId: { userId: payload.userId, postId } } })
       if (existing) {
         await db.favorite.delete({ where: { id: existing.id } })
         return { liked: false }
       } else {
-        await db.favorite.create({ data: { userId, postId } })
+        await db.favorite.create({ data: { userId: payload.userId, postId } })
         return { liked: true }
       }
     } catch (error) {
-      console.error("[POSTS] Error toggling like:", error)
+      log.posts.error("Error toggling like", { postId }, error as Error)
       set.status = 500
       return { error: "Failed to toggle like" }
     }
   })
   // Favorite post
   .post("/:id/favorite", async ({ params, set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
-    const userId = payload.userId as number
     const postId = Number(params.id)
+    if (isNaN(postId)) {
+      set.status = 400
+      return { error: "Invalid post ID" }
+    }
     try {
-      const existing = await db.favorite.findUnique({ where: { userId_postId: { userId, postId } } })
+      const existing = await db.favorite.findUnique({ where: { userId_postId: { userId: payload.userId, postId } } })
       if (existing) {
         await db.favorite.delete({ where: { id: existing.id } })
         return { favorited: false }
       } else {
-        await db.favorite.create({ data: { userId, postId } })
+        await db.favorite.create({ data: { userId: payload.userId, postId } })
         return { favorited: true }
       }
     } catch (error) {
-      console.error("[POSTS] Error toggling favorite:", error)
+      log.posts.error("Error toggling favorite", { postId }, error as Error)
       set.status = 500
       return { error: "Failed to toggle favorite" }
     }
@@ -406,26 +461,16 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
 
 // Pinned tech routes
 export const pinnedTechRoutes = new Elysia({ prefix: "/api/pinned-tech" })
-  .use(jwt({
-    name: "jwt",
-    secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
-  }))
+  .use(jwt(jwtConfig))
   // Get user's pinned techs with unread counts
   .get("/", async ({ set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
-    const userId = payload.userId as number
     try {
       const pinnedTechs = await db.pinnedTech.findMany({
-        where: { userId },
+        where: { userId: payload.userId },
         orderBy: { createdAt: "asc" },
       })
 
@@ -449,89 +494,68 @@ export const pinnedTechRoutes = new Elysia({ prefix: "/api/pinned-tech" })
       )
       return result
     } catch (error) {
-      console.error("[PINNED] Error fetching pinned techs:", error)
+      log.posts.error("Error fetching pinned techs", {}, error as Error)
       return []
     }
   })
   // Pin a tech
   .post("/:tech", async ({ params, set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
-    const userId = payload.userId as number
     const techName = decodeURIComponent(params.tech)
-    console.log(`[PINNED] Pinning tech "${techName}" for user ${userId}`)
+    log.posts.debug("Pinning tech", { techName, userId: payload.userId })
     try {
-      // Check if pinnedTech table exists
       const existing = await db.pinnedTech.findFirst({
-        where: { userId, techName },
+        where: { userId: payload.userId, techName },
       })
       if (existing) {
         return { pinned: true, message: "Already pinned" }
       }
       await db.pinnedTech.create({
-        data: { userId, techName, lastReadAt: new Date() },
+        data: { userId: payload.userId, techName, lastReadAt: new Date() },
       })
-      console.log(`[PINNED] Successfully pinned "${techName}"`)
+      log.posts.info("Tech pinned", { techName })
+      set.status = 201
       return { pinned: true }
     } catch (error) {
-      console.error("[PINNED] Error pinning tech:", error)
+      log.posts.error("Error pinning tech", { techName }, error as Error)
       set.status = 500
       return { error: "Failed to pin tech" }
     }
   })
   // Unpin a tech
   .delete("/:tech", async ({ params, set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
-    const userId = payload.userId as number
     const techName = decodeURIComponent(params.tech)
     try {
-      await db.pinnedTech.deleteMany({ where: { userId, techName } })
+      await db.pinnedTech.deleteMany({ where: { userId: payload.userId, techName } })
       return { pinned: false }
     } catch (error) {
-      console.error("[PINNED] Error unpinning tech:", error)
+      log.posts.error("Error unpinning tech", { techName }, error as Error)
       set.status = 500
       return { error: "Failed to unpin tech" }
     }
   })
   // Mark tech as read (update lastReadAt)
   .post("/:tech/read", async ({ params, set, jwt, cookie: { auth } }) => {
-    const authValue = auth?.value
-    if (!authValue || typeof authValue !== "string") {
-      set.status = 401
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
       return { error: "Not authenticated" }
     }
-    const payload = await jwt.verify(authValue)
-    if (!payload) {
-      set.status = 401
-      return { error: "Invalid token" }
-    }
-    const userId = payload.userId as number
     const techName = decodeURIComponent(params.tech)
     try {
       await db.pinnedTech.updateMany({
-        where: { userId, techName },
+        where: { userId: payload.userId, techName },
         data: { lastReadAt: new Date() },
       })
       return { success: true }
     } catch (error) {
-      console.error("[PINNED] Error marking as read:", error)
+      log.posts.error("Error marking as read", { techName }, error as Error)
       set.status = 500
       return { error: "Failed to mark as read" }
     }

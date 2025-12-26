@@ -2,18 +2,21 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaLibSQL } from "@prisma/adapter-libsql";
 import { createClient } from "@libsql/client";
 import { resolve } from "path";
+import { log } from "./lib/logger";
 
 // Get the correct path to the database
 const tursoUrl = process.env.TURSO_DATABASE_URL;
 const tursoToken = process.env.TURSO_AUTH_TOKEN;
 
-console.log(`[DB] TURSO_DATABASE_URL set: ${!!tursoUrl}`);
-console.log(`[DB] TURSO_AUTH_TOKEN set: ${!!tursoToken}`);
+log.db.info("Database configuration", {
+  tursoUrlSet: !!tursoUrl,
+  tursoTokenSet: !!tursoToken,
+});
 
 let db: PrismaClient;
 
 if (tursoUrl && tursoToken) {
-  console.log(`[DB] Connecting to Turso: ${tursoUrl.substring(0, 50)}...`);
+  log.db.info("Connecting to Turso", { url: tursoUrl.substring(0, 50) + "..." });
   
   const libsql = createClient({
     url: tursoUrl,
@@ -21,19 +24,19 @@ if (tursoUrl && tursoToken) {
   });
 
   const adapter = new PrismaLibSQL(libsql);
-  db = new PrismaClient({ adapter });
+  db = new PrismaClient({ adapter }) as unknown as PrismaClient;
 } else {
   // Local SQLite fallback - convert relative path to absolute for libsql
   const dbPath = resolve(process.cwd(), "prisma/dev.db");
   const localPath = `file:${dbPath}`;
-  console.log(`[DB] Using local SQLite: ${localPath}`);
+  log.db.info("Using local SQLite", { path: localPath });
 
   const libsql = createClient({
     url: localPath,
   });
 
   const adapter = new PrismaLibSQL(libsql);
-  db = new PrismaClient({ adapter });
+  db = new PrismaClient({ adapter }) as unknown as PrismaClient;
 }
 
 export { db };
@@ -41,10 +44,10 @@ export { db };
 export async function testConnection() {
   try {
     await db.$connect();
-    console.log("✅ Database connection successful!");
+    log.db.info("Database connection successful");
     return true;
   } catch (error) {
-    console.error("❌ Database connection failed:", error);
+    log.db.error("Database connection failed", {}, error as Error);
     return false;
   }
 }

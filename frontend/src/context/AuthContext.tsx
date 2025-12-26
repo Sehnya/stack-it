@@ -7,18 +7,19 @@ import {
 } from 'react'
 import { api, User } from '../lib/api'
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (email: string, password: string) => Promise<{ error?: string }>
+  login: (email: string, password: string) => Promise<{ error?: string; requiresVerification?: boolean; email?: string }>
   signup: (
     username: string,
     email: string,
     password: string
-  ) => Promise<{ error?: string }>
+  ) => Promise<{ error?: string; requiresVerification?: boolean; email?: string }>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
+  setUser: (user: User | null) => void
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -56,6 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await api.auth.login(email, password)
 
       if (error) {
+        // Check if verification is required
+        if (data?.requiresVerification) {
+          return { error, requiresVerification: true, email: data.email }
+        }
         return { error }
       }
 
@@ -75,6 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         return { error }
+      }
+
+      // Check if verification is required (new flow)
+      if (data?.requiresVerification) {
+        return { requiresVerification: true, email: data.email }
       }
 
       if (data?.user) {
@@ -105,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signup,
         logout,
         refreshUser,
+        setUser,
       }}
     >
       {children}

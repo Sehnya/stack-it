@@ -1,37 +1,35 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { db } from "../db";
+import { jwtConfig, verifyAuth } from "../middleware/auth";
+import { log } from "../lib/logger";
 
-// Middleware to check admin role
-async function requireAdmin(
+// The only email allowed to have admin role
+const ADMIN_EMAIL = "sehnyaw@gmail.com";
+
+// Middleware to check admin role (specific to admin routes - checks email too)
+async function requireAdminAccess(
   jwtInstance: { verify: (token: string) => Promise<any> },
   authValue: unknown
 ) {
-  if (!authValue || typeof authValue !== "string") {
-    return null;
-  }
-  const payload = await jwtInstance.verify(authValue);
+  const payload = await verifyAuth(jwtInstance, authValue);
   if (!payload) return null;
 
   const user = await db.user.findUnique({
-    where: { id: payload.userId as number },
-    select: { id: true, role: true },
+    where: { id: payload.userId },
+    select: { id: true, role: true, email: true },
   });
 
-  if (!user || user.role !== "admin") return null;
+  // Only allow admin if role is admin AND email matches
+  if (!user || user.role !== "admin" || user.email !== ADMIN_EMAIL) return null;
   return user;
 }
 
 export const adminRoutes = new Elysia({ prefix: "/api/admin" })
-  .use(
-    jwt({
-      name: "jwt",
-      secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
-    })
-  )
+  .use(jwt(jwtConfig))
   // Get admin stats
   .get("/stats", async ({ set, jwt, cookie: { auth } }) => {
-    const admin = await requireAdmin(jwt, auth?.value);
+    const admin = await requireAdminAccess(jwt, auth?.value);
     if (!admin) {
       set.status = 403;
       return { error: "Admin access required" };
@@ -66,14 +64,14 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
         recentPosts,
       };
     } catch (error) {
-      console.error("[ADMIN] Error fetching stats:", error);
+      log.admin.error("Error fetching stats", {}, error as Error);
       set.status = 500;
       return { error: "Failed to fetch stats" };
     }
   })
   // Get all users
   .get("/users", async ({ query, set, jwt, cookie: { auth } }) => {
-    const admin = await requireAdmin(jwt, auth?.value);
+    const admin = await requireAdminAccess(jwt, auth?.value);
     if (!admin) {
       set.status = 403;
       return { error: "Admin access required" };
@@ -120,7 +118,7 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
         total,
       };
     } catch (error) {
-      console.error("[ADMIN] Error fetching users:", error);
+      log.admin.error("Error fetching users", {}, error as Error);
       set.status = 500;
       return { error: "Failed to fetch users" };
     }
@@ -128,7 +126,7 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
 
   // Update user role
   .patch("/users/:id/role", async ({ params, body, set, jwt, cookie: { auth } }) => {
-    const admin = await requireAdmin(jwt, auth?.value);
+    const admin = await requireAdminAccess(jwt, auth?.value);
     if (!admin) {
       set.status = 403;
       return { error: "Admin access required" };
@@ -140,6 +138,19 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
       return { error: "Invalid role" };
     }
 
+    // If trying to set admin role, check if target user has the allowed email
+    if (role === "admin") {
+      const targetUser = await db.user.findUnique({
+        where: { id: Number(params.id) },
+        select: { email: true },
+      });
+      
+      if (!targetUser || targetUser.email !== ADMIN_EMAIL) {
+        set.status = 403;
+        return { error: "Only sehnyaw@gmail.com can have admin role" };
+      }
+    }
+
     try {
       const user = await db.user.update({
         where: { id: Number(params.id) },
@@ -148,14 +159,14 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
       });
       return { message: "Role updated", user };
     } catch (error) {
-      console.error("[ADMIN] Error updating role:", error);
+      log.admin.error("Error updating role", { userId: params.id }, error as Error);
       set.status = 500;
       return { error: "Failed to update role" };
     }
   })
   // Delete user
   .delete("/users/:id", async ({ params, set, jwt, cookie: { auth } }) => {
-    const admin = await requireAdmin(jwt, auth?.value);
+    const admin = await requireAdminAccess(jwt, auth?.value);
     if (!admin) {
       set.status = 403;
       return { error: "Admin access required" };
@@ -171,14 +182,14 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
       await db.user.delete({ where: { id: Number(params.id) } });
       return { message: "User deleted" };
     } catch (error) {
-      console.error("[ADMIN] Error deleting user:", error);
+      log.admin.error("Error deleting user", { userId: params.id }, error as Error);
       set.status = 500;
       return { error: "Failed to delete user" };
     }
   })
   // Get all posts (admin view)
   .get("/posts", async ({ query, set, jwt, cookie: { auth } }) => {
-    const admin = await requireAdmin(jwt, auth?.value);
+    const admin = await requireAdminAccess(jwt, auth?.value);
     if (!admin) {
       set.status = 403;
       return { error: "Admin access required" };
@@ -216,14 +227,14 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
         total,
       };
     } catch (error) {
-      console.error("[ADMIN] Error fetching posts:", error);
+      log.admin.error("Error fetching posts", {}, error as Error);
       set.status = 500;
       return { error: "Failed to fetch posts" };
     }
   })
   // Delete post
   .delete("/posts/:id", async ({ params, set, jwt, cookie: { auth } }) => {
-    const admin = await requireAdmin(jwt, auth?.value);
+    const admin = await requireAdminAccess(jwt, auth?.value);
     if (!admin) {
       set.status = 403;
       return { error: "Admin access required" };
@@ -233,7 +244,7 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
       await db.post.delete({ where: { id: Number(params.id) } });
       return { message: "Post deleted" };
     } catch (error) {
-      console.error("[ADMIN] Error deleting post:", error);
+      log.admin.error("Error deleting post", { postId: params.id }, error as Error);
       set.status = 500;
       return { error: "Failed to delete post" };
     }

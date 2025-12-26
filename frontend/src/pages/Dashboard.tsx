@@ -4,19 +4,16 @@ import {
   Heart,
   Bookmark,
   Eye,
-  TrendingUp,
   Clock,
   Zap,
   ChevronRight,
   Sparkles,
-  Code2,
-  Users,
   Star,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { TechTag } from '../components/TechTag'
-import { api, Post, UserStats } from '../lib/api'
+import { api, Post } from '../lib/api'
 
 // Hero card - large featured post
 const HeroCard = ({ post }: { post: Post }) => {
@@ -33,6 +30,8 @@ const HeroCard = ({ post }: { post: Post }) => {
         <img
           src={post.coverImage}
           alt={post.title}
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
@@ -74,7 +73,7 @@ const HeroCard = ({ post }: { post: Post }) => {
             </div>
             <div className="flex items-center gap-4 text-gray-400 text-sm">
               <span className="flex items-center gap-1"><Heart size={14} /> {post.favorites}</span>
-              <span className="flex items-center gap-1"><Eye size={14} /> {Math.floor(Math.random() * 1000) + 500}</span>
+              <span className="flex items-center gap-1"><Eye size={14} /> {post.viewCount}</span>
             </div>
           </div>
         </div>
@@ -97,6 +96,8 @@ const CompactCard = ({ post, index }: { post: Post; index: number }) => {
         <img
           src={post.coverImage}
           alt={post.title}
+          loading="lazy"
+          decoding="async"
           className="w-20 h-20 rounded-xl object-cover shrink-0"
         />
         <div className="flex-1 min-w-0">
@@ -133,6 +134,8 @@ const GridCard = ({ post, index }: { post: Post; index: number }) => {
           <img
             src={post.coverImage}
             alt={post.title}
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -161,7 +164,7 @@ const GridCard = ({ post, index }: { post: Post; index: number }) => {
           <h3 className="font-semibold text-white text-sm line-clamp-2 mb-2">{post.title}</h3>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <img src={post.author.avatar} alt="" className="w-5 h-5 rounded-full" />
+              <img src={post.author.avatar} alt="" loading="lazy" className="w-5 h-5 rounded-full" />
               <span className="text-xs text-gray-300">{post.author.username}</span>
             </div>
             <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -174,34 +177,9 @@ const GridCard = ({ post, index }: { post: Post; index: number }) => {
   )
 }
 
-// Stats card
-const StatCard = ({ icon: Icon, label, value, trend, color }: {
-  icon: typeof TrendingUp
-  label: string
-  value: string
-  trend?: string
-  color: string
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/40"
-  >
-    <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center mb-3`}>
-      <Icon size={20} className="text-white" />
-    </div>
-    <div className="text-2xl font-bold text-gray-900 mb-1">{value}</div>
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-gray-500">{label}</span>
-      {trend && <span className="text-xs text-green-600 font-medium">{trend}</span>}
-    </div>
-  </motion.div>
-)
-
 const Dashboard = () => {
   const { user } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
-  const [stats, setStats] = useState<UserStats>({ posts: 0, likes: 0, views: 0, followers: 0, following: 0 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -212,12 +190,6 @@ const Dashboard = () => {
       const { data: postsData } = await api.posts.getAll('latest', 10)
       if (postsData) {
         setPosts(postsData)
-      }
-
-      // Fetch user stats
-      const { data: statsData } = await api.posts.getStats()
-      if (statsData) {
-        setStats(statsData)
       }
       
       setLoading(false)
@@ -263,14 +235,6 @@ const Dashboard = () => {
           </div>
         </div>
       </motion.div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-4">
-        <StatCard icon={Eye} label="Total Views" value={stats.views.toLocaleString()} trend="+12%" color="bg-blue-500" />
-        <StatCard icon={Heart} label="Total Likes" value={stats.likes.toLocaleString()} trend="+8%" color="bg-red-500" />
-        <StatCard icon={Users} label="Followers" value={stats.followers.toLocaleString()} trend="+24%" color="bg-gray-700" />
-        <StatCard icon={Code2} label="Posts" value={String(stats.posts)} color="bg-gray-900" />
-      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-3 gap-6">

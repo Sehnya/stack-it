@@ -1,13 +1,23 @@
 import { useState, useEffect } from 'react'
 import { useParams, NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, FileCode, Heart, Eye, Code2, Zap, Pin, PinOff, Users, MessageSquare, TrendingUp } from 'lucide-react'
-import { api, Post } from '../lib/api'
-import { TechTag, getTechColor } from '../components/TechTag'
+import { ArrowLeft, FileCode, Heart, Eye, Code2, Zap, Pin, PinOff, Users, MessageSquare, TrendingUp, HelpCircle, Sparkles, MessageCircle, CheckCircle } from 'lucide-react'
+import { api, Post, Discussion, Snippet } from '../lib/api'
+import { TechTag, getTechColor, getTechIconUrl } from '../components/TechTag'
+import { SnippetCard } from '../components/SnippetCard'
+
+const categoryStyles: Record<string, { bg: string; text: string; icon: typeof HelpCircle }> = {
+  help: { bg: 'bg-blue-100', text: 'text-blue-700', icon: HelpCircle },
+  showcase: { bg: 'bg-purple-100', text: 'text-purple-700', icon: Sparkles },
+  feedback: { bg: 'bg-amber-100', text: 'text-amber-700', icon: MessageCircle },
+  general: { bg: 'bg-gray-100', text: 'text-gray-700', icon: MessageSquare },
+}
 
 const Tech = () => {
   const { techName } = useParams<{ techName: string }>()
   const [posts, setPosts] = useState<Post[]>([])
+  const [snippets, setSnippets] = useState<Snippet[]>([])
+  const [discussions, setDiscussions] = useState<Discussion[]>([])
   const [loading, setLoading] = useState(true)
   const [isPinned, setIsPinned] = useState(false)
   const [pinLoading, setPinLoading] = useState(false)
@@ -20,12 +30,16 @@ const Tech = () => {
       if (!techName) return
       setLoading(true)
 
-      const [postsRes, pinnedRes] = await Promise.all([
+      const [postsRes, snippetsRes, discussionsRes, pinnedRes] = await Promise.all([
         api.posts.getByTech(decodedTech),
+        api.snippets.getByTech(decodedTech),
+        api.discussions.getByTech(decodedTech),
         api.pinnedTech.getAll(),
       ])
 
       if (postsRes.data) setPosts(postsRes.data)
+      if (snippetsRes.data) setSnippets(snippetsRes.data)
+      if (discussionsRes.data) setDiscussions(discussionsRes.data)
       if (pinnedRes.data) {
         setIsPinned(pinnedRes.data.some(pt => pt.techName.toLowerCase() === decodedTech.toLowerCase()))
       }
@@ -109,14 +123,36 @@ const Tech = () => {
           <div className="flex items-end justify-between">
             <div className="flex items-end gap-4">
               <div 
-                className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold border-4 border-white shadow-lg"
-                style={{ backgroundColor: techColor.bg, color: techColor.text }}
+                className="w-20 h-20 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg bg-white relative z-10"
               >
-                {decodedTech.charAt(0).toUpperCase()}
+                {getTechIconUrl(decodedTech) ? (
+                  <img 
+                    src={getTechIconUrl(decodedTech)!} 
+                    alt={decodedTech}
+                    className="w-12 h-12"
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none'
+                      const parent = (e.target as HTMLImageElement).parentElement
+                      if (parent) {
+                        parent.innerHTML = `<span style="color: ${techColor.text}; font-weight: bold; font-size: 28px;">${decodedTech.charAt(0).toUpperCase()}</span>`
+                        parent.style.backgroundColor = techColor.bg
+                      }
+                    }}
+                  />
+                ) : (
+                  <span 
+                    className="text-3xl font-bold"
+                    style={{ color: techColor.text }}
+                  >
+                    {decodedTech.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               <div className="pb-2">
-                <h1 className="text-2xl font-bold text-gray-900">{decodedTech}</h1>
-                <p className="text-gray-500 text-sm flex items-center gap-4 mt-1">
+                <h1 className="text-2xl font-bold drop-shadow-sm" style={{ color: '#111827' }}>{decodedTech}</h1>
+                <p className="text-gray-600 text-sm flex items-center gap-4 mt-1">
                   <span className="flex items-center gap-1">
                     <FileCode size={14} /> {posts.length} stacks
                   </span>
@@ -235,6 +271,8 @@ const Tech = () => {
                         src={post.coverImage}
                         alt={post.title}
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        loading="lazy"
+                        decoding="async"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       {index < 3 && (
@@ -253,6 +291,8 @@ const Tech = () => {
                         src={post.author.avatar}
                         alt={post.author.username}
                         className="w-7 h-7 rounded-full"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </NavLink>
                     <NavLink 
@@ -297,6 +337,127 @@ const Tech = () => {
                 </div>
               </motion.div>
             ))}
+          </div>
+        )}
+      </motion.div>
+
+      {/* Snippets Section */}
+      {snippets.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="mt-8"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Code2 size={20} />
+              {decodedTech} Snippets
+            </h2>
+            <NavLink
+              to="/create-snippet"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Share Snippet
+            </NavLink>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {snippets.slice(0, 4).map((snippet) => (
+              <SnippetCard 
+                key={snippet.id} 
+                snippet={snippet}
+                onUpdate={(updated) => {
+                  setSnippets(prev => prev.map(s => s.id === updated.id ? updated : s))
+                }}
+                compact
+              />
+            ))}
+          </div>
+          {snippets.length > 4 && (
+            <div className="mt-4 text-center">
+              <NavLink to={`/community?tab=snippets&tech=${encodeURIComponent(decodedTech)}`} className="text-sm text-blue-600 hover:underline">
+                View all {snippets.length} snippets →
+              </NavLink>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Discussions Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="mt-8"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <MessageSquare size={20} />
+            Discussions about {decodedTech}
+          </h2>
+          <NavLink
+            to="/create-discussion"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            Start Discussion
+          </NavLink>
+        </div>
+
+        {discussions.length === 0 ? (
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-6 text-center">
+            <MessageSquare size={36} className="mx-auto text-gray-300 mb-3" />
+            <p className="text-gray-500 mb-2">No discussions about {decodedTech} yet</p>
+            <p className="text-sm text-gray-400">Start a conversation about this technology!</p>
+          </div>
+        ) : (
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden">
+            <div className="divide-y divide-gray-100">
+              {discussions.slice(0, 5).map((discussion, index) => {
+                const catStyle = categoryStyles[discussion.category] || categoryStyles.general
+                const CatIcon = catStyle.icon
+                return (
+                  <motion.div
+                    key={discussion.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="flex items-start gap-4 p-4 hover:bg-gray-50/50 transition-colors"
+                  >
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${catStyle.bg} ${catStyle.text}`}>
+                      <CatIcon size={10} />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {discussion.resolved && (
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-semibold">
+                            <CheckCircle size={10} /> Resolved
+                          </span>
+                        )}
+                        <NavLink to={`/discussion/${discussion.id}`} className="font-medium text-gray-900 hover:text-blue-600 transition-colors line-clamp-1">
+                          {discussion.title}
+                        </NavLink>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <NavLink to={`/profile/${discussion.author.id}`} className="flex items-center gap-1.5 hover:text-gray-900">
+                          <img src={discussion.author.avatar} alt="" className="w-4 h-4 rounded-full" loading="lazy" decoding="async" />
+                          <span>{discussion.author.username}</span>
+                        </NavLink>
+                        <span>{timeAgo(discussion.createdAt)}</span>
+                        <span className="flex items-center gap-1"><MessageSquare size={12} /> {discussion.replies}</span>
+                        <span className="flex items-center gap-1"><Eye size={12} /> {discussion.viewCount}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+            {discussions.length > 5 && (
+              <div className="px-4 py-3 bg-gray-50/50 border-t border-gray-100 text-center">
+                <NavLink to={`/community?tab=discussions&tech=${encodeURIComponent(decodedTech)}`} className="text-sm text-blue-600 hover:underline">
+                  View all {discussions.length} discussions →
+                </NavLink>
+              </div>
+            )}
           </div>
         )}
       </motion.div>

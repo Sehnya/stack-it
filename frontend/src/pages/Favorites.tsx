@@ -66,7 +66,7 @@ const GridCard = ({ post, onRemove }: { post: Post; onRemove: () => void }) => {
               <Heart size={12} /> {post.favorites}
             </span>
             <span className="flex items-center gap-1">
-              <Eye size={12} /> {Math.floor(Math.random() * 500) + 100}
+              <Eye size={12} /> {post.viewCount}
             </span>
           </div>
           <span className="flex items-center gap-1">
