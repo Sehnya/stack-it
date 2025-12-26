@@ -209,7 +209,7 @@ export const api = {
       }),
 
     checkUsername: (username: string) =>
-      request<{ available: boolean; error?: string }>(`/api/auth/check-username/${encodeURIComponent(username)}`),
+      request<{ available: boolean; error?: string }>(`/api/auth/check-username?username=${encodeURIComponent(username)}`),
 
     logout: () =>
       request<{ message: string }>('/api/auth/logout', {

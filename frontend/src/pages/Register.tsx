@@ -60,13 +60,20 @@ const Register = () => {
 
     const timer = setTimeout(async () => {
       setUsernameChecking(true)
-      const res = await api.auth.checkUsername(username)
-      setUsernameChecking(false)
-      
-      if (res.data) {
-        setUsernameAvailable(res.data.available)
-        setUsernameError(res.data.available ? '' : 'Username already taken')
+      try {
+        const res = await api.auth.checkUsername(username)
+        if (res.data) {
+          setUsernameAvailable(res.data.available)
+          setUsernameError(res.data.available ? '' : 'Username already taken')
+        } else if (res.error) {
+          setUsernameError('')
+          setUsernameAvailable(null)
+        }
+      } catch {
+        setUsernameAvailable(null)
+        setUsernameError('')
       }
+      setUsernameChecking(false)
     }, 500)
 
     return () => clearTimeout(timer)
