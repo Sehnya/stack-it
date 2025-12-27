@@ -186,17 +186,17 @@ const Post = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex-1 bg-white/60 backdrop-blur-xl rounded-3xl p-8 shadow-sm"
+          className="flex-1 bg-white/60 dark:bg-[#1a1a1a]/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm"
         >
           {/* Meta Info */}
-          <div className="flex items-center gap-6 mb-8 text-gray-600 pb-6 border-b border-gray-200">
+          <div className="flex items-center gap-6 mb-8 text-gray-600 dark:text-gray-400 pb-6 border-b border-gray-200 dark:border-[#333]">
             <NavLink to={`/profile/${post.author.id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <img
                 src={post.author.avatar}
                 alt={post.author.username}
                 className="w-10 h-10 rounded-full"
               />
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-gray-900 dark:text-gray-100">
                 {post.author.username}
               </span>
             </NavLink>
@@ -213,7 +213,7 @@ const Post = () => {
           </div>
 
           {/* Excerpt */}
-          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+          <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
             {post.excerpt}
           </p>
 
@@ -221,21 +221,21 @@ const Post = () => {
           <PostContent html={post.content} />
 
           {/* Like Section */}
-          <div className="mt-12 pt-8 border-t border-gray-200">
+          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-[#333]">
             <div className="flex items-center justify-between">
               <button
                 onClick={handleLike}
                 className={`flex items-center gap-3 px-6 py-3 rounded-2xl transition-all ${
                   liked
                     ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#333]'
                 }`}
               >
                 <Heart size={22} className={liked ? 'fill-white' : ''} />
                 <span className="font-medium">{likeCount} likes</span>
               </button>
 
-              <div className="text-gray-500 text-sm">
+              <div className="text-gray-500 dark:text-gray-400 text-sm">
                 Share this stack with your community
               </div>
             </div>

@@ -88,7 +88,7 @@ const Community = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-gray-200 dark:border-[#333] border-t-gray-600 dark:border-t-gray-300 rounded-full animate-spin" />
       </div>
     )
   }
@@ -100,21 +100,21 @@ const Community = () => {
         <div className="sticky top-4 space-y-4">
           {/* User Profile Card */}
           {user && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] p-4">
               <NavLink to={`/profile/${user.id}`} className="flex items-center gap-3 mb-3 hover:opacity-80">
-                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-lg">
+                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-[#252525] flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-lg">
                   {user.username?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div className="min-w-0">
-                  <div className="font-semibold text-gray-900 truncate">{user.username}</div>
-                  <div className="text-xs text-gray-500">@{user.username?.toLowerCase()}</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">{user.username}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">@{user.username?.toLowerCase()}</div>
                 </div>
               </NavLink>
               <div className="flex gap-2">
-                <NavLink to="/favorites" className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">
+                <NavLink to="/favorites" className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-[#252525] rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
                   <Bookmark size={12} /> Saved
                 </NavLink>
-                <NavLink to="/settings" className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">
+                <NavLink to="/settings" className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-[#252525] rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
                   <Settings size={12} /> Settings
                 </NavLink>
               </div>
@@ -122,10 +122,10 @@ const Community = () => {
           )}
 
           {/* Trending Tech */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp size={14} className="text-emerald-500" />
-              <span className="text-sm font-semibold text-gray-900">Trending Tech</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Trending Tech</span>
             </div>
             <div className="space-y-1">
               {trendingTech.slice(0, 6).map((tech, i) => {
@@ -135,7 +135,7 @@ const Community = () => {
                   <NavLink
                     key={tech.name}
                     to={`/tech/${encodeURIComponent(tech.name)}`}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <span className="w-5 text-xs font-medium text-gray-400">{i + 1}</span>
                     {icon ? (
@@ -145,7 +145,7 @@ const Community = () => {
                         {tech.name.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <span className="flex-1 text-sm text-gray-700 truncate">{tech.name}</span>
+                    <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 truncate">{tech.name}</span>
                     <span className="text-xs text-gray-400">{tech.posts}</span>
                   </NavLink>
                 )
@@ -160,13 +160,13 @@ const Community = () => {
         {/* Header with Tabs */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold text-gray-900">Community</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Community</h1>
             {/* Tab Switcher */}
-            <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-lg">
+            <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-[#1a1a1a] rounded-lg">
               <button
                 onClick={() => setActiveTab('stacks')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition ${
-                  activeTab === 'stacks' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                  activeTab === 'stacks' ? 'bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
                 <Layers size={14} /> Stacks
@@ -174,7 +174,7 @@ const Community = () => {
               <button
                 onClick={() => setActiveTab('snippets')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition ${
-                  activeTab === 'snippets' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                  activeTab === 'snippets' ? 'bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
                 <Code2 size={14} /> Snippets
@@ -182,16 +182,16 @@ const Community = () => {
               <button
                 onClick={() => setActiveTab('discussions')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition ${
-                  activeTab === 'discussions' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                  activeTab === 'discussions' ? 'bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
                 <MessageSquare size={14} /> Discussions
               </button>
             </div>
           </div>
-          <NavLink 
+          <NavLink
             to={activeTab === 'stacks' ? '/create-post' : activeTab === 'snippets' ? '/create-snippet' : '/create-discussion'}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200"
           >
             <Plus size={16} /> {activeTab === 'stacks' ? 'New Stack' : activeTab === 'snippets' ? 'New Snippet' : 'New Thread'}
           </NavLink>
@@ -205,41 +205,41 @@ const Community = () => {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder={activeTab === 'stacks' ? 'Search stacks...' : activeTab === 'snippets' ? 'Search snippets...' : 'Search discussions...'}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-300"
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-gray-300 dark:focus:border-gray-600"
             />
           </div>
           {activeTab === 'snippets' ? (
-            <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-lg">
+            <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-[#1a1a1a] rounded-lg">
               <button
                 onClick={() => setSnippetSort('top-rated')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${snippetSort === 'top-rated' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${snippetSort === 'top-rated' ? 'bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
               >
                 <Star size={14} className="inline mr-1.5" />Top Rated
               </button>
               <button
                 onClick={() => setSnippetSort('latest')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${snippetSort === 'latest' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${snippetSort === 'latest' ? 'bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
               >
                 <Clock size={14} className="inline mr-1.5" />Latest
               </button>
               <button
                 onClick={() => setSnippetSort('popular')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${snippetSort === 'popular' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${snippetSort === 'popular' ? 'bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
               >
                 <Eye size={14} className="inline mr-1.5" />Popular
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-lg">
+            <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-[#1a1a1a] rounded-lg">
               <button
                 onClick={() => setSort('latest')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${sort === 'latest' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${sort === 'latest' ? 'bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
               >
                 <Clock size={14} className="inline mr-1.5" />Latest
               </button>
               <button
                 onClick={() => setSort('popular')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${sort === 'popular' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${sort === 'popular' ? 'bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
               >
                 <ChevronUp size={14} className="inline mr-1.5" />Popular
               </button>
@@ -249,30 +249,30 @@ const Community = () => {
 
         {/* Stacks Tab */}
         {activeTab === 'stacks' && (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-4 text-xs font-medium text-gray-500">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] overflow-hidden">
+            <div className="px-4 py-3 bg-gray-50 dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-[#333] flex items-center gap-4 text-xs font-medium text-gray-500 dark:text-gray-400">
               <span className="w-12 text-center">Votes</span>
               <span className="flex-1">Stack</span>
               <span className="w-16 text-center hidden sm:block">Files</span>
               <span className="w-20 text-center hidden md:block">Views</span>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {filteredPosts.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">No stacks found</div>
+                <div className="p-8 text-center text-gray-500 dark:text-gray-400">No stacks found</div>
               ) : (
                 filteredPosts.map((post, i) => (
-                  <motion.div key={post.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
+                  <motion.div key={post.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="flex items-start gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <div className="w-12 flex flex-col items-center gap-1 pt-1 flex-shrink-0">
-                      <button onClick={() => api.posts.like(post.id)} className="p-1 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded transition-colors">
+                      <button onClick={() => api.posts.like(post.id)} className="p-1 text-gray-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded transition-colors">
                         <ChevronUp size={18} />
                       </button>
-                      <span className="text-sm font-semibold text-gray-700">{post.favorites}</span>
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{post.favorites}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <NavLink to={`/post/${post.id}`} className="block group">
-                        <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1 mb-1">{post.title}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 mb-1">{post.title}</h3>
                       </NavLink>
-                      <p className="text-sm text-gray-500 line-clamp-1 mb-2">{post.excerpt}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 mb-2">{post.excerpt}</p>
                       <div className="flex flex-wrap gap-1.5 mb-2">
                         {post.technologies.slice(0, 4).map(tech => {
                           const icon = getTechIconUrl(tech)
@@ -285,8 +285,8 @@ const Community = () => {
                           )
                         })}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
-                        <NavLink to={`/profile/${post.author.id}`} className="flex items-center gap-1.5 hover:text-gray-900">
+                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                        <NavLink to={`/profile/${post.author.id}`} className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-gray-100">
                           <img src={post.author.avatar} alt="" className="w-5 h-5 rounded-full" loading="lazy" decoding="async" />
                           <span className="font-medium">{post.author.username}</span>
                         </NavLink>
@@ -295,11 +295,11 @@ const Community = () => {
                       </div>
                     </div>
                     <div className="w-16 text-center hidden sm:block flex-shrink-0">
-                      <span className="text-sm font-semibold text-gray-600">{post.files?.length || 0}</span>
+                      <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">{post.files?.length || 0}</span>
                       <div className="text-[10px] text-gray-400">files</div>
                     </div>
                     <div className="w-20 text-center hidden md:block flex-shrink-0">
-                      <div className="flex items-center justify-center gap-1 text-gray-600 text-sm">
+                      <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-300 text-sm">
                         <Eye size={14} /><span>{post.viewCount}</span>
                       </div>
                     </div>
@@ -319,10 +319,10 @@ const Community = () => {
         {activeTab === 'snippets' && (
           <div>
             {filteredSnippets.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <Code2 size={48} className="mx-auto text-gray-300 mb-4" />
-                <p className="text-gray-500 mb-4">No snippets yet</p>
-                <NavLink to="/create-snippet" className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800">
+              <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] p-8 text-center">
+                <Code2 size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                <p className="text-gray-500 dark:text-gray-400 mb-4">No snippets yet</p>
+                <NavLink to="/create-snippet" className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200">
                   <Plus size={16} /> Share a Snippet
                 </NavLink>
               </div>
@@ -344,18 +344,18 @@ const Community = () => {
 
         {/* Discussions Tab */}
         {activeTab === 'discussions' && (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-4 text-xs font-medium text-gray-500">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] overflow-hidden">
+            <div className="px-4 py-3 bg-gray-50 dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-[#333] flex items-center gap-4 text-xs font-medium text-gray-500 dark:text-gray-400">
               <span className="w-16">Category</span>
               <span className="flex-1">Discussion</span>
               <span className="w-16 text-center hidden sm:block">Replies</span>
               <span className="w-16 text-center hidden md:block">Views</span>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {filteredDiscussions.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
+                <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                   <p className="mb-4">No discussions yet</p>
-                  <NavLink to="/create-discussion" className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800">
+                  <NavLink to="/create-discussion" className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200">
                     <Plus size={16} /> Start a Discussion
                   </NavLink>
                 </div>
@@ -364,7 +364,7 @@ const Community = () => {
                   const catStyle = categoryStyles[discussion.category] || categoryStyles.general
                   const CatIcon = catStyle.icon
                   return (
-                    <motion.div key={discussion.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
+                    <motion.div key={discussion.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="flex items-start gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                       {/* Category Badge */}
                       <div className={`w-16 flex-shrink-0 flex items-center justify-center`}>
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${catStyle.bg} ${catStyle.text}`}>
@@ -377,32 +377,32 @@ const Community = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           {discussion.resolved && (
-                            <span className="flex items-center gap-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-semibold">
+                            <span className="flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-[10px] font-semibold">
                               <CheckCircle size={10} /> Resolved
                             </span>
                           )}
-                          <NavLink to={`/discussion/${discussion.id}`} className="font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-1">
+                          <NavLink to={`/discussion/${discussion.id}`} className="font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors line-clamp-1">
                             {discussion.title}
                           </NavLink>
                         </div>
-                        <p className="text-sm text-gray-500 line-clamp-1 mb-2" dangerouslySetInnerHTML={{ __html: discussion.content.replace(/<[^>]*>/g, '').slice(0, 150) }} />
-                        
+                        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 mb-2" dangerouslySetInnerHTML={{ __html: discussion.content.replace(/<[^>]*>/g, '').slice(0, 150) }} />
+
                         {/* Tags */}
                         <div className="flex flex-wrap gap-1.5 mb-2">
                           {discussion.tags.map(tag => {
                             const icon = getTechIconUrl(tag)
                             return (
-                              <NavLink key={tag} to={`/tech/${encodeURIComponent(tag)}`} className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium hover:opacity-80 bg-gray-100 text-gray-600">
+                              <NavLink key={tag} to={`/tech/${encodeURIComponent(tag)}`} className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium hover:opacity-80 bg-gray-100 dark:bg-[#252525] text-gray-600 dark:text-gray-300">
                                 {icon && <img src={icon} alt="" className="w-3 h-3" loading="lazy" decoding="async" />}
                                 #{tag}
                               </NavLink>
                             )
                           })}
                         </div>
-                        
+
                         {/* Author */}
-                        <div className="flex items-center gap-3 text-xs text-gray-500">
-                          <NavLink to={`/profile/${discussion.author.id}`} className="flex items-center gap-1.5 hover:text-gray-900">
+                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                          <NavLink to={`/profile/${discussion.author.id}`} className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-gray-100">
                             <img src={discussion.author.avatar} alt="" className="w-5 h-5 rounded-full" loading="lazy" decoding="async" />
                             <span className="font-medium">{discussion.author.username}</span>
                           </NavLink>
@@ -413,7 +413,7 @@ const Community = () => {
 
                       {/* Replies */}
                       <div className="w-16 text-center hidden sm:flex flex-col items-center flex-shrink-0">
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
                           <MessageSquare size={14} />
                           <span className="font-semibold">{discussion.replies}</span>
                         </div>
@@ -422,7 +422,7 @@ const Community = () => {
 
                       {/* Views */}
                       <div className="w-16 text-center hidden md:flex flex-col items-center flex-shrink-0">
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
                           <Eye size={14} />
                           <span>{discussion.viewCount}</span>
                         </div>
@@ -441,14 +441,14 @@ const Community = () => {
       <div className="hidden xl:block w-64 flex-shrink-0">
         <div className="sticky top-4 space-y-4">
           {/* Top Stackers */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] p-4">
             <div className="flex items-center gap-2 mb-3">
               <Trophy size={14} className="text-amber-500" />
-              <span className="text-sm font-semibold text-gray-900">Top Stackers</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Top Stackers</span>
             </div>
             <div className="space-y-2">
               {topUsers.slice(0, 5).map((u) => (
-                <NavLink key={u.id} to={`/profile/${u.id}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                <NavLink key={u.id} to={`/profile/${u.id}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                   <div className="relative">
                     <img src={u.avatar} alt="" className="w-8 h-8 rounded-full" loading="lazy" decoding="async" />
                     {u.rank <= 3 && (
@@ -458,8 +458,8 @@ const Community = () => {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">{u.name}</div>
-                    <div className="text-xs text-gray-500">{u.stacks} stacks</div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{u.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{u.stacks} stacks</div>
                   </div>
                 </NavLink>
               ))}
@@ -493,17 +493,17 @@ const Community = () => {
           </div>
 
           {/* Discussion Categories */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="text-sm font-semibold text-gray-900 mb-3">Discussion Categories</div>
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] p-4">
+            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Discussion Categories</div>
             <div className="space-y-2">
               {Object.entries(categoryStyles).map(([key, style]) => {
                 const Icon = style.icon
                 return (
-                  <button key={key} className={`w-full flex items-center gap-2 p-2 rounded-lg text-left hover:bg-gray-50 transition-colors`}>
+                  <button key={key} className={`w-full flex items-center gap-2 p-2 rounded-lg text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors`}>
                     <span className={`w-6 h-6 rounded-md flex items-center justify-center ${style.bg}`}>
                       <Icon size={12} className={style.text} />
                     </span>
-                    <span className="text-sm text-gray-700 capitalize">{key}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{key}</span>
                   </button>
                 )
               })}

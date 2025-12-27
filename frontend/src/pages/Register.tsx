@@ -37,7 +37,7 @@ const Register = () => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   // Username validation
-  const [usernameChecking, setUsernameChecking] = useState(false)
+  const [usernameChecking] = useState(false)
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
   const [usernameError, setUsernameError] = useState('')
 

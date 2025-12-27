@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Camera, Trash2, User, Save, X } from 'lucide-react'
+import { Camera, Trash2, User, Save, X, Palette } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
+import { ThemeToggle } from '../components/ThemeToggle'
 
 const Settings = () => {
   const { user, refreshUser } = useAuth()
@@ -92,24 +93,24 @@ const Settings = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Settings</h1>
-        <p className="text-gray-500 text-sm">Manage your account and profile</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Settings</h1>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Manage your account and profile</p>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-6"
+        className="bg-white/70 dark:bg-[#1a1a1a]/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-[#333]/50 p-6"
       >
-        <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
           <User size={20} />
           Profile
         </h2>
 
         {/* Profile Photo */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Profile Photo
           </label>
           <div className="flex items-center gap-6">
@@ -117,7 +118,7 @@ const Settings = () => {
               <img
                 src={currentAvatar}
                 alt="Profile"
-                className="w-24 h-24 rounded-2xl object-cover border-2 border-gray-200"
+                className="w-24 h-24 rounded-2xl object-cover border-2 border-gray-200 dark:border-[#333]"
               />
               {uploading && (
                 <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
@@ -136,7 +137,7 @@ const Settings = () => {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
                 <Camera size={16} />
                 {profilePhoto ? 'Change Photo' : 'Upload Photo'}
@@ -150,7 +151,7 @@ const Settings = () => {
                   Remove Photo
                 </button>
               )}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 JPG, PNG or GIF. Max 5MB.
               </p>
             </div>
@@ -159,30 +160,30 @@ const Settings = () => {
 
         {/* Username */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Username
           </label>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-[#252525] border border-gray-200 dark:border-[#333] rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-400 focus:border-transparent transition-all text-gray-900 dark:text-gray-100"
             placeholder="Your username"
           />
         </div>
 
         {/* Email (read-only) */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Email
           </label>
           <input
             type="email"
             value={user?.email || ''}
             disabled
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
+            className="w-full px-4 py-3 bg-gray-100 dark:bg-[#252525] border border-gray-200 dark:border-[#333] rounded-xl text-gray-500 dark:text-gray-400 cursor-not-allowed"
           />
-          <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Email cannot be changed</p>
         </div>
 
         {/* Message */}
@@ -206,7 +207,7 @@ const Settings = () => {
           <button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? (
               <>
@@ -220,6 +221,31 @@ const Settings = () => {
               </>
             )}
           </button>
+        </div>
+      </motion.div>
+
+      {/* Appearance Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white/70 dark:bg-[#1a1a1a]/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-[#333]/50 p-6 mt-6"
+      >
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+          <Palette size={20} />
+          Appearance
+        </h2>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Theme
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Select your preferred color scheme
+            </p>
+          </div>
+          <ThemeToggle variant="dropdown" />
         </div>
       </motion.div>
     </div>

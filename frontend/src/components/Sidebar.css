@@ -1,4 +1,43 @@
-/* Light Sidebar Styles */
+/* Sidebar CSS Variables */
+:root {
+    --sidebar-bg: #f3f4f6;
+    --sidebar-toggle-bg: white;
+    --sidebar-toggle-border: #e5e7eb;
+    --sidebar-toggle-color: #6b7280;
+    --sidebar-toggle-hover-bg: #f9fafb;
+    --sidebar-toggle-hover-color: #1a1a1a;
+    --sidebar-text: #1a1a1a;
+    --sidebar-text-muted: #6b7280;
+    --sidebar-text-subtle: #9ca3af;
+    --sidebar-hover-bg: rgba(0, 0, 0, 0.04);
+    --sidebar-active-bg: #1a1a1a;
+    --sidebar-active-text: white;
+    --sidebar-item-active-bg: white;
+    --sidebar-divider: #e5e7eb;
+    --sidebar-divider-light: #d1d5db;
+    --sidebar-shadow: rgba(0, 0, 0, 0.08);
+    --sidebar-rail-item-hover: rgba(255, 255, 255, 0.5);
+}
+
+.dark {
+    --sidebar-bg: #1a1a1a;
+    --sidebar-toggle-bg: #2a2a2a;
+    --sidebar-toggle-border: #3a3a3a;
+    --sidebar-toggle-color: #9ca3af;
+    --sidebar-toggle-hover-bg: #333333;
+    --sidebar-toggle-hover-color: #f8f8f2;
+    --sidebar-text: #f8f8f2;
+    --sidebar-text-muted: #9ca3af;
+    --sidebar-text-subtle: #6b7280;
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+    --sidebar-active-bg: #ffffff;
+    --sidebar-active-text: #1a1a1a;
+    --sidebar-item-active-bg: #2a2a2a;
+    --sidebar-divider: #333333;
+    --sidebar-divider-light: #444444;
+    --sidebar-shadow: rgba(0, 0, 0, 0.3);
+    --sidebar-rail-item-hover: rgba(255, 255, 255, 0.1);
+}
 
 .sidebar-container {
     position: fixed;
@@ -17,34 +56,36 @@
     transform: translateY(-50%);
     width: 24px;
     height: 24px;
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: var(--sidebar-toggle-bg);
+    border: 1px solid var(--sidebar-toggle-border);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px var(--sidebar-shadow);
     z-index: 101;
-    color: #6b7280;
+    color: var(--sidebar-toggle-color);
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebar-toggle:hover {
-    background: #f9fafb;
-    color: #1a1a1a;
+    background: var(--sidebar-toggle-hover-bg);
+    color: var(--sidebar-toggle-hover-color);
 }
 
 /* Icon Rail - Left narrow panel */
 .sidebar-rail {
     width: 80px;
     height: 100vh;
-    background: #f3f4f6;
+    background: var(--sidebar-bg);
     border-radius: 0 24px 24px 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 24px 0;
     flex-shrink: 0;
+    transition: background-color 0.3s ease;
 }
 
 .sidebar-rail-logo {
@@ -54,7 +95,7 @@
 .sidebar-rail-logo svg {
     width: 28px;
     height: 28px;
-    fill: #1a1a1a;
+    fill: var(--sidebar-text);
 }
 
 .sidebar-rail-nav {
@@ -77,16 +118,16 @@
     position: relative;
     background: transparent;
     border: none;
-    color: #1a1a1a;
+    color: var(--sidebar-text);
 }
 
 .sidebar-rail-item:hover {
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--sidebar-rail-item-hover);
 }
 
 .sidebar-rail-item.active {
-    background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: var(--sidebar-item-active-bg);
+    box-shadow: 0 2px 8px var(--sidebar-shadow);
 }
 
 .sidebar-rail-item svg {
@@ -116,14 +157,14 @@
 .sidebar-rail-scroll-bar {
     width: 4px;
     height: 32px;
-    background: #d1d5db;
+    background: var(--sidebar-divider-light);
     border-radius: 2px;
 }
 
 .sidebar-rail-scroll-dot {
     width: 8px;
     height: 8px;
-    background: #9ca3af;
+    background: var(--sidebar-text-subtle);
     border-radius: 50%;
 }
 
@@ -134,7 +175,7 @@
     align-items: center;
     gap: 12px;
     padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--sidebar-divider);
     margin-top: auto;
 }
 
@@ -157,25 +198,27 @@
 .sidebar-menu {
     width: 256px;
     height: 100vh;
-    background: #f3f4f6;
+    background: var(--sidebar-bg);
     border-radius: 24px;
     display: flex;
     flex-direction: column;
     padding: 24px 16px;
     margin-left: 4px;
     overflow: hidden;
+    transition: background-color 0.3s ease;
 }
 
 /* Expanded Menu - Full width when expanded */
 .sidebar-menu-expanded {
     width: 100%;
     height: 100vh;
-    background: #f3f4f6;
+    background: var(--sidebar-bg);
     border-radius: 0 24px 24px 0;
     display: flex;
     flex-direction: column;
     padding: 24px 20px;
     overflow: hidden;
+    transition: background-color 0.3s ease;
 }
 
 .sidebar-menu-header {
@@ -189,13 +232,13 @@
 .sidebar-menu-header svg {
     width: 20px;
     height: 20px;
-    fill: #1a1a1a;
+    fill: var(--sidebar-text);
 }
 
 .sidebar-menu-header span {
     font-size: 18px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--sidebar-text);
 }
 
 .sidebar-menu-nav {
@@ -214,7 +257,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     text-decoration: none;
-    color: #1a1a1a;
+    color: var(--sidebar-text);
     background: transparent;
     border: none;
     width: 100%;
@@ -223,12 +266,12 @@
 }
 
 .sidebar-menu-item:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--sidebar-hover-bg);
 }
 
 .sidebar-menu-item.active {
-    background: #1a1a1a;
-    color: white;
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
 }
 
 .sidebar-menu-item-left {
@@ -249,31 +292,31 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #1a1a1a;
-    color: white;
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
     border-radius: 50%;
     font-size: 12px;
     font-weight: 500;
 }
 
 .sidebar-menu-item.active .badge {
-    background: white;
-    color: #1a1a1a;
+    background: var(--sidebar-active-text);
+    color: var(--sidebar-active-bg);
 }
 
 .sidebar-menu-item .expand-icon {
-    color: #9ca3af;
+    color: var(--sidebar-text-subtle);
 }
 
 .sidebar-menu-item.active .expand-icon {
-    color: white;
+    color: var(--sidebar-active-text);
 }
 
 /* Submenu */
 .sidebar-submenu {
     margin-left: 16px;
     padding-left: 16px;
-    border-left: 1px solid #e5e7eb;
+    border-left: 1px solid var(--sidebar-divider);
     margin-top: 4px;
 }
 
@@ -286,33 +329,33 @@
     cursor: pointer;
     transition: all 0.2s ease;
     text-decoration: none;
-    color: #6b7280;
+    color: var(--sidebar-text-muted);
     font-size: 14px;
 }
 
 .sidebar-submenu-item:hover {
-    background: rgba(0, 0, 0, 0.04);
-    color: #1a1a1a;
+    background: var(--sidebar-hover-bg);
+    color: var(--sidebar-text);
 }
 
 .sidebar-submenu-item.active {
-    background: white;
-    color: #1a1a1a;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: var(--sidebar-item-active-bg);
+    color: var(--sidebar-text);
+    box-shadow: 0 2px 8px var(--sidebar-shadow);
 }
 
 .sidebar-submenu-item svg {
     width: 18px;
     height: 18px;
     stroke-width: 1.5;
-    color: #9ca3af;
+    color: var(--sidebar-text-subtle);
 }
 
 /* Menu Bottom Section */
 .sidebar-menu-bottom {
     margin-top: auto;
     padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--sidebar-divider);
 }
 
 .sidebar-menu-user {
@@ -338,12 +381,12 @@
 .sidebar-menu-user-name {
     font-size: 14px;
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--sidebar-text);
 }
 
 .sidebar-menu-user-email {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--sidebar-text-muted);
 }
 
 .sidebar-menu-logout {
@@ -355,7 +398,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     text-decoration: none;
-    color: #6b7280;
+    color: var(--sidebar-text-muted);
     font-size: 14px;
     font-weight: 500;
     background: transparent;
@@ -372,7 +415,7 @@
 .sidebar-right {
     width: 224px;
     height: 100vh;
-    background: #f3f4f6;
+    background: var(--sidebar-bg);
     border-radius: 24px;
     display: flex;
     flex-direction: column;
@@ -381,6 +424,7 @@
     left: 344px;
     top: 0;
     z-index: 98;
+    transition: background-color 0.3s ease;
 }
 
 .sidebar-right-section {
@@ -398,13 +442,13 @@
 .sidebar-right-header span {
     font-size: 14px;
     font-weight: 500;
-    color: #6b7280;
+    color: var(--sidebar-text-muted);
 }
 
 .sidebar-right-header svg {
     width: 16px;
     height: 16px;
-    color: #9ca3af;
+    color: var(--sidebar-text-subtle);
 }
 
 .sidebar-right-item {
@@ -416,24 +460,24 @@
     cursor: pointer;
     transition: all 0.2s ease;
     text-decoration: none;
-    color: #1a1a1a;
+    color: var(--sidebar-text);
     font-size: 14px;
 }
 
 .sidebar-right-item:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--sidebar-hover-bg);
 }
 
 .sidebar-right-item.active {
-    background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: var(--sidebar-item-active-bg);
+    box-shadow: 0 2px 8px var(--sidebar-shadow);
 }
 
 .sidebar-right-item svg {
     width: 18px;
     height: 18px;
     stroke-width: 1.5;
-    color: #9ca3af;
+    color: var(--sidebar-text-subtle);
 }
 
 
@@ -449,7 +493,7 @@
 .sidebar-rail-divider {
     width: 32px;
     height: 1px;
-    background: #d1d5db;
+    background: var(--sidebar-divider-light);
     margin-bottom: 8px;
 }
 
@@ -457,7 +501,7 @@
 .sidebar-menu-sections {
     margin-top: 16px;
     padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--sidebar-divider);
 }
 
 .sidebar-sections-header {
@@ -469,7 +513,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    color: #6b7280;
+    color: var(--sidebar-text-muted);
     font-size: 13px;
     font-weight: 500;
     text-transform: uppercase;
@@ -478,7 +522,7 @@
 }
 
 .sidebar-sections-header:hover {
-    color: #1a1a1a;
+    color: var(--sidebar-text);
 }
 
 .sidebar-section-item {
@@ -490,16 +534,16 @@
     cursor: pointer;
     transition: all 0.2s ease;
     text-decoration: none;
-    color: #1a1a1a;
+    color: var(--sidebar-text);
     font-size: 14px;
     font-weight: 500;
 }
 
 .sidebar-section-item:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--sidebar-hover-bg);
 }
 
 .sidebar-section-item.active {
-    background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: var(--sidebar-item-active-bg);
+    box-shadow: 0 2px 8px var(--sidebar-shadow);
 }

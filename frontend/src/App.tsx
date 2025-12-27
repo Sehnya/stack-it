@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { useState, lazy, Suspense } from 'react'
 import Sidebar from './components/Sidebar'
@@ -26,11 +27,11 @@ const Tech = lazy(() => import('./pages/Tech'))
 
 // Loading spinner
 const LoadingScreen = () => (
-  <div className="min-h-screen bg-[#e5e7eb] flex items-center justify-center">
+  <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
     <motion.div
       animate={{ rotate: 360 }}
       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-      className="w-8 h-8 border-3 border-gray-300 border-t-gray-900 rounded-full"
+      className="w-8 h-8 border-3 border-gray-300 dark:border-[#333] border-t-gray-900 dark:border-t-gray-100 rounded-full"
     />
   </div>
 )
@@ -38,7 +39,7 @@ const LoadingScreen = () => (
 // Page loading fallback (lighter than full screen)
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
-    <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+    <div className="w-6 h-6 border-2 border-gray-200 dark:border-gray-700 border-t-gray-600 dark:border-t-gray-300 rounded-full animate-spin" />
   </div>
 )
 
@@ -89,7 +90,7 @@ const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
     : null
 
   return (
-    <div className="flex min-h-screen bg-[#e5e7eb]">
+    <div className="flex min-h-screen bg-[var(--color-bg-primary)]">
       <Sidebar
         user={sidebarUser}
         onLogout={logout}
@@ -282,9 +283,11 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   )
 }

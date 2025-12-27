@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* Background colors */
+    --color-bg-primary: #e5e7eb;
+    --color-bg-secondary: #f3f4f6;
+    --color-bg-tertiary: #ffffff;
+    --color-bg-elevated: rgba(255, 255, 255, 0.6);
+
+    /* Text colors */
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #374151;
+    --color-text-tertiary: #6b7280;
+    --color-text-inverse: #ffffff;
+
+    /* Border colors */
+    --color-border-primary: #e5e7eb;
+    --color-border-secondary: #d1d5db;
+
+    /* Accent colors */
+    --color-accent-primary: #1a1a1a;
+    --color-accent-hover: #374151;
+  }
+
+  .dark {
+    /* Background colors */
+    --color-bg-primary: #252525;
+    --color-bg-secondary: #1a1a1a;
+    --color-bg-tertiary: #252525;
+    --color-bg-elevated: rgba(30, 30, 30, 0.8);
+
+    /* Text colors */
+    --color-text-primary: #f8f8f2;
+    --color-text-secondary: #d1d5db;
+    --color-text-tertiary: #9ca3af;
+    --color-text-inverse: #1a1a1a;
+
+    /* Border colors */
+    --color-border-primary: #333333;
+    --color-border-secondary: #444444;
+
+    /* Accent colors */
+    --color-accent-primary: #ffffff;
+    --color-accent-hover: #e5e7eb;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -10,8 +56,9 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #e5e7eb;
-  color: #1a1a1a;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Hide scrollbar but keep scrolling */
@@ -36,6 +83,14 @@ body::-webkit-scrollbar {
 /* TipTap Editor Styles */
 .ProseMirror {
   outline: none;
+}
+
+.dark .ProseMirror {
+  color: #e5e7eb;
+}
+
+.dark .ProseMirror p.is-editor-empty:first-child::before {
+  color: #6b7280;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
@@ -533,6 +588,131 @@ body::-webkit-scrollbar {
   text-decoration: underline;
   text-decoration-color: #374151;
   text-underline-offset: 3px;
+}
+
+/* ========================================
+   Post Content - Dark Mode
+   ======================================== */
+
+.dark .post-content {
+  color: #d1d5db;
+}
+
+.dark .post-content h1 {
+  color: #f8f8f2;
+  background: linear-gradient(135deg, #f8f8f2 0%, #d1d5db 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark .post-content h2 {
+  color: #f8f8f2;
+}
+
+.dark .post-content h2::after {
+  background: linear-gradient(90deg, #6b7280 0%, transparent 100%);
+}
+
+.dark .post-content h3 {
+  color: #e5e7eb;
+}
+
+.dark .post-content h4 {
+  color: #d1d5db;
+}
+
+.dark .post-content p {
+  color: #d1d5db;
+}
+
+.dark .post-content > .prose > p:first-of-type {
+  color: #e5e7eb;
+}
+
+.dark .post-content strong,
+.dark .post-content b {
+  color: #f8f8f2;
+}
+
+.dark .post-content em,
+.dark .post-content i {
+  color: #9ca3af;
+}
+
+.dark .post-content a {
+  color: #60a5fa;
+  text-decoration-color: #4b5563;
+}
+
+.dark .post-content a:hover {
+  color: #93c5fd;
+  text-decoration-color: #93c5fd;
+}
+
+.dark .post-content blockquote {
+  background: linear-gradient(135deg, #252525 0%, #1a1a1a 100%);
+  border-left-color: #4b5563;
+  color: #9ca3af;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.dark .post-content blockquote::before {
+  color: #4b5563;
+}
+
+.dark .post-content ul li::before {
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+}
+
+.dark .post-content ol li::before {
+  background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+}
+
+.dark .post-content code:not(pre code) {
+  background: linear-gradient(135deg, #252525 0%, #1a1a1a 100%);
+  color: #f8f8f2;
+  border-color: #4b5563;
+}
+
+.dark .post-content hr {
+  background: linear-gradient(90deg, transparent 0%, #4b5563 20%, #4b5563 80%, transparent 100%);
+}
+
+.dark .post-content table {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.dark .post-content th {
+  background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+}
+
+.dark .post-content td {
+  border-bottom-color: #333;
+  background: #1a1a1a;
+}
+
+.dark .post-content tr:hover td {
+  background: #252525;
+}
+
+.dark .post-content mark {
+  background: linear-gradient(120deg, #854d0e 0%, #a16207 100%);
+  color: #fef08a;
+}
+
+.dark .post-content sub,
+.dark .post-content sup {
+  color: #9ca3af;
+}
+
+.dark .post-content s,
+.dark .post-content del {
+  color: #6b7280;
+}
+
+.dark .post-content u {
+  text-decoration-color: #6b7280;
 }
 
 

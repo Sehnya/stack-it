@@ -116,7 +116,7 @@ const FileTreeNodeComponent = ({
       <div>
         <button
           onClick={() => onToggleFolder(node.path)}
-          className="w-full flex items-center gap-1.5 py-1 text-left text-xs text-gray-400 hover:bg-[#37373d] hover:text-gray-200 transition-colors rounded"
+          className="w-full flex items-center gap-1.5 py-1 text-left text-xs text-gray-400 hover:bg-[#252525] hover:text-gray-200 transition-colors rounded"
           style={{ paddingLeft: `${paddingLeft}px` }}
         >
           {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
@@ -143,7 +143,7 @@ const FileTreeNodeComponent = ({
 
   return (
     <div
-      className="flex items-center justify-between py-1 text-xs text-gray-300 hover:bg-[#37373d] rounded group pr-2"
+      className="flex items-center justify-between py-1 text-xs text-gray-300 hover:bg-[#252525] rounded group pr-2"
       style={{ paddingLeft: `${paddingLeft + 16}px` }}
     >
       <div className="flex items-center gap-1.5 min-w-0">
@@ -224,34 +224,34 @@ const fontSizes = [
   { label: '64px', value: '64px' },
 ]
 
-const MenuButton = ({ 
-  onClick, 
-  isActive = false, 
+const MenuButton = ({
+  onClick,
+  isActive = false,
   disabled = false,
   title,
-  children 
-}: { 
+  children
+}: {
   onClick: () => void
   isActive?: boolean
   disabled?: boolean
   title: string
-  children: React.ReactNode 
+  children: React.ReactNode
 }) => (
   <button
     onClick={onClick}
     disabled={disabled}
     title={title}
     className={`p-2 rounded-lg transition-all ${
-      isActive 
-        ? 'bg-gray-900 text-white' 
-        : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+      isActive
+        ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#333] hover:text-gray-900 dark:hover:text-gray-100'
     } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
   >
     {children}
   </button>
 )
 
-const Divider = () => <div className="w-px h-6 bg-gray-300 mx-1" />
+const Divider = () => <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
 
 const CreatePost = () => {
   const navigate = useNavigate()
@@ -557,16 +557,16 @@ const CreatePost = () => {
     <div className="min-h-screen">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-6">
-        <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+        <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-[#252525] text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-300 dark:hover:bg-[#333] transition-colors">
             <Eye size={18} />
             Preview
           </button>
-          <button onClick={handlePublish} className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors">
+          <button onClick={handlePublish} className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
             <Save size={18} />
             Publish
           </button>
@@ -593,13 +593,13 @@ const CreatePost = () => {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            className={`flex flex-col items-center justify-center h-56 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${isDragging ? 'border-gray-900 bg-gray-100' : 'border-gray-300 hover:border-gray-400 bg-white/50'}`}
+            className={`flex flex-col items-center justify-center h-56 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${isDragging ? 'border-gray-900 dark:border-gray-100 bg-gray-100 dark:bg-[#252525]' : 'border-gray-300 dark:border-[#333] hover:border-gray-400 dark:hover:border-gray-500 bg-white/50 dark:bg-[#1a1a1a]/50'}`}
           >
-            <div className={`p-4 rounded-full mb-3 transition-colors ${isDragging ? 'bg-gray-200' : 'bg-gray-100'}`}>
-              <Upload size={28} className="text-gray-500" />
+            <div className={`p-4 rounded-full mb-3 transition-colors ${isDragging ? 'bg-gray-200 dark:bg-[#333]' : 'bg-gray-100 dark:bg-[#252525]'}`}>
+              <Upload size={28} className="text-gray-500 dark:text-gray-400" />
             </div>
-            <span className="text-gray-700 font-medium mb-1">{isDragging ? 'Drop image here' : 'Click to upload or drag and drop'}</span>
-            <span className="text-gray-400 text-sm">PNG, JPG, GIF up to 10MB</span>
+            <span className="text-gray-700 dark:text-gray-300 font-medium mb-1">{isDragging ? 'Drop image here' : 'Click to upload or drag and drop'}</span>
+            <span className="text-gray-400 dark:text-gray-500 text-sm">PNG, JPG, GIF up to 10MB</span>
           </div>
         )}
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileSelect(file) }} />
@@ -614,7 +614,7 @@ const CreatePost = () => {
         placeholder="Post title..."
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full text-4xl font-bold bg-transparent border-0 focus:outline-none focus:ring-0 placeholder-gray-400 mb-4"
+        className="w-full text-4xl font-bold bg-transparent border-0 focus:outline-none focus:ring-0 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 mb-4"
       />
 
       {/* Technologies */}
@@ -628,16 +628,16 @@ const CreatePost = () => {
           value={techInput}
           onChange={(e) => setTechInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTech())}
-          className="px-3 py-1.5 bg-white/60 rounded-full text-sm border-0 focus:ring-2 focus:ring-gray-300 w-32"
+          className="px-3 py-1.5 bg-white/60 dark:bg-[#252525] rounded-full text-sm border-0 focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 w-32 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
         />
       </motion.div>
 
       {/* Main Content Area */}
       <div className="flex gap-6">
         {/* Editor Container */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex-1 bg-white/60 backdrop-blur-xl rounded-3xl shadow-sm overflow-hidden">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex-1 bg-white/60 dark:bg-[#1a1a1a]/80 backdrop-blur-xl rounded-3xl shadow-sm overflow-hidden">
           {/* Toolbar */}
-          <div className="flex flex-wrap items-center gap-1 p-3 border-b border-gray-200 bg-gray-50/50">
+          <div className="flex flex-wrap items-center gap-1 p-3 border-b border-gray-200 dark:border-[#333] bg-gray-50/50 dark:bg-[#252525]/50">
             <MenuButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo"><Undo size={18} /></MenuButton>
             <MenuButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo"><Redo size={18} /></MenuButton>
             <Divider />
@@ -646,7 +646,7 @@ const CreatePost = () => {
             <div className="relative">
               <button
                 onClick={() => { setShowFontFamily(!showFontFamily); setShowFontSize(false); setShowColorPicker(false) }}
-                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all text-sm min-w-[100px]"
+                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#333] hover:text-gray-900 dark:hover:text-gray-100 transition-all text-sm min-w-[100px]"
                 title="Font Family"
               >
                 <Type size={16} />
@@ -656,7 +656,7 @@ const CreatePost = () => {
                 <ChevronDown size={14} />
               </button>
               {showFontFamily && (
-                <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl z-50 border py-1 min-w-[160px] max-h-64 overflow-y-auto">
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl z-50 border border-gray-200 dark:border-[#333] py-1 min-w-[160px] max-h-64 overflow-y-auto">
                   {fontFamilies.map((font) => (
                     <button
                       key={font.name}
@@ -668,7 +668,7 @@ const CreatePost = () => {
                         }
                         setShowFontFamily(false)
                       }}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors"
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-700 dark:text-gray-300 transition-colors"
                       style={{ fontFamily: font.value || 'inherit' }}
                     >
                       {font.name}
@@ -682,7 +682,7 @@ const CreatePost = () => {
             <div className="relative">
               <button
                 onClick={() => { setShowFontSize(!showFontSize); setShowFontFamily(false); setShowColorPicker(false) }}
-                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all text-sm min-w-[70px]"
+                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#333] hover:text-gray-900 dark:hover:text-gray-100 transition-all text-sm min-w-[70px]"
                 title="Font Size"
               >
                 <ALargeSmall size={16} />
@@ -690,7 +690,7 @@ const CreatePost = () => {
                 <ChevronDown size={14} />
               </button>
               {showFontSize && (
-                <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-xl z-50 border py-1 min-w-[100px] max-h-64 overflow-y-auto">
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl z-50 border border-gray-200 dark:border-[#333] py-1 min-w-[100px] max-h-64 overflow-y-auto">
                   {fontSizes.map((size) => (
                     <button
                       key={size.label}
@@ -702,7 +702,7 @@ const CreatePost = () => {
                         }
                         setShowFontSize(false)
                       }}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors"
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-700 dark:text-gray-300 transition-colors"
                     >
                       {size.label}
                     </button>
@@ -741,17 +741,17 @@ const CreatePost = () => {
             <div className="relative">
               <MenuButton onClick={() => { setShowColorPicker(!showColorPicker); setShowFontFamily(false); setShowFontSize(false) }} title="Text Color"><Palette size={18} /></MenuButton>
               {showColorPicker && (
-                <div className="absolute top-full left-0 mt-2 p-3 bg-white rounded-xl shadow-xl z-50 border">
-                  <div className="text-xs text-gray-500 mb-2">Text Color</div>
+                <div className="absolute top-full left-0 mt-2 p-3 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl z-50 border border-gray-200 dark:border-[#333]">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Text Color</div>
                   <div className="flex gap-1 mb-3">
                     {colors.map((color) => (
-                      <button key={color} onClick={() => { editor.chain().focus().setColor(color).run(); setShowColorPicker(false) }} className="w-6 h-6 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-transform" style={{ backgroundColor: color }} />
+                      <button key={color} onClick={() => { editor.chain().focus().setColor(color).run(); setShowColorPicker(false) }} className="w-6 h-6 rounded-full border-2 border-white dark:border-[#333] shadow-sm hover:scale-110 transition-transform" style={{ backgroundColor: color }} />
                     ))}
                   </div>
-                  <div className="text-xs text-gray-500 mb-2">Highlight</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Highlight</div>
                   <div className="flex gap-1">
                     {highlightColors.map((color) => (
-                      <button key={color} onClick={() => { editor.chain().focus().toggleHighlight({ color }).run(); setShowColorPicker(false) }} className="w-6 h-6 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-transform" style={{ backgroundColor: color }} />
+                      <button key={color} onClick={() => { editor.chain().focus().toggleHighlight({ color }).run(); setShowColorPicker(false) }} className="w-6 h-6 rounded-full border-2 border-white dark:border-[#333] shadow-sm hover:scale-110 transition-transform" style={{ backgroundColor: color }} />
                     ))}
                   </div>
                 </div>
@@ -771,13 +771,13 @@ const CreatePost = () => {
               </>
             )}
           </div>
-          <EditorContent editor={editor} className="min-h-[500px]" />
+          <EditorContent editor={editor} className="min-h-[500px] dark:text-gray-100" />
         </motion.div>
 
         {/* Code Files Sidebar */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="w-72 shrink-0">
-          <div className="bg-[#252526] rounded-xl overflow-hidden sticky top-8">
-            <div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-[#3d3d3d]">
+          <div className="bg-[#1a1a1a] rounded-xl overflow-hidden sticky top-8 border border-[#333]">
+            <div className="flex items-center justify-between px-4 py-3 bg-[#0f0f0f] border-b border-[#333]">
               <span className="text-sm font-medium text-gray-300">Project Files</span>
               <div className="flex items-center gap-2">
                 <button onClick={() => folderInputRef.current?.click()} className="text-xs text-gray-400 hover:text-white flex items-center gap-1" title="Upload Folder">
@@ -796,7 +796,7 @@ const CreatePost = () => {
               onDrop={handleCodeFileDrop}
               onDragOver={(e) => { e.preventDefault(); setIsFileDragging(true) }}
               onDragLeave={() => setIsFileDragging(false)}
-              className={`p-3 border-b border-[#3d3d3d] transition-colors ${isFileDragging ? 'bg-[#37373d]' : ''}`}
+              className={`p-3 border-b border-[#333] transition-colors ${isFileDragging ? 'bg-[#252525]' : ''}`}
             >
               {codeFiles.length === 0 ? (
                 <div className="text-center py-6">
@@ -855,12 +855,12 @@ const CreatePost = () => {
       {/* Link Modal */}
       {showLinkModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowLinkModal(false)}>
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-4">Add Link</h3>
-            <input type="url" placeholder="https://example.com" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-300 focus:border-transparent mb-4" autoFocus />
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-md shadow-xl border border-gray-200 dark:border-[#333]" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Add Link</h3>
+            <input type="url" placeholder="https://example.com" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#333] focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent mb-4 bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500" autoFocus />
             <div className="flex gap-3 justify-end">
-              <button onClick={() => setShowLinkModal(false)} className="px-4 py-2 text-gray-600 hover:text-gray-900">Cancel</button>
-              <button onClick={addLink} className="px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800">Add Link</button>
+              <button onClick={() => setShowLinkModal(false)} className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">Cancel</button>
+              <button onClick={addLink} className="px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200">Add Link</button>
             </div>
           </motion.div>
         </div>
@@ -869,9 +869,9 @@ const CreatePost = () => {
       {/* Image Modal */}
       {showImageModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowImageModal(false)}>
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-4">Add Inline Image</h3>
-            
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-lg shadow-xl border border-gray-200 dark:border-[#333]" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Add Inline Image</h3>
+
             {/* File Upload Area */}
             <div
               onClick={() => inlineImageInputRef.current?.click()}
@@ -881,11 +881,11 @@ const CreatePost = () => {
                 if (file) handleInlineImageUpload(file)
               }}
               onDragOver={(e) => e.preventDefault()}
-              className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all mb-4"
+              className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 dark:border-[#333] rounded-xl cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-[#252525] transition-all mb-4"
             >
               <Upload size={32} className="text-gray-400 mb-2" />
-              <span className="text-gray-600 font-medium">Click to upload or drag & drop</span>
-              <span className="text-gray-400 text-sm mt-1">PNG, JPG, GIF, WebP</span>
+              <span className="text-gray-600 dark:text-gray-300 font-medium">Click to upload or drag & drop</span>
+              <span className="text-gray-400 dark:text-gray-500 text-sm mt-1">PNG, JPG, GIF, WebP</span>
             </div>
             <input
               ref={inlineImageInputRef}
@@ -899,16 +899,16 @@ const CreatePost = () => {
             />
 
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-gray-400 text-sm">or paste URL</span>
-              <div className="flex-1 h-px bg-gray-200" />
+              <div className="flex-1 h-px bg-gray-200 dark:bg-[#333]" />
+              <span className="text-gray-400 dark:text-gray-500 text-sm">or paste URL</span>
+              <div className="flex-1 h-px bg-gray-200 dark:bg-[#333]" />
             </div>
 
-            <input type="url" placeholder="https://example.com/image.jpg" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-300 focus:border-transparent mb-4" />
-            
+            <input type="url" placeholder="https://example.com/image.jpg" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-[#333] focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent mb-4 bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500" />
+
             <div className="flex gap-3 justify-end">
-              <button onClick={() => { setShowImageModal(false); setImageUrl('') }} className="px-4 py-2 text-gray-600 hover:text-gray-900">Cancel</button>
-              <button onClick={addImage} disabled={!imageUrl} className="px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">Add from URL</button>
+              <button onClick={() => { setShowImageModal(false); setImageUrl('') }} className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">Cancel</button>
+              <button onClick={addImage} disabled={!imageUrl} className="px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">Add from URL</button>
             </div>
           </motion.div>
         </div>

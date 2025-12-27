@@ -136,28 +136,28 @@ const Login = () => {
   // Verification screen
   if (showVerification) {
     return (
-      <div className="min-h-screen bg-[#e5e7eb] flex items-center justify-center p-8">
+      <div className="min-h-screen bg-[#e5e7eb] dark:bg-[#0f0f0f] flex items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white rounded-2xl p-8 shadow-sm"
+          className="w-full max-w-md bg-white dark:bg-[#1a1a1a] rounded-2xl p-8 shadow-sm"
         >
           <button
             onClick={() => setShowVerification(false)}
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-6 transition-colors"
           >
             <ArrowLeft size={18} />
             Back to login
           </button>
 
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail size={28} className="text-gray-600" />
+            <div className="w-16 h-16 bg-gray-100 dark:bg-[#252525] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail size={28} className="text-gray-600 dark:text-gray-300" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Verify your email</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Verify your email</h1>
+            <p className="text-gray-600 dark:text-gray-400">
               We sent a verification code to<br />
-              <span className="font-medium text-gray-900">{verificationEmail}</span>
+              <span className="font-medium text-gray-900 dark:text-gray-100">{verificationEmail}</span>
             </p>
           </div>
 
@@ -165,7 +165,7 @@ const Login = () => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-200 rounded-xl text-red-700"
+              className="flex items-center gap-2 p-4 mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400"
             >
               <AlertCircle size={18} />
               <span className="text-sm">{error}</span>
@@ -173,7 +173,7 @@ const Login = () => {
           )}
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">
               Enter verification code
             </label>
             <div className="flex gap-2 justify-center" onPaste={handleCodePaste}>
@@ -187,7 +187,7 @@ const Login = () => {
                   value={digit}
                   onChange={(e) => handleCodeChange(index, e.target.value)}
                   onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                  className="w-12 h-14 text-center text-2xl font-bold bg-gray-50 border border-gray-200 rounded-xl focus:border-gray-400 focus:outline-none transition-colors"
+                  className="w-12 h-14 text-center text-2xl font-bold bg-gray-50 dark:bg-[#252525] border border-gray-200 dark:border-[#333] rounded-xl focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none transition-colors text-gray-900 dark:text-gray-100"
                 />
               ))}
             </div>
@@ -197,7 +197,7 @@ const Login = () => {
             onClick={handleVerify}
             disabled={verifyLoading || verificationCode.join('').length !== 6}
             whileTap={{ scale: 0.98 }}
-            className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+            className="w-full py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
           >
             {verifyLoading ? (
               <span className="flex items-center justify-center gap-2">
@@ -210,11 +210,11 @@ const Login = () => {
           </motion.button>
 
           <div className="text-center">
-            <span className="text-gray-600 text-sm">Didn't receive the code? </span>
+            <span className="text-gray-600 dark:text-gray-400 text-sm">Didn't receive the code? </span>
             <button
               onClick={handleResendCode}
               disabled={resendLoading || resendCooldown > 0}
-              className="text-gray-900 font-medium text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-gray-900 dark:text-gray-100 font-medium text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {resendLoading ? (
                 'Sending...'
@@ -231,7 +231,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb] flex">
+    <div className="min-h-screen bg-[#e5e7eb] dark:bg-[#0f0f0f] flex">
       {/* Left Panel - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <motion.div
@@ -242,7 +242,7 @@ const Login = () => {
         >
           <NavLink
             to="/"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-8 transition-colors"
           >
             <ArrowLeft size={18} />
             Back to home
@@ -252,15 +252,15 @@ const Login = () => {
             <img
               src="/images/black-logo.png"
               alt="Stack-it"
-              className="w-12 h-12 object-contain"
+              className="w-12 h-12 object-contain dark:invert"
             />
-            <span className="text-2xl font-semibold text-gray-900">
+            <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
               Stack-it
             </span>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
-          <p className="text-gray-600 mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Welcome back</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
             Sign in to continue to your account
           </p>
 
@@ -268,7 +268,7 @@ const Login = () => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-2 p-4 mb-6 bg-red-50 border border-red-200 rounded-xl text-red-700"
+              className="flex items-center gap-2 p-4 mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400"
             >
               <AlertCircle size={18} />
               <span className="text-sm">{error}</span>
@@ -277,7 +277,7 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <div className="relative">
@@ -290,14 +290,14 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full pl-11 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition-colors"
+                  className="w-full pl-11 pr-4 py-3 bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none transition-colors text-gray-900 dark:text-gray-100 placeholder-gray-400"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -310,13 +310,13 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-12 py-3 bg-white rounded-xl border border-gray-200 focus:border-gray-400 focus:outline-none transition-colors"
+                  className="w-full pl-11 pr-12 py-3 bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none transition-colors text-gray-900 dark:text-gray-100 placeholder-gray-400"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -327,11 +327,11 @@ const Login = () => {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-500"
+                  className="w-4 h-4 rounded border-gray-300 dark:border-[#333] text-gray-900 dark:text-gray-100 focus:ring-gray-500 dark:bg-[#252525]"
                 />
-                <span className="text-sm text-gray-600">Remember me</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-gray-600 hover:text-gray-900">
+              <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
                 Forgot password?
               </a>
             </div>
@@ -340,7 +340,7 @@ const Login = () => {
               type="submit"
               disabled={isLoading}
               whileTap={{ scale: 0.98 }}
-              className="w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -354,10 +354,10 @@ const Login = () => {
           </form>
 
           <div className="mt-8 text-center">
-            <span className="text-gray-600">Don't have an account? </span>
+            <span className="text-gray-600 dark:text-gray-400">Don't have an account? </span>
             <NavLink
               to="/register"
-              className="text-gray-900 font-medium hover:underline"
+              className="text-gray-900 dark:text-gray-100 font-medium hover:underline"
             >
               Sign up
             </NavLink>

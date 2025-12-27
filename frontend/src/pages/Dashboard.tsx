@@ -91,7 +91,7 @@ const CompactCard = ({ post, index }: { post: Post; index: number }) => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: index * 0.1 }}
         whileHover={{ x: 4 }}
-        className="flex gap-4 p-3 rounded-xl hover:bg-white/60 transition-all cursor-pointer group"
+        className="flex gap-4 p-3 rounded-xl hover:bg-white/60 dark:hover:bg-[#252525]/60 transition-all cursor-pointer group"
       >
         <img
           src={post.coverImage}
@@ -101,16 +101,16 @@ const CompactCard = ({ post, index }: { post: Post; index: number }) => {
           className="w-20 h-20 rounded-xl object-cover shrink-0"
         />
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 group-hover:text-gray-700 mb-1">
+          <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm line-clamp-2 group-hover:text-gray-700 dark:group-hover:text-gray-300 mb-1">
             {post.title}
           </h4>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             <span>{post.author.username}</span>
             <span>•</span>
             <span className="flex items-center gap-1"><Heart size={12} /> {post.favorites}</span>
           </div>
         </div>
-        <ChevronRight size={16} className="text-gray-400 self-center opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ChevronRight size={16} className="text-gray-400 dark:text-gray-500 self-center opacity-0 group-hover:opacity-100 transition-opacity" />
       </motion.div>
     </NavLink>
   )
@@ -205,8 +205,8 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-10 h-10 border-2 border-gray-300 border-t-gray-900 rounded-full mx-auto mb-4" />
-          <p className="text-gray-500">Loading dashboard...</p>
+          <div className="animate-spin w-10 h-10 border-2 border-gray-300 dark:border-[#333] border-t-gray-900 dark:border-t-gray-100 rounded-full mx-auto mb-4" />
+          <p className="text-gray-500 dark:text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     )
@@ -221,15 +221,15 @@ const Dashboard = () => {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
             Welcome back, {user?.username || 'Developer'}
           </h1>
-          <p className="text-gray-500">Here's what's happening in your dev world</p>
+          <p className="text-gray-500 dark:text-gray-400">Here's what's happening in your dev world</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <div className="text-sm text-gray-500">Today</div>
-            <div className="font-semibold text-gray-900">
+            <div className="text-sm text-gray-500 dark:text-gray-400">Today</div>
+            <div className="font-semibold text-gray-900 dark:text-gray-100">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </div>
           </div>
@@ -246,10 +246,10 @@ const Dashboard = () => {
           {/* Recent Posts Grid */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <Clock size={20} /> Recent Posts
               </h2>
-              <NavLink to="/community" className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1">
+              <NavLink to="/community" className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-1">
                 View all <ChevronRight size={16} />
               </NavLink>
             </div>
@@ -267,13 +267,13 @@ const Dashboard = () => {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/40"
+            className="bg-white/60 dark:bg-[#1a1a1a]/80 backdrop-blur-sm rounded-2xl p-5 border border-white/40 dark:border-[#333]/40"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2">
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <Zap size={18} className="text-yellow-500" /> Trending
               </h3>
-              <span className="text-xs text-gray-500">This week</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">This week</span>
             </div>
             <div className="space-y-1">
               {trendingPosts.map((post, index) => (
@@ -287,7 +287,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white"
+            className="bg-[#1a1a1a] rounded-2xl p-6 text-white border border-[#333]"
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
@@ -314,9 +314,9 @@ const Dashboard = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/40"
+            className="bg-white/60 dark:bg-[#1a1a1a]/80 backdrop-blur-sm rounded-2xl p-5 border border-white/40 dark:border-[#333]/40"
           >
-            <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+            <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4">
               <Star size={18} className="text-orange-500" /> Popular Tech
             </h3>
             <div className="flex flex-wrap gap-2">

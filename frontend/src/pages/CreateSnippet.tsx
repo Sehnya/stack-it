@@ -26,10 +26,10 @@ const CreateSnippet = () => {
   if (!user) {
     return (
       <div className="max-w-2xl mx-auto text-center py-12">
-        <Code2 size={48} className="mx-auto text-gray-300 mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Sign in to share snippets</h1>
-        <p className="text-gray-600 mb-4">You need to be logged in to create snippets.</p>
-        <NavLink to="/login" className="text-blue-600 hover:underline">Sign in</NavLink>
+        <Code2 size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Sign in to share snippets</h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">You need to be logged in to create snippets.</p>
+        <NavLink to="/login" className="text-blue-600 dark:text-blue-400 hover:underline">Sign in</NavLink>
       </div>
     )
   }
@@ -87,7 +87,7 @@ const CreateSnippet = () => {
       >
         <NavLink
           to="/community"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
         >
           <ArrowLeft size={20} />
           <span>Back to Community</span>
@@ -97,23 +97,23 @@ const CreateSnippet = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+        className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#333] overflow-hidden"
       >
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
-          <Code2 size={24} className="text-gray-700" />
-          <h1 className="text-xl font-bold text-gray-900">Share a Code Snippet</h1>
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-[#333] flex items-center gap-3">
+          <Code2 size={24} className="text-gray-700 dark:text-gray-300" />
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Share a Code Snippet</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -121,29 +121,29 @@ const CreateSnippet = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., React useDebounce hook"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-[#333] rounded-lg focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               maxLength={200}
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description <span className="text-gray-400">(optional)</span>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Description <span className="text-gray-400 dark:text-gray-500">(optional)</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of what this snippet does..."
               rows={2}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 resize-none"
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-[#333] rounded-lg focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 resize-none bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               maxLength={500}
             />
           </div>
 
           {/* Language */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Language <span className="text-red-500">*</span>
             </label>
             <div className="flex flex-wrap gap-2">
@@ -157,12 +157,12 @@ const CreateSnippet = () => {
                     type="button"
                     onClick={() => setLanguage(lang)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                      isSelected 
-                        ? 'ring-2 ring-gray-900 ring-offset-1' 
-                        : 'hover:bg-gray-100'
+                      isSelected
+                        ? 'ring-2 ring-gray-900 dark:ring-gray-100 ring-offset-1 dark:ring-offset-[#1a1a1a]'
+                        : 'hover:bg-gray-100 dark:hover:bg-[#252525] text-gray-700 dark:text-gray-300'
                     }`}
-                    style={isSelected ? { 
-                      backgroundColor: colors.bg + '20', 
+                    style={isSelected ? {
+                      backgroundColor: colors.bg + '20',
                       color: colors.bg,
                     } : {}}
                   >
@@ -176,7 +176,7 @@ const CreateSnippet = () => {
 
           {/* Code */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Code <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -191,8 +191,8 @@ const CreateSnippet = () => {
 
           {/* Tags */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tags <span className="text-gray-400">(up to 5)</span>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tags <span className="text-gray-400 dark:text-gray-500">(up to 5)</span>
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {tags.map((tag) => {
@@ -200,14 +200,14 @@ const CreateSnippet = () => {
                 return (
                   <span
                     key={tag}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-[#252525] text-gray-700 dark:text-gray-300 rounded-full text-sm"
                   >
                     {icon && <img src={icon} alt="" className="w-3.5 h-3.5" />}
                     {tag}
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="ml-1 text-gray-400 hover:text-gray-600"
+                      className="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                       <X size={14} />
                     </button>
@@ -223,12 +223,12 @@ const CreateSnippet = () => {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                   placeholder="Add a tag (e.g., react, hooks)"
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400"
+                  className="flex-1 px-3 py-2 border border-gray-200 dark:border-[#333] rounded-lg text-sm focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
                 <button
                   type="button"
                   onClick={handleAddTag}
-                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 bg-gray-100 dark:bg-[#252525] text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
                 >
                   <Plus size={18} />
                 </button>
@@ -237,17 +237,17 @@ const CreateSnippet = () => {
           </div>
 
           {/* Submit */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-[#333]">
             <NavLink
               to="/community"
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
               Cancel
             </NavLink>
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 transition-colors"
             >
               <Save size={18} />
               {saving ? 'Saving...' : 'Share Snippet'}

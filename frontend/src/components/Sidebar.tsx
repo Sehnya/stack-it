@@ -154,7 +154,7 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
             <img
               src="/images/black-logo.png"
               alt="Logo"
-              className="w-14 h-14 object-contain"
+              className="w-14 h-14 object-contain dark:invert"
             />
           </div>
 
@@ -256,7 +256,7 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
               <img
                 src={user?.avatar || '/images/Ellipse-2.png'}
                 alt="Avatar"
-                className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
+                className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-[#333]"
               />
             </div>
             <button
@@ -287,9 +287,9 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
             <img
               src="/images/black-logo.png"
               alt="Logo"
-              className="w-12 h-12 object-contain"
+              className="w-12 h-12 object-contain dark:invert"
             />
-            <span className="text-lg font-semibold text-gray-900">Stack-it</span>
+            <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">Stack-it</span>
           </div>
 
           <nav className="sidebar-menu-nav">
@@ -463,7 +463,7 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
               <img
                 src={user?.avatar || '/images/Ellipse-2.png'}
                 alt="Avatar"
-                className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
+                className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-[#333]"
               />
               <div className="sidebar-menu-user-info">
                 <span className="sidebar-menu-user-name">

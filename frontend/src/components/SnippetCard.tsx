@@ -84,7 +84,7 @@ export const SnippetCard = ({ snippet, onUpdate, compact = false }: SnippetCardP
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all group"
+      className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] overflow-hidden hover:shadow-lg transition-all group"
     >
       {/* Code Preview */}
       <div className="relative">
@@ -130,13 +130,13 @@ export const SnippetCard = ({ snippet, onUpdate, compact = false }: SnippetCardP
       {/* Content */}
       <div className="p-4">
         <NavLink to={`/snippet/${snippet.id}`}>
-          <h3 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-1 mb-1">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors line-clamp-1 mb-1">
             {snippet.title}
           </h3>
         </NavLink>
-        
+
         {snippet.description && !compact && (
-          <p className="text-sm text-gray-500 line-clamp-2 mb-2">{snippet.description}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">{snippet.description}</p>
         )}
 
         {/* Tags */}
@@ -147,7 +147,7 @@ export const SnippetCard = ({ snippet, onUpdate, compact = false }: SnippetCardP
               <NavLink
                 key={tag}
                 to={`/tech/${encodeURIComponent(tag)}`}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-[#252525] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 {tagIcon && <img src={tagIcon} alt="" className="w-3 h-3" />}
                 {tag}
@@ -177,13 +177,13 @@ export const SnippetCard = ({ snippet, onUpdate, compact = false }: SnippetCardP
                       ? 'text-yellow-400 fill-yellow-400'
                       : star <= localSnippet.rating.average
                       ? 'text-yellow-400 fill-yellow-400/50'
-                      : 'text-gray-300'
+                      : 'text-gray-300 dark:text-gray-600'
                   }`}
                 />
               </button>
             ))}
           </div>
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {localSnippet.rating.average.toFixed(1)}
           </span>
           <span className="text-xs text-gray-400">
@@ -193,9 +193,9 @@ export const SnippetCard = ({ snippet, onUpdate, compact = false }: SnippetCardP
 
         {/* Footer */}
         <div className="flex items-center justify-between">
-          <NavLink 
+          <NavLink
             to={`/profile/${snippet.author.id}`}
-            className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-900"
+            className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <img src={snippet.author.avatar} alt="" className="w-5 h-5 rounded-full" />
             <span className="font-medium">{snippet.author.username}</span>
@@ -203,7 +203,7 @@ export const SnippetCard = ({ snippet, onUpdate, compact = false }: SnippetCardP
             <span>{timeAgo(snippet.createdAt)}</span>
           </NavLink>
 
-          <div className="flex items-center gap-3 text-xs text-gray-500">
+          <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
             <button
               onClick={handleFavorite}
               disabled={!user || isFavoriting}
