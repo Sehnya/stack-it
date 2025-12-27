@@ -329,7 +329,7 @@ const Dashboard = () => {
                   </p>
                 </div>
               ) : (
-                feedItems.map((item, index) => (
+                feedItems.map((item) => (
                   <FeedCard key={`${item.type}-${item.id}-${item.repostId || ''}`} item={item} />
                 ))
               )}
