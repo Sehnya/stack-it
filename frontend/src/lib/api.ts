@@ -67,6 +67,7 @@ export interface Post {
   files: PostFile[]
   likes: number
   favorites: number
+  reposts?: number
   comments?: number
 }
 
@@ -188,6 +189,56 @@ export interface FollowingFeedUser {
   avatar: string
   unreadCount: number
   followedAt: string
+}
+
+export interface FeedItem {
+  type: 'post' | 'repost'
+  id: string
+  title: string
+  excerpt: string
+  content: string
+  coverImage?: string
+  technologies: string[]
+  viewCount: number
+  createdAt: string
+  author: {
+    id: string
+    username: string
+    avatar: string
+  }
+  favorites: number
+  reposts: number
+  comments: number
+  // Repost-specific fields
+  repostId?: number
+  repostedBy?: {
+    id: string
+    username: string
+    avatar: string
+  }
+  repostedAt?: string
+  quote?: string
+}
+
+export interface RepostStatus {
+  reposted: boolean
+  quote: string | null
+}
+
+export interface Comment {
+  id: string
+  content: string
+  createdAt: string
+  updatedAt: string
+  author: {
+    id: string
+    username: string
+    avatar: string
+  }
+  likes: number
+  liked: boolean
+  replyCount: number
+  replies?: Comment[]
 }
 
 export const api = {
@@ -465,5 +516,71 @@ export const api = {
 
     getFavorites: () =>
       request<Snippet[]>('/api/snippets/favorites/me'),
+  },
+
+  reposts: {
+    toggle: (postId: string, quote?: string) =>
+      request<{ reposted: boolean; repostId?: number }>(`/api/reposts/${postId}`, {
+        method: 'POST',
+        body: JSON.stringify({ quote }),
+      }),
+
+    updateQuote: (postId: string, quote?: string) =>
+      request<{ success: boolean }>(`/api/reposts/${postId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ quote }),
+      }),
+
+    getStatus: (postId: string) =>
+      request<RepostStatus>(`/api/reposts/${postId}/status`),
+
+    getForPost: (postId: string, limit = 20, offset = 0) =>
+      request<{ id: number; quote: string | null; createdAt: string; user: { id: number; username: string; avatar: string } }[]>(
+        `/api/reposts/${postId}?limit=${limit}&offset=${offset}`
+      ),
+
+    getCount: (postId: string) =>
+      request<{ count: number }>(`/api/reposts/${postId}/count`),
+  },
+
+  feed: {
+    getPersonalized: (limit = 20, offset = 0) =>
+      request<FeedItem[]>(`/api/feed?limit=${limit}&offset=${offset}`),
+
+    getUserFeed: (userId: string, limit = 20, offset = 0) =>
+      request<FeedItem[]>(`/api/feed/user/${userId}?limit=${limit}&offset=${offset}`),
+
+    getDiscover: (limit = 20, offset = 0) =>
+      request<FeedItem[]>(`/api/feed/discover?limit=${limit}&offset=${offset}`),
+  },
+
+  comments: {
+    getForPost: (postId: string, sort: 'top' | 'newest' | 'oldest' = 'top', limit = 50, offset = 0) =>
+      request<Comment[]>(`/api/comments/post/${postId}?sort=${sort}&limit=${limit}&offset=${offset}`),
+
+    getReplies: (commentId: string, limit = 20, offset = 0) =>
+      request<Comment[]>(`/api/comments/${commentId}/replies?limit=${limit}&offset=${offset}`),
+
+    create: (postId: string, content: string, parentId?: number) =>
+      request<Comment>(`/api/comments/post/${postId}`, {
+        method: 'POST',
+        body: JSON.stringify({ content, parentId }),
+      }),
+
+    update: (commentId: string, content: string) =>
+      request<Comment>(`/api/comments/${commentId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ content }),
+      }),
+
+    delete: (commentId: string) =>
+      request<{ message: string }>(`/api/comments/${commentId}`, {
+        method: 'DELETE',
+      }),
+
+    like: (commentId: string) =>
+      request<{ liked: boolean }>(`/api/comments/${commentId}/like`, {
+        method: 'POST',
+      }),
   },
 }

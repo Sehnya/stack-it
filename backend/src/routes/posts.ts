@@ -23,6 +23,7 @@ function formatPost(post: any): any {
     files: post.files || [],
     likes: post._count?.likes || 0,
     favorites: post._count?.favorites || 0,
+    reposts: post._count?.reposts || 0,
     comments: post._count?.comments || 0,
   }
 }
@@ -45,6 +46,7 @@ function formatPostSummary(post: any): any {
     files: post.files ? post.files.map((f: any) => ({ id: f.id, name: f.name, language: f.language })) : [],
     likes: post._count?.likes || 0,
     favorites: post._count?.favorites || 0,
+    reposts: post._count?.reposts || 0,
     comments: post._count?.comments || 0,
   }
 }
@@ -74,7 +76,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
               createdAt: true,
               author: { select: { id: true, username: true, profilePhoto: true } },
               files: { select: { id: true, name: true, language: true } },
-              _count: { select: { favorites: true, likes: true, comments: true } },
+              _count: { select: { favorites: true, likes: true, comments: true, reposts: true } },
             },
           },
         },
@@ -181,7 +183,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
           createdAt: true,
           author: { select: { id: true, username: true, profilePhoto: true } },
           files: { select: { id: true, name: true, language: true } },
-          _count: { select: { favorites: true, likes: true, comments: true } },
+          _count: { select: { favorites: true, likes: true, comments: true, reposts: true } },
         },
       })
       // Filter posts that contain the technology (case-insensitive)
@@ -213,7 +215,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
           createdAt: true,
           author: { select: { id: true, username: true, profilePhoto: true } },
           files: { select: { id: true, name: true, language: true } },
-          _count: { select: { favorites: true, likes: true, comments: true } },
+          _count: { select: { favorites: true, likes: true, comments: true, reposts: true } },
         },
       })
 
@@ -262,7 +264,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         },
       })
       set.status = 201
-      return formatPost({ ...post, _count: { favorites: 0, likes: 0, comments: 0 } })
+      return formatPost({ ...post, _count: { favorites: 0, likes: 0, comments: 0, reposts: 0 } })
     } catch (error) {
       log.posts.error("Error creating post", {}, error as Error)
       set.status = 500
@@ -280,7 +282,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         include: {
           author: { select: { id: true, username: true, profilePhoto: true } },
           files: true,
-          _count: { select: { favorites: true, likes: true, comments: true } },
+          _count: { select: { favorites: true, likes: true, comments: true, reposts: true } },
         },
       })
       if (!post) {
@@ -358,7 +360,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         include: {
           author: { select: { id: true, username: true, profilePhoto: true } },
           files: true,
-          _count: { select: { favorites: true, likes: true, comments: true } },
+          _count: { select: { favorites: true, likes: true, comments: true, reposts: true } },
         },
       })
       return formatPost(post)

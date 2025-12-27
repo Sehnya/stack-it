@@ -13,7 +13,7 @@ import {
   Quote, Undo, Redo, Link as LinkIcon, ArrowLeft, Send, X,
   HelpCircle, Sparkles, MessageCircle, MessageSquare,
 } from 'lucide-react'
-import { TechTag } from '../components/TechTag'
+import { TechVersionInput, techsToStrings } from '../components/TechVersionInput'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
 
@@ -44,8 +44,7 @@ const CreateDiscussion = () => {
   useAuth()
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('general')
-  const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState('')
+  const [tags, setTags] = useState<{ name: string; version?: string }[]>([])
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -72,15 +71,6 @@ const CreateDiscussion = () => {
     }
   }, [editor, linkUrl])
 
-  const addTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim().toLowerCase())) {
-      setTags([...tags, tagInput.trim().toLowerCase()])
-      setTagInput('')
-    }
-  }
-
-  const removeTag = (tag: string) => setTags(tags.filter(t => t !== tag))
-
   const handleSubmit = async () => {
     if (!title.trim()) return alert('Please add a title')
     if (!editor) return
@@ -92,7 +82,7 @@ const CreateDiscussion = () => {
       title: title.trim(),
       content,
       category,
-      tags,
+      tags: techsToStrings(tags),
     })
 
     setIsSubmitting(false)
@@ -160,19 +150,12 @@ const CreateDiscussion = () => {
       {/* Tags */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-6">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Related Technologies</label>
-        <div className="flex flex-wrap items-center gap-2">
-          {tags.map((tag) => (
-            <TechTag key={tag} tech={tag} size="md" onRemove={() => removeTag(tag)} />
-          ))}
-          <input
-            type="text"
-            placeholder="Add tag..."
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-            className="px-3 py-1.5 bg-gray-100 dark:bg-[#252525] rounded-full text-sm border-0 focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 w-28 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-          />
-        </div>
+        <TechVersionInput
+          technologies={tags}
+          onChange={setTags}
+          placeholder="Add technology (press Enter)..."
+          maxTags={10}
+        />
       </motion.div>
 
       {/* Editor */}

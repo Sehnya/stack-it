@@ -144,6 +144,7 @@ const darkenColor = (hex: string, percent: number): string => {
 // Custom local icons (override CDN)
 const localIcons: Record<string, string> = {
   bun: '/icons/bun.svg',
+  elysia: '/images/elysia-logo.svg',
 }
 
 // Get colored icon URL (original brand colors)

@@ -6,6 +6,9 @@ import { userRoutes } from "./routes/users";
 import { adminRoutes } from "./routes/admin";
 import { discussionsRoutes } from "./routes/discussions";
 import { snippetsRoutes } from "./routes/snippets";
+import { repostRoutes } from "./routes/reposts";
+import { feedRoutes } from "./routes/feed";
+import { commentsRoutes } from "./routes/comments";
 
 // Allow multiple origins for dev and production
 const allowedOrigins = [
@@ -50,6 +53,9 @@ export const app = new Elysia()
   .use(snippetsRoutes)   // /api/snippets/*
   .use(userRoutes)       // /api/users/*
   .use(adminRoutes)      // /api/admin/*
+  .use(repostRoutes)     // /api/reposts/*
+  .use(feedRoutes)       // /api/feed/*
+  .use(commentsRoutes)   // /api/posts/:postId/comments/*
   // Global error handler
   .onError(({ code, error }) => {
     console.error(`Error [${code}]:`, error);

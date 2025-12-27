@@ -9,11 +9,13 @@ import {
   ChevronRight,
   Sparkles,
   Star,
+  Rss,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { TechTag } from '../components/TechTag'
-import { api, Post } from '../lib/api'
+import { FeedCard } from '../components/FeedCard'
+import { api, Post, FeedItem } from '../lib/api'
 
 // Hero card - large featured post
 const HeroCard = ({ post }: { post: Post }) => {
@@ -180,22 +182,41 @@ const GridCard = ({ post, index }: { post: Post; index: number }) => {
 const Dashboard = () => {
   const { user } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [feedTab, setFeedTab] = useState<'following' | 'discover'>('following')
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       
-      // Fetch posts
-      const { data: postsData } = await api.posts.getAll('latest', 10)
-      if (postsData) {
-        setPosts(postsData)
+      // Fetch posts and feed in parallel
+      const [postsRes, feedRes] = await Promise.all([
+        api.posts.getAll('latest', 10),
+        user ? api.feed.getPersonalized(10) : api.feed.getDiscover(10),
+      ])
+      
+      if (postsRes.data) {
+        setPosts(postsRes.data)
+      }
+      if (feedRes.data) {
+        setFeedItems(feedRes.data)
       }
       
       setLoading(false)
     }
     fetchData()
-  }, [])
+  }, [user])
+
+  const handleFeedTabChange = async (tab: 'following' | 'discover') => {
+    setFeedTab(tab)
+    const res = tab === 'following' && user 
+      ? await api.feed.getPersonalized(10)
+      : await api.feed.getDiscover(10)
+    if (res.data) {
+      setFeedItems(res.data)
+    }
+  }
 
   const featuredPost = posts[0]
   const trendingPosts = posts.slice(1, 4)
@@ -238,7 +259,7 @@ const Dashboard = () => {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-3 gap-6">
-        {/* Featured + Grid */}
+        {/* Left Column - Featured + Recent */}
         <div className="col-span-2 space-y-6">
           {/* Featured Post */}
           {featuredPost && <HeroCard post={featuredPost} />}
@@ -261,8 +282,60 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Right Column */}
+        {/* Right Column - Feed + Widgets */}
         <div className="space-y-6">
+          {/* Feed Section */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white/60 dark:bg-[#1a1a1a]/80 backdrop-blur-sm rounded-2xl border border-white/40 dark:border-[#333]/40 overflow-hidden"
+          >
+            {/* Feed Header with Tabs */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-[#333]">
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 text-sm">
+                <Rss size={16} /> Your Feed
+              </h3>
+              <div className="flex gap-1 bg-gray-100 dark:bg-[#252525] rounded-md p-0.5">
+                <button
+                  onClick={() => handleFeedTabChange('following')}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    feedTab === 'following'
+                      ? 'bg-white dark:bg-[#333] text-gray-900 dark:text-gray-100 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  Following
+                </button>
+                <button
+                  onClick={() => handleFeedTabChange('discover')}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    feedTab === 'discover'
+                      ? 'bg-white dark:bg-[#333] text-gray-900 dark:text-gray-100 shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  Discover
+                </button>
+              </div>
+            </div>
+
+            {/* Feed Content */}
+            <div className="p-2 space-y-2 max-h-[400px] overflow-y-auto">
+              {feedItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <Rss size={24} className="mx-auto text-gray-300 dark:text-gray-600 mb-2" />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {feedTab === 'following' ? 'Follow users to see posts' : 'No posts yet'}
+                  </p>
+                </div>
+              ) : (
+                feedItems.map((item, index) => (
+                  <FeedCard key={`${item.type}-${item.id}-${item.repostId || ''}`} item={item} />
+                ))
+              )}
+            </div>
+          </motion.div>
+
           {/* Trending Section */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}

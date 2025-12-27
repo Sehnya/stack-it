@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Code2, Save, X, Plus } from 'lucide-react'
+import { ArrowLeft, Code2, Save } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { getTechIconUrl, getTechColor } from '../components/TechTag'
+import { TechVersionInput, techsToStrings } from '../components/TechVersionInput'
 
 const LANGUAGES = [
   'javascript', 'typescript', 'python', 'rust', 'go', 'java', 'c', 'cpp', 
@@ -18,8 +19,7 @@ const CreateSnippet = () => {
   const [description, setDescription] = useState('')
   const [code, setCode] = useState('')
   const [language, setLanguage] = useState('javascript')
-  const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState('')
+  const [tags, setTags] = useState<{ name: string; version?: string }[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -32,18 +32,6 @@ const CreateSnippet = () => {
         <NavLink to="/login" className="text-blue-600 dark:text-blue-400 hover:underline">Sign in</NavLink>
       </div>
     )
-  }
-
-  const handleAddTag = () => {
-    const tag = tagInput.trim().toLowerCase()
-    if (tag && !tags.includes(tag) && tags.length < 5) {
-      setTags([...tags, tag])
-      setTagInput('')
-    }
-  }
-
-  const handleRemoveTag = (tag: string) => {
-    setTags(tags.filter(t => t !== tag))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,7 +53,7 @@ const CreateSnippet = () => {
       description: description.trim() || undefined,
       code: code.trim(),
       language,
-      tags,
+      tags: techsToStrings(tags),
     })
 
     if (res.error) {
@@ -194,46 +182,12 @@ const CreateSnippet = () => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Tags <span className="text-gray-400 dark:text-gray-500">(up to 5)</span>
             </label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {tags.map((tag) => {
-                const icon = getTechIconUrl(tag)
-                return (
-                  <span
-                    key={tag}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-[#252525] text-gray-700 dark:text-gray-300 rounded-full text-sm"
-                  >
-                    {icon && <img src={icon} alt="" className="w-3.5 h-3.5" />}
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    >
-                      <X size={14} />
-                    </button>
-                  </span>
-                )
-              })}
-            </div>
-            {tags.length < 5 && (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                  placeholder="Add a tag (e.g., react, hooks)"
-                  className="flex-1 px-3 py-2 border border-gray-200 dark:border-[#333] rounded-lg text-sm focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 bg-white dark:bg-[#252525] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddTag}
-                  className="px-3 py-2 bg-gray-100 dark:bg-[#252525] text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
-                >
-                  <Plus size={18} />
-                </button>
-              </div>
-            )}
+            <TechVersionInput
+              technologies={tags}
+              onChange={setTags}
+              placeholder="Add a tag (e.g., react, hooks)"
+              maxTags={5}
+            />
           </div>
 
           {/* Submit */}

@@ -27,6 +27,7 @@ model User {
   favorites         Favorite[]
   likes             Like[]
   comments          Comment[]
+  commentLikes      CommentLike[]
   followers         Follow[]           @relation("following")
   following         Follow[]           @relation("followers")
   threads           ForumThread[]
@@ -35,6 +36,7 @@ model User {
   snippetFavorites  SnippetFavorite[]
   replies           ForumReply[]
   postViews         PostView[]
+  reposts           Repost[]
 
   @@map("users")
 }
@@ -57,6 +59,7 @@ model Post {
   files     PostFile[]
   comments  Comment[]
   views     PostView[]
+  reposts   Repost[]
 
   @@map("posts")
 }
@@ -117,12 +120,30 @@ model Comment {
   content   String
   userId    Int      @map("user_id")
   postId    Int      @map("post_id")
+  parentId  Int?     @map("parent_id")
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post     Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent   Comment?       @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[]      @relation("CommentReplies")
+  likes    CommentLike[]
 
   @@map("comments")
+}
+
+model CommentLike {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  commentId Int      @map("comment_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+  @@map("comment_likes")
 }
 
 model Follow {
@@ -242,4 +263,18 @@ model SnippetFavorite {
 
   @@unique([snippetId, userId])
   @@map("snippet_favorites")
+}
+
+model Repost {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  quote     String?  // Optional quote text for quote reposts
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId]) // One repost per user per post
+  @@map("reposts")
 }

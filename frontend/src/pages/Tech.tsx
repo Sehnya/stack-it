@@ -89,7 +89,8 @@ const Tech = () => {
   const totalLikes = posts.reduce((sum, p) => sum + p.favorites, 0)
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen p-6 pt-8">
+      <div className="max-w-6xl mx-auto">
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -112,80 +113,81 @@ const Tech = () => {
         className="rounded-2xl border border-gray-200/50 dark:border-[#333]/50 overflow-hidden mb-6 bg-white/70 dark:bg-[#1a1a1a]/80 backdrop-blur-sm"
       >
         <div 
-          className="h-32 relative"
+          className="relative pb-16"
           style={{ 
             background: `linear-gradient(135deg, ${techColor.bg} 0%, ${techColor.bg}cc 50%, ${techColor.bg}99 100%)` 
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
-        </div>
-        <div className="px-6 pb-6 -mt-10">
-          <div className="flex items-end justify-between">
-            <div className="flex items-end gap-4">
-              <div 
-                className="w-20 h-20 rounded-2xl flex items-center justify-center border-4 border-white dark:border-[#333] shadow-lg bg-white dark:bg-[#1a1a1a] relative z-10"
+          <div className="h-24" />
+          {/* Content positioned at bottom of gradient */}
+          <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
+            <div className="flex items-end justify-between">
+              <div className="flex items-end gap-4">
+                <div 
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center border-4 border-white/20 shadow-lg bg-white relative z-10"
+                >
+                  {getTechIconUrl(decodedTech) ? (
+                    <img 
+                      src={getTechIconUrl(decodedTech)!} 
+                      alt={decodedTech}
+                      className="w-12 h-12"
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                        const parent = (e.target as HTMLImageElement).parentElement
+                        if (parent) {
+                          parent.innerHTML = `<span style="color: white; font-weight: bold; font-size: 28px;">${decodedTech.charAt(0).toUpperCase()}</span>`
+                        }
+                      }}
+                    />
+                  ) : (
+                    <span 
+                      className="text-3xl font-bold"
+                      style={{ color: techColor.text }}
+                    >
+                      {decodedTech.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className="pb-1">
+                  <h1 className="text-2xl font-bold text-white drop-shadow-sm">{decodedTech}</h1>
+                  <p className="text-white/80 text-sm flex items-center gap-4 mt-1">
+                    <span className="flex items-center gap-1">
+                      <FileCode size={14} /> {posts.length} stacks
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Eye size={14} /> {totalViews.toLocaleString()} views
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Heart size={14} /> {totalLikes} likes
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleTogglePin}
+                disabled={pinLoading}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all mb-1 ${
+                  isPinned
+                    ? 'bg-white text-gray-900 hover:bg-gray-100'
+                    : 'bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30'
+                } ${pinLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {getTechIconUrl(decodedTech) ? (
-                  <img 
-                    src={getTechIconUrl(decodedTech)!} 
-                    alt={decodedTech}
-                    className="w-12 h-12"
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none'
-                      const parent = (e.target as HTMLImageElement).parentElement
-                      if (parent) {
-                        parent.innerHTML = `<span style="color: ${techColor.text}; font-weight: bold; font-size: 28px;">${decodedTech.charAt(0).toUpperCase()}</span>`
-                        parent.style.backgroundColor = techColor.bg
-                      }
-                    }}
-                  />
+                {isPinned ? (
+                  <>
+                    <PinOff size={16} />
+                    Unpin from Sidebar
+                  </>
                 ) : (
-                  <span 
-                    className="text-3xl font-bold"
-                    style={{ color: techColor.text }}
-                  >
-                    {decodedTech.charAt(0).toUpperCase()}
-                  </span>
+                  <>
+                    <Pin size={16} />
+                    Pin to Sidebar
+                  </>
                 )}
-              </div>
-              <div className="pb-2">
-                <h1 className="text-2xl font-bold drop-shadow-sm text-gray-900 dark:text-gray-100">{decodedTech}</h1>
-                <p className="text-gray-600 dark:text-gray-400 text-sm flex items-center gap-4 mt-1">
-                  <span className="flex items-center gap-1">
-                    <FileCode size={14} /> {posts.length} stacks
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye size={14} /> {totalViews.toLocaleString()} views
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Heart size={14} /> {totalLikes} likes
-                  </span>
-                </p>
-              </div>
+              </button>
             </div>
-            <button
-              onClick={handleTogglePin}
-              disabled={pinLoading}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                isPinned
-                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200'
-                  : 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#333] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252525]'
-              } ${pinLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {isPinned ? (
-                <>
-                  <PinOff size={16} />
-                  Unpin from Sidebar
-                </>
-              ) : (
-                <>
-                  <Pin size={16} />
-                  Pin to Sidebar
-                </>
-              )}
-            </button>
           </div>
         </div>
       </motion.div>
@@ -461,6 +463,7 @@ const Tech = () => {
           </div>
         )}
       </motion.div>
+      </div>
     </div>
   )
 }

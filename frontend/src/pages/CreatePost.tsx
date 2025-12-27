@@ -34,7 +34,7 @@ import {
   Palette, FileCode, X, RowsIcon, ColumnsIcon, Upload, FileUp, File,
   ChevronDown, ChevronRight, Type, ALargeSmall, Folder, FolderOpen,
 } from 'lucide-react'
-import { TechTag } from '../components/TechTag'
+import { TechVersionInput, techsToStrings } from '../components/TechVersionInput'
 import { useAuth } from '../context/AuthContext'
 import { getLanguageFromFilename } from '../lib/postStore'
 import { api, PostFile } from '../lib/api'
@@ -258,8 +258,7 @@ const CreatePost = () => {
   useAuth() // Ensure user is authenticated
   const [title, setTitle] = useState('')
   const [coverImage, setCoverImage] = useState('')
-  const [technologies, setTechnologies] = useState<string[]>([])
-  const [techInput, setTechInput] = useState('')
+  const [technologies, setTechnologies] = useState<{ name: string; version?: string }[]>([])
   const [codeFiles, setCodeFiles] = useState<CodeFile[]>([])
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
@@ -505,17 +504,6 @@ const CreatePost = () => {
     }
   }, [editor])
 
-  const addTech = () => {
-    if (techInput.trim() && !technologies.includes(techInput.trim())) {
-      setTechnologies([...technologies, techInput.trim()])
-      setTechInput('')
-    }
-  }
-
-  const removeTech = (tech: string) => {
-    setTechnologies(technologies.filter(t => t !== tech))
-  }
-
   const handlePublish = async () => {
     if (!title.trim()) {
       alert('Please add a title')
@@ -531,7 +519,7 @@ const CreatePost = () => {
       excerpt,
       content,
       files: codeFiles,
-      technologies,
+      technologies: techsToStrings(technologies),
       coverImage: coverImage || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200',
     })
 
@@ -618,17 +606,12 @@ const CreatePost = () => {
       />
 
       {/* Technologies */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="flex flex-wrap items-center gap-2 mb-6">
-        {technologies.map((tech) => (
-          <TechTag key={tech} tech={tech} size="md" onRemove={() => removeTech(tech)} />
-        ))}
-        <input
-          type="text"
-          placeholder="Add technology..."
-          value={techInput}
-          onChange={(e) => setTechInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTech())}
-          className="px-3 py-1.5 bg-white/60 dark:bg-[#252525] rounded-full text-sm border-0 focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 w-32 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-6">
+        <TechVersionInput
+          technologies={technologies}
+          onChange={setTechnologies}
+          placeholder="Add technology (press Enter)..."
+          maxTags={20}
         />
       </motion.div>
 

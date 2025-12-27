@@ -3,11 +3,12 @@ import { useParams, NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
   ArrowLeft, Heart, Eye, MessageSquare, CheckCircle, HelpCircle, 
-  Sparkles, MessageCircle, Code2, Layers, Users, UserPlus, UserMinus
+  Sparkles, MessageCircle, Code2, Layers, Users, UserPlus, UserMinus, Rss
 } from 'lucide-react'
-import { api, Post, Discussion, Snippet, FollowUser } from '../lib/api'
+import { api, Post, Discussion, Snippet, FollowUser, FeedItem } from '../lib/api'
 import { TechTag, getTechIconUrl } from '../components/TechTag'
 import { SnippetCard } from '../components/SnippetCard'
+import { FeedCard } from '../components/FeedCard'
 import { useAuth } from '../context/AuthContext'
 
 interface UserProfile {
@@ -41,22 +42,25 @@ const Profile = () => {
   const [discussions, setDiscussions] = useState<Discussion[]>([])
   const [followers, setFollowers] = useState<FollowUser[]>([])
   const [following, setFollowing] = useState<FollowUser[]>([])
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'stacks' | 'snippets' | 'discussions' | 'followers'>('stacks')
+  const [activeTab, setActiveTab] = useState<'feed' | 'stacks' | 'snippets' | 'discussions' | 'followers'>('feed')
   const [followLoading, setFollowLoading] = useState(false)
+  const [followersSubTab, setFollowersSubTab] = useState<'followers' | 'following'>('followers')
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!userId) return
       setLoading(true)
 
-      const [profileRes, postsRes, snippetsRes, discussionsRes, followersRes, followingRes] = await Promise.all([
+      const [profileRes, postsRes, snippetsRes, discussionsRes, followersRes, followingRes, feedRes] = await Promise.all([
         api.users.getById(userId),
         api.users.getPosts(userId),
         api.snippets.getByUser(userId),
         api.discussions.getByUser(userId),
         api.users.getFollowers(userId),
         api.users.getFollowing(userId),
+        api.feed.getUserFeed(userId),
       ])
 
       if (profileRes.data?.user) {
@@ -81,6 +85,7 @@ const Profile = () => {
       if (discussionsRes.data) setDiscussions(discussionsRes.data)
       if (followersRes.data) setFollowers(followersRes.data)
       if (followingRes.data) setFollowing(followingRes.data)
+      if (feedRes.data) setFeedItems(feedRes.data)
 
       setLoading(false)
     }
@@ -248,6 +253,7 @@ const Profile = () => {
         <div className="border-t border-gray-100 dark:border-[#333]">
           <div className="flex">
             {[
+              { key: 'feed', label: 'Feed', icon: Rss, count: feedItems.length },
               { key: 'stacks', label: 'Stacks', icon: Layers, count: profile._count.posts },
               { key: 'snippets', label: 'Snippets', icon: Code2, count: snippets.length },
               { key: 'discussions', label: 'Discussions', icon: MessageSquare, count: discussions.length },
@@ -275,6 +281,30 @@ const Profile = () => {
 
       {/* Tab Content */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        {/* Feed Tab */}
+        {activeTab === 'feed' && (
+          feedItems.length === 0 ? (
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#333] p-12 text-center">
+              <Rss size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">No activity yet</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Posts and reposts will appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {feedItems.map((item, index) => (
+                <motion.div
+                  key={`${item.type}-${item.id}-${item.repostId || ''}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <FeedCard item={item} />
+                </motion.div>
+              ))}
+            </div>
+          )
+        )}
+
         {/* Stacks Tab */}
         {activeTab === 'stacks' && (
           posts.length === 0 ? (
@@ -409,48 +439,86 @@ const Profile = () => {
           <div className="space-y-4">
             {/* Sub-tabs for Followers/Following */}
             <div className="flex gap-4 mb-4">
-              <button className="text-sm font-medium text-gray-900 dark:text-gray-100 border-b-2 border-gray-900 dark:border-gray-100 pb-1">
+              <button 
+                onClick={() => setFollowersSubTab('followers')}
+                className={`text-sm font-medium pb-1 ${followersSubTab === 'followers' ? 'text-gray-900 dark:text-gray-100 border-b-2 border-gray-900 dark:border-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+              >
                 Followers ({followers.length})
               </button>
               <button
-                onClick={() => {}}
-                className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 pb-1"
+                onClick={() => setFollowersSubTab('following')}
+                className={`text-sm font-medium pb-1 ${followersSubTab === 'following' ? 'text-gray-900 dark:text-gray-100 border-b-2 border-gray-900 dark:border-gray-100' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
               >
                 Following ({following.length})
               </button>
             </div>
 
-            {followers.length === 0 ? (
-              <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#333] p-12 text-center">
-                <Users size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">No followers yet</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {followers.map((follower, index) => (
-                  <motion.div
-                    key={follower.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] p-4 hover:shadow-md transition-all"
-                  >
-                    <NavLink to={`/profile/${follower.id}`} className="flex items-center gap-3">
-                      <img src={follower.avatar} alt={follower.username} className="w-12 h-12 rounded-full object-cover" loading="lazy" />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{follower.username}</h4>
-                        {follower.bio && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{follower.bio}</p>
-                        )}
-                        <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          <span>{follower.posts} stacks</span>
-                          <span>{follower.followers} followers</span>
+            {followersSubTab === 'followers' ? (
+              followers.length === 0 ? (
+                <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#333] p-12 text-center">
+                  <Users size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">No followers yet</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {followers.map((follower, index) => (
+                    <motion.div
+                      key={follower.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] p-4 hover:shadow-md transition-all"
+                    >
+                      <NavLink to={`/profile/${follower.id}`} className="flex items-center gap-3">
+                        <img src={follower.avatar} alt={follower.username} className="w-12 h-12 rounded-full object-cover" loading="lazy" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{follower.username}</h4>
+                          {follower.bio && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{follower.bio}</p>
+                          )}
+                          <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            <span>{follower.posts} stacks</span>
+                            <span>{follower.followers} followers</span>
+                          </div>
                         </div>
-                      </div>
-                    </NavLink>
-                  </motion.div>
-                ))}
-              </div>
+                      </NavLink>
+                    </motion.div>
+                  ))}
+                </div>
+              )
+            ) : (
+              following.length === 0 ? (
+                <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#333] p-12 text-center">
+                  <Users size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">Not following anyone yet</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {following.map((user, index) => (
+                    <motion.div
+                      key={user.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-white dark:bg-[#1a1a1a] rounded-xl border border-gray-200 dark:border-[#333] p-4 hover:shadow-md transition-all"
+                    >
+                      <NavLink to={`/profile/${user.id}`} className="flex items-center gap-3">
+                        <img src={user.avatar} alt={user.username} className="w-12 h-12 rounded-full object-cover" loading="lazy" />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{user.username}</h4>
+                          {user.bio && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{user.bio}</p>
+                          )}
+                          <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            <span>{user.posts} stacks</span>
+                            <span>{user.followers} followers</span>
+                          </div>
+                        </div>
+                      </NavLink>
+                    </motion.div>
+                  ))}
+                </div>
+              )
             )}
           </div>
         )}
