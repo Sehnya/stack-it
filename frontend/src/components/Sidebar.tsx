@@ -12,8 +12,9 @@ import {
   PenSquare,
   Hash,
   ChevronDown,
+  UserCheck,
 } from 'lucide-react'
-import { api, PinnedTech } from '../lib/api'
+import { api, PinnedTech, FollowingFeedUser } from '../lib/api'
 import { getTechColor, getTechIconUrl } from './TechTag'
 import './Sidebar.css'
 
@@ -36,7 +37,9 @@ interface SidebarProps {
 const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
   const location = useLocation()
   const [pinnedTechs, setPinnedTechs] = useState<PinnedTech[]>([])
+  const [followingUsers, setFollowingUsers] = useState<FollowingFeedUser[]>([])
   const [sectionsExpanded, setSectionsExpanded] = useState(true)
+  const [followingExpanded, setFollowingExpanded] = useState(true)
 
   useEffect(() => {
     const fetchPinnedTechs = async () => {
@@ -54,6 +57,21 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
     return () => clearInterval(interval)
   }, [])
 
+  // Fetch following users with unread counts
+  useEffect(() => {
+    const fetchFollowing = async () => {
+      if (!user) return
+      const { data } = await api.users.getFollowingFeed()
+      if (data) {
+        setFollowingUsers(data)
+      }
+    }
+    fetchFollowing()
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchFollowing, 60000)
+    return () => clearInterval(interval)
+  }, [user])
+
   // Refresh pinned techs when route changes (e.g., after pinning from Tech page)
   useEffect(() => {
     const fetchPinnedTechs = async () => {
@@ -62,6 +80,16 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
     }
     fetchPinnedTechs()
   }, [location.pathname])
+
+  // Refresh following when route changes (e.g., after viewing a profile)
+  useEffect(() => {
+    const fetchFollowing = async () => {
+      if (!user) return
+      const { data } = await api.users.getFollowingFeed()
+      if (data) setFollowingUsers(data)
+    }
+    fetchFollowing()
+  }, [location.pathname, user])
 
   // Listen for custom event when tech is pinned/unpinned
   useEffect(() => {
@@ -85,8 +113,11 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
   const isActive = (path: string) => location.pathname === path
   const isTechActive = (tech: string) => 
     location.pathname === `/tech/${encodeURIComponent(tech)}`
+  const isProfileActive = (userId: number) =>
+    location.pathname === `/profile/${userId}`
 
   const totalUnread = pinnedTechs.reduce((sum, pt) => sum + pt.unreadCount, 0)
+  const totalFollowingUnread = followingUsers.reduce((sum, u) => sum + u.unreadCount, 0)
 
   const handleTechClick = async (techName: string) => {
     // Mark as read when clicking
@@ -139,6 +170,32 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
               </NavLink>
             ))}
           </nav>
+
+          {/* Following Users - Collapsed */}
+          {followingUsers.length > 0 && (
+            <div className="sidebar-rail-sections">
+              <div className="sidebar-rail-divider" />
+              {followingUsers.slice(0, 5).map((followedUser) => (
+                <NavLink
+                  key={followedUser.id}
+                  to={`/profile/${followedUser.id}`}
+                  className={`sidebar-rail-item relative ${isProfileActive(followedUser.id) ? 'active' : ''}`}
+                  title={followedUser.username}
+                >
+                  <img
+                    src={followedUser.avatar}
+                    alt={followedUser.username}
+                    className="w-7 h-7 rounded-full object-cover"
+                  />
+                  {followedUser.unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {followedUser.unreadCount > 9 ? '9+' : followedUser.unreadCount}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          )}
 
           {/* Pinned Sections - Collapsed */}
           {pinnedTechs.length > 0 && (
@@ -249,6 +306,71 @@ const Sidebar = ({ user, onLogout, isExpanded, onToggle }: SidebarProps) => {
               </NavLink>
             ))}
           </nav>
+
+          {/* Following Users - Expanded */}
+          {user && (
+            <div className="sidebar-menu-sections">
+              <button 
+                onClick={() => setFollowingExpanded(!followingExpanded)}
+                className="sidebar-sections-header"
+              >
+                <div className="flex items-center gap-2">
+                  <UserCheck size={16} strokeWidth={1.5} />
+                  <span>Following</span>
+                  {totalFollowingUnread > 0 && (
+                    <span className="ml-auto mr-2 px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-full">
+                      {totalFollowingUnread > 99 ? '99+' : totalFollowingUnread}
+                    </span>
+                  )}
+                </div>
+                <motion.div
+                  animate={{ rotate: followingExpanded ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown size={16} />
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {followingExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    {followingUsers.length === 0 ? (
+                      <div className="px-4 py-3 text-xs text-gray-400 text-center">
+                        Follow developers to see them here
+                      </div>
+                    ) : (
+                      followingUsers.map((followedUser) => (
+                        <NavLink
+                          key={followedUser.id}
+                          to={`/profile/${followedUser.id}`}
+                          className={`sidebar-section-item ${isProfileActive(followedUser.id) ? 'active' : ''}`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <img
+                              src={followedUser.avatar}
+                              alt={followedUser.username}
+                              className="w-7 h-7 rounded-full object-cover"
+                            />
+                            <span className="truncate">{followedUser.username}</span>
+                          </div>
+                          {followedUser.unreadCount > 0 && (
+                            <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-full min-w-[18px] text-center">
+                              {followedUser.unreadCount > 99 ? '99+' : followedUser.unreadCount}
+                            </span>
+                          )}
+                        </NavLink>
+                      ))
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           {/* Pinned Sections - Expanded */}
           <div className="sidebar-menu-sections">

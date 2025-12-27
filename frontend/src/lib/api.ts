@@ -182,6 +182,14 @@ export interface FollowUser {
   followedAt: string
 }
 
+export interface FollowingFeedUser {
+  id: number
+  username: string
+  avatar: string
+  unreadCount: number
+  followedAt: string
+}
+
 export const api = {
   auth: {
     login: (email: string, password: string) =>
@@ -303,6 +311,9 @@ export const api = {
 
     getFollowing: (id: string, limit = 20, offset = 0) =>
       request<FollowUser[]>(`/api/users/${id}/following?limit=${limit}&offset=${offset}`),
+
+    getFollowingFeed: () =>
+      request<FollowingFeedUser[]>('/api/users/me/following-feed'),
   },
 
   pinnedTech: {

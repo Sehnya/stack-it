@@ -216,6 +216,58 @@ export const userRoutes = new Elysia({ prefix: "/api/users" })
       }),
     }
   )
+  // Get current user's following with unread post counts (for sidebar)
+  .get(
+    "/me/following-feed",
+    async ({ set, jwt, cookie: { auth } }) => {
+      const payload = await verifyAuth(jwt, auth?.value);
+      if (!requireAuth(set, payload)) {
+        return { error: "Not authenticated" };
+      }
+
+      const userId = payload.userId;
+
+      // Get all users the current user is following
+      const following = await db.follow.findMany({
+        where: { followerId: userId },
+        include: {
+          following: {
+            select: {
+              id: true,
+              username: true,
+              profilePhoto: true,
+              posts: {
+                select: {
+                  id: true,
+                  createdAt: true,
+                  views: {
+                    where: { userId },
+                    select: { id: true },
+                  },
+                },
+                orderBy: { createdAt: "desc" },
+                take: 50, // Check last 50 posts for unread
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return following.map((f: any) => {
+        // Count posts that haven't been viewed by the current user
+        const unreadCount = f.following.posts.filter((p: any) => p.views.length === 0).length;
+        
+        return {
+          id: f.following.id,
+          username: f.following.username,
+          avatar: f.following.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${f.following.username}`,
+          unreadCount,
+          followedAt: f.createdAt,
+        };
+      });
+    }
+  )
   // Update profile (auth required)
   .put(
     "/profile",
