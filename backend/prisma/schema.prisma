@@ -33,6 +33,8 @@ model User {
   snippets          Snippet[]
   snippetRatings    SnippetRating[]
   snippetFavorites  SnippetFavorite[]
+  replies           ForumReply[]
+  postViews         PostView[]
 
   @@map("users")
 }
@@ -66,6 +68,7 @@ model PostView {
   createdAt DateTime @default(now()) @map("created_at")
 
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@map("post_views")
@@ -190,6 +193,7 @@ model ForumReply {
   createdAt DateTime @default(now()) @map("created_at")
 
   thread ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("forum_replies")
 }

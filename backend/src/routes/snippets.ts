@@ -41,6 +41,94 @@ function formatSnippet(snippet: any, userId?: number): any {
 export const snippetsRoutes = new Elysia({ prefix: "/api/snippets" })
   .use(jwt(jwtConfig))
 
+  // STATIC ROUTES FIRST (before /:id to avoid route conflicts)
+  // Get user's favorited snippets
+  .get("/favorites/me", async ({ set, jwt, cookie: { auth } }) => {
+    const payload = await verifyAuth(jwt, auth?.value)
+    if (!requireAuth(set, payload)) {
+      return { error: "Not authenticated" }
+    }
+
+    try {
+      const favorites = await db.snippetFavorite.findMany({
+        where: { userId: payload.userId },
+        include: {
+          snippet: {
+            include: {
+              author: { select: { id: true, username: true, profilePhoto: true } },
+              ratings: true,
+              favorites: true,
+              _count: { select: { favorites: true, ratings: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+
+      return favorites.map((f: any) => formatSnippet(f.snippet, payload.userId))
+    } catch (error) {
+      log.server.error("Error fetching favorite snippets", {}, error as Error)
+      return []
+    }
+  })
+
+  // Get snippets by tech/language
+  .get("/tech/:tech", async ({ params, jwt, cookie: { auth } }) => {
+    const tech = decodeURIComponent(params.tech).toLowerCase()
+    const payload = await verifyAuth(jwt, auth?.value)
+    const userId = payload?.userId
+
+    try {
+      const snippets = await db.snippet.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        include: {
+          author: { select: { id: true, username: true, profilePhoto: true } },
+          ratings: true,
+          favorites: true,
+          _count: { select: { favorites: true, ratings: true } },
+        },
+      })
+
+      // Filter by language or tag
+      const filtered = snippets.filter((s: any) => {
+        if (s.language.toLowerCase() === tech) return true
+        const tags = JSON.parse(s.tags || "[]") as string[]
+        return tags.some((tag: string) => tag.toLowerCase() === tech)
+      })
+
+      return filtered.map((s: any) => formatSnippet(s, userId))
+    } catch (error) {
+      log.server.error("Error fetching snippets by tech", { tech }, error as Error)
+      return []
+    }
+  })
+
+  // Get snippets by user
+  .get("/user/:userId", async ({ params, jwt, cookie: { auth } }) => {
+    const userId = parseInt(params.userId)
+    const payload = await verifyAuth(jwt, auth?.value)
+    const currentUserId = payload?.userId
+
+    try {
+      const snippets = await db.snippet.findMany({
+        where: { authorId: userId },
+        orderBy: { createdAt: "desc" },
+        include: {
+          author: { select: { id: true, username: true, profilePhoto: true } },
+          ratings: true,
+          favorites: true,
+          _count: { select: { favorites: true, ratings: true } },
+        },
+      })
+
+      return snippets.map((s: any) => formatSnippet(s, currentUserId))
+    } catch (error) {
+      log.server.error("Error fetching user snippets", { userId: params.userId }, error as Error)
+      return []
+    }
+  })
+
   // Get all snippets
   .get("/", async ({ query, jwt, cookie: { auth } }) => {
     const sort = query.sort || "latest"
@@ -353,89 +441,3 @@ export const snippetsRoutes = new Elysia({ prefix: "/api/snippets" })
     }
   })
 
-  // Get snippets by tech/language
-  .get("/tech/:tech", async ({ params, jwt, cookie: { auth } }) => {
-    const tech = decodeURIComponent(params.tech).toLowerCase()
-    const payload = await verifyAuth(jwt, auth?.value)
-    const userId = payload?.userId
-
-    try {
-      const snippets = await db.snippet.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 50,
-        include: {
-          author: { select: { id: true, username: true, profilePhoto: true } },
-          ratings: true,
-          favorites: true,
-          _count: { select: { favorites: true, ratings: true } },
-        },
-      })
-
-      // Filter by language or tag
-      const filtered = snippets.filter((s: any) => {
-        if (s.language.toLowerCase() === tech) return true
-        const tags = JSON.parse(s.tags || "[]") as string[]
-        return tags.some((tag: string) => tag.toLowerCase() === tech)
-      })
-
-      return filtered.map((s: any) => formatSnippet(s, userId))
-    } catch (error) {
-      log.server.error("Error fetching snippets by tech", { tech }, error as Error)
-      return []
-    }
-  })
-
-  // Get snippets by user
-  .get("/user/:userId", async ({ params, jwt, cookie: { auth } }) => {
-    const userId = parseInt(params.userId)
-    const payload = await verifyAuth(jwt, auth?.value)
-    const currentUserId = payload?.userId
-
-    try {
-      const snippets = await db.snippet.findMany({
-        where: { authorId: userId },
-        orderBy: { createdAt: "desc" },
-        include: {
-          author: { select: { id: true, username: true, profilePhoto: true } },
-          ratings: true,
-          favorites: true,
-          _count: { select: { favorites: true, ratings: true } },
-        },
-      })
-
-      return snippets.map((s: any) => formatSnippet(s, currentUserId))
-    } catch (error) {
-      log.server.error("Error fetching user snippets", { userId: params.userId }, error as Error)
-      return []
-    }
-  })
-
-  // Get user's favorited snippets
-  .get("/favorites/me", async ({ set, jwt, cookie: { auth } }) => {
-    const payload = await verifyAuth(jwt, auth?.value)
-    if (!requireAuth(set, payload)) {
-      return { error: "Not authenticated" }
-    }
-
-    try {
-      const favorites = await db.snippetFavorite.findMany({
-        where: { userId: payload.userId },
-        include: {
-          snippet: {
-            include: {
-              author: { select: { id: true, username: true, profilePhoto: true } },
-              ratings: true,
-              favorites: true,
-              _count: { select: { favorites: true, ratings: true } },
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-      })
-
-      return favorites.map((f: any) => formatSnippet(f.snippet, payload.userId))
-    } catch (error) {
-      log.server.error("Error fetching favorite snippets", {}, error as Error)
-      return []
-    }
-  })

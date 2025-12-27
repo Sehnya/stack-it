@@ -21,7 +21,7 @@ function formatPost(post: any): any {
       avatar: post.author.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author.username}`,
     },
     files: post.files || [],
-    likes: post._count?.favorites || 0,
+    likes: post._count?.likes || 0,
     favorites: post._count?.favorites || 0,
     comments: post._count?.comments || 0,
   }
@@ -43,7 +43,7 @@ function formatPostSummary(post: any): any {
       avatar: post.author.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author.username}`,
     },
     files: post.files ? post.files.map((f: any) => ({ id: f.id, name: f.name, language: f.language })) : [],
-    likes: post._count?.favorites || 0,
+    likes: post._count?.likes || 0,
     favorites: post._count?.favorites || 0,
     comments: post._count?.comments || 0,
   }
@@ -74,7 +74,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
               createdAt: true,
               author: { select: { id: true, username: true, profilePhoto: true } },
               files: { select: { id: true, name: true, language: true } },
-              _count: { select: { favorites: true, comments: true } },
+              _count: { select: { favorites: true, likes: true, comments: true } },
             },
           },
         },
@@ -96,16 +96,17 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
       return { error: "Not authenticated" }
     }
     try {
-      const [postCount, totalViews, followerCount, followingCount] = await Promise.all([
+      const [postCount, viewCount, likeCount, followerCount, followingCount] = await Promise.all([
         db.post.count({ where: { authorId: payload.userId } }),
-        db.post.aggregate({ where: { authorId: payload.userId }, _sum: { viewCount: true } }),
+        db.postView.count({ where: { post: { authorId: payload.userId } } }),
+        db.like.count({ where: { post: { authorId: payload.userId } } }),
         db.follow.count({ where: { followingId: payload.userId } }),
         db.follow.count({ where: { followerId: payload.userId } }),
       ])
       return {
         posts: postCount,
-        likes: 0,
-        views: totalViews._sum.viewCount || 0,
+        likes: likeCount,
+        views: viewCount,
         followers: followerCount,
         following: followingCount,
       }
@@ -180,7 +181,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
           createdAt: true,
           author: { select: { id: true, username: true, profilePhoto: true } },
           files: { select: { id: true, name: true, language: true } },
-          _count: { select: { favorites: true, comments: true } },
+          _count: { select: { favorites: true, likes: true, comments: true } },
         },
       })
       // Filter posts that contain the technology (case-insensitive)
@@ -212,10 +213,10 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
           createdAt: true,
           author: { select: { id: true, username: true, profilePhoto: true } },
           files: { select: { id: true, name: true, language: true } },
-          _count: { select: { favorites: true, comments: true } },
+          _count: { select: { favorites: true, likes: true, comments: true } },
         },
       })
-      
+
       // Get view counts for each post
       const postsWithViews = await Promise.all(posts.map(async (post) => {
         const viewCount = await db.$queryRaw<[{count: number}]>`
@@ -261,7 +262,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         },
       })
       set.status = 201
-      return formatPost({ ...post, _count: { favorites: 0, comments: 0 } })
+      return formatPost({ ...post, _count: { favorites: 0, likes: 0, comments: 0 } })
     } catch (error) {
       log.posts.error("Error creating post", {}, error as Error)
       set.status = 500
@@ -279,7 +280,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         include: {
           author: { select: { id: true, username: true, profilePhoto: true } },
           files: true,
-          _count: { select: { favorites: true, comments: true } },
+          _count: { select: { favorites: true, likes: true, comments: true } },
         },
       })
       if (!post) {
@@ -357,7 +358,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
         include: {
           author: { select: { id: true, username: true, profilePhoto: true } },
           files: true,
-          _count: { select: { favorites: true, comments: true } },
+          _count: { select: { favorites: true, likes: true, comments: true } },
         },
       })
       return formatPost(post)
@@ -406,7 +407,7 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
   }, {
     params: schemas.idParam,
   })
-  // Like post (toggle favorite)
+  // Like post (toggle like)
   .post("/:id/like", async ({ params, set, jwt, cookie: { auth } }) => {
     const payload = await verifyAuth(jwt, auth?.value)
     if (!requireAuth(set, payload)) {
@@ -418,12 +419,12 @@ export const postsRoutes = new Elysia({ prefix: "/api/posts" })
       return { error: "Invalid post ID" }
     }
     try {
-      const existing = await db.favorite.findUnique({ where: { userId_postId: { userId: payload.userId, postId } } })
+      const existing = await db.like.findUnique({ where: { userId_postId: { userId: payload.userId, postId } } })
       if (existing) {
-        await db.favorite.delete({ where: { id: existing.id } })
+        await db.like.delete({ where: { id: existing.id } })
         return { liked: false }
       } else {
-        await db.favorite.create({ data: { userId: payload.userId, postId } })
+        await db.like.create({ data: { userId: payload.userId, postId } })
         return { liked: true }
       }
     } catch (error) {

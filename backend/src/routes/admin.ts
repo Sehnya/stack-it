@@ -40,7 +40,7 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
         db.user.count(),
         db.post.count(),
         db.comment.count(),
-        db.post.aggregate({ _sum: { viewCount: true } }),
+        db.postView.count(),
       ]);
 
       // Get recent signups (last 7 days)
@@ -59,7 +59,7 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
         users: userCount,
         posts: postCount,
         comments: commentCount,
-        views: totalViews._sum.viewCount || 0,
+        views: totalViews,
         recentSignups,
         recentPosts,
       };
@@ -208,7 +208,7 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
           orderBy: { createdAt: "desc" },
           include: {
             author: { select: { id: true, username: true } },
-            _count: { select: { favorites: true, comments: true } },
+            _count: { select: { favorites: true, comments: true, views: true } },
           },
         }),
         db.post.count({ where }),
@@ -219,7 +219,7 @@ export const adminRoutes = new Elysia({ prefix: "/api/admin" })
           id: p.id,
           title: p.title,
           author: p.author,
-          viewCount: p.viewCount,
+          viewCount: p._count.views,
           favorites: p._count.favorites,
           comments: p._count.comments,
           createdAt: p.createdAt,

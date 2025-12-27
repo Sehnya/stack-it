@@ -6,7 +6,8 @@ import { log } from "../lib/logger"
 
 // Helper to format discussion response
 function formatDiscussion(thread: any): any {
-  return {
+  const replyCount = thread._count?.replies || 0
+  const response: any = {
     id: String(thread.id),
     title: thread.title,
     content: thread.content,
@@ -22,9 +23,28 @@ function formatDiscussion(thread: any): any {
       username: thread.author.username,
       avatar: thread.author.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${thread.author.username}`,
     },
-    replies: thread._count?.replies || 0,
+    replyCount,
+    replies: replyCount, // Keep for backwards compatibility with frontend
     postId: thread.postId ? String(thread.postId) : null,
   }
+
+  // Override replies with full array when available (single discussion view)
+  if (thread.replies && Array.isArray(thread.replies)) {
+    response.replies = thread.replies.map((reply: any) => ({
+      id: String(reply.id),
+      content: reply.content,
+      isAnswer: reply.isAnswer,
+      likes: reply.likes,
+      createdAt: reply.createdAt.toISOString(),
+      author: reply.author ? {
+        id: String(reply.author.id),
+        username: reply.author.username,
+        avatar: reply.author.profilePhoto || `https://api.dicebear.com/7.x/initials/svg?seed=${reply.author.username}`,
+      } : null,
+    }))
+  }
+
+  return response
 }
 
 export const discussionsRoutes = new Elysia({ prefix: "/api/discussions" })
@@ -70,7 +90,7 @@ export const discussionsRoutes = new Elysia({ prefix: "/api/discussions" })
           replies: {
             orderBy: [{ isAnswer: "desc" }, { createdAt: "asc" }],
             include: {
-              // We'll need to add author relation to ForumReply
+              author: { select: { id: true, username: true, profilePhoto: true } },
             },
           },
           _count: { select: { replies: true } },
